@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .navbar-brand {
+    font-weight: bold;
+    color: #4a9eff !important; /* Bright blue */
+}
+
+.card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: none;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    background-color: #1a1a1a; /* Dark charcoal */
+    color: #e0e0e0; /* Light gray text */
+    border: 1px solid #333333; /* Dark border */
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(26, 115, 232, 0.4); /* Blue shadow on hover */
+}
+
+.dashboard-card {
+    cursor: pointer;
+    background: linear-gradient(135deg, #0d1421 0%, #1a73e8 50%, #000814 100%);
+    color: #ffffff;
+    border-radius: 15px;
+    border: 1px solid #2962ff;
+}
+
+.dashboard-card:hover {
+    background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 50%, #000051 100%);
+    box-shadow: 0 12px 24px rgba(26, 115, 232, 0.3);
+}
+
+body {
+    background: linear-gradient(135deg, #000000 0%, #0d1421 25%, #1a237e 75%, #000051 100%);
+    background-attachment: fixed;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+
+.login-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #000000 0%, #1a237e 50%, #0d47a1 100%);
+}
+
+.login-card {
+    background: rgba(13, 20, 33, 0.95); /* Dark blue-black with transparency */
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    border: 1px solid #2962ff;
+    color: #ffffff;
+    box-shadow: 0 8px 32px rgba(26, 115, 232, 0.2);
+}
+
+/* Additional complementary styles for better cohesion */
+.btn-primary {
+    background: linear-gradient(135deg, #1a73e8 0%, #2962ff 100%);
+    border: none;
+    color: #ffffff;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #0d47a1 0%, #1a237e 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4);
+}
+
+.text-primary {
+    color: #4a9eff !important;
+}
+
+.bg-primary {
+    background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%) !important;
+}
+
+/* Form elements styling */
+.form-control {
+    background-color: #0d1421;
+    border: 1px solid #333333;
+    color: #ffffff;
+    border-radius: 8px;
+}
+
+.form-control:focus {
+    background-color: #1a1a1a;
+    border-color: #4a9eff;
+    box-shadow: 0 0 0 0.2rem rgba(74, 158, 255, 0.25);
+    color: #ffffff;
+}
+
+/* Navigation and header elements */
+.navbar {
+    background: linear-gradient(90deg, #000000 0%, #0d1421 50%, #1a237e 100%) !important;
+    border-bottom: 1px solid #2962ff;
+}
+
+.navbar-nav .nav-link {
+    color: #e0e0e0 !important;
+    transition: color 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover {
+    color: #4a9eff !important;
+}
+
+/* Table styling */
+.table-dark {
+    background-color: #0d1421;
+    color: #e0e0e0;
+}
+
+.table-dark th,
+.table-dark td {
+    border-color: #333333;
+}
+
+/* Alert styling */
+.alert-info {
+    background: linear-gradient(135deg, rgba(26, 115, 232, 0.1) 0%, rgba(13, 71, 161, 0.1) 100%);
+    border: 1px solid #2962ff;
+    color: #4a9eff;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, rgba(0, 150, 136, 0.1) 0%, rgba(0, 77, 64, 0.1) 100%);
+    border: 1px solid #00695c;
+    color: #4db6ac;
+}
+    </style>
+</head>
+<body>
+    {% if session.admin_id %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('dashboard.index') }}">
+                <i class="fas fa-dumbbell"></i> FitZone Gym
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">
+                    <i class="fas fa-user-circle"></i> Welcome, {{ session.admin_name }}
+                </span>
+                <a class="nav-link" href="{{ url_for('auth.logout') }}">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <div class="container-fluid">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="row mt-3">
+            <div class="col-12">
+                {% for message in messages %}
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

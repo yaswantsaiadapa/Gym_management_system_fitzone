@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Add Equipment - Gym Management{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white">
+                    <h4 class="mb-0"><i class="fas fa-plus"></i> Add New Equipment</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Equipment Name *</label>
+                            <input type="text" class="form-control" id="name" name="name" required 
+                                   placeholder="e.g., Treadmill, Bench Press, Dumbbells">
+                        </div>
+                        <div class="mb-4">
+                            <label for="status" class="form-label">Initial Status *</label>
+                            <select class="form-select" id="status" name="status" required>
+                                <option value="working" selected>Working</option>
+                                <option value="maintenance">Under Maintenance</option>
+                            </select>
+                        </div>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('equipment.list_equipment') }}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-arrow-left"></i> Back to Equipment
+                            </a>
+                            <button type="submit" class="btn btn-dark">
+                                <i class="fas fa-save"></i> Add Equipment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
