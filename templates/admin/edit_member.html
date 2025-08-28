@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Edit Member - Gym Management{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="fas fa-edit"></i> Edit Member: {{ member.full_name }}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="full_name" class="form-label">Full Name *</label>
+                                <input type="text" class="form-control" id="full_name" name="full_name" 
+                                       value="{{ user.full_name }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">Email Address *</label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{{ user.email }}" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="phone" class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" id="phone" name="phone" 
+                                       value="{{ user.phone }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="status" class="form-label">Status</label>
+                                <select class="form-select" id="status" name="status">
+                                    <option value="active" {{ 'selected' if member.status == 'active' }}>Active</option>
+                                    <option value="inactive" {{ 'selected' if member.status == 'inactive' }}>Inactive</option>
+                                    <option value="suspended" {{ 'selected' if member.status == 'suspended' }}>Suspended</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="weight" class="form-label">Weight (kg)</label>
+                                <input type="number" step="0.1" class="form-control" id="weight" name="weight" 
+                                       value="{{ member.weight }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="height" class="form-label">Height (cm)</label>
+                                <input type="number" step="0.1" class="form-control" id="height" name="height" 
+                                       value="{{ member.height }}">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="membership_start_date" class="form-label">Membership Start Date</label>
+                                <input type="date" class="form-control" id="membership_start_date" name="membership_start_date" 
+                                       value="{{ member.membership_start_date }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="membership_end_date" class="form-label">Membership End Date</label>
+                                <input type="date" class="form-control" id="membership_end_date" name="membership_end_date" 
+                                       value="{{ member.membership_end_date }}">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="emergency_contact" class="form-label">Emergency Contact</label>
+                            <input type="text" class="form-control" id="emergency_contact" name="emergency_contact" 
+                                   value="{{ member.emergency_contact }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="emergency_phone" class="form-label">Emergency Phone</label>
+                            <input type="tel" class="form-control" id="emergency_phone" name="emergency_phone" 
+                                   value="{{ member.emergency_phone }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="medical_conditions" class="form-label">Medical Conditions</label>
+                            <textarea class="form-control" id="medical_conditions" name="medical_conditions" rows="3">{{ member.medical_conditions }}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="fitness_goals" class="form-label">Fitness Goals</label>
+                            <textarea class="form-control" id="fitness_goals" name="fitness_goals" rows="3">{{ member.fitness_goals }}</textarea>
+                        </div>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('admin.members') }}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-arrow-left"></i> Back to Members
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-save"></i> Update Member
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
