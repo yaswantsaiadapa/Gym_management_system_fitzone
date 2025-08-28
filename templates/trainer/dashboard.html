@@ -1,38 +1,234 @@
 {% extends "base.html" %}
+{% block title %}Trainer Dashboard - Gym Management{% endblock %}
+
 {% block content %}
-<h1>Welcome, {{ trainer.name }}</h1>
+<div class="container py-4">
+    <!-- Welcome Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-gradient-primary text-white">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="mb-1">Welcome, {{ trainer.full_name }}!</h2>
+                            <p class="mb-0 opacity-75">Ready to help your clients achieve their fitness goals?</p>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <i class="fas fa-user-tie fa-4x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<h2>Stats</h2>
-<ul>
-  <li>Total Clients: {{ total_clients }}</li>
-  <li>Today's Sessions: {{ today_sessions }}</li>
-  <li>Active Workout Plans: {{ active_workout_plans }}</li>
-</ul>
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card success h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-2x text-success mb-2"></i>
+                    <h6 class="card-title">Total Clients</h6>
+                    <p class="stat-number text-success">{{ total_clients }}</p>
+                    <a href="{{ url_for('trainer_routes.clients') }}" class="btn btn-sm btn-outline-success">
+                        View Clients
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card warning h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-calendar-day fa-2x text-warning mb-2"></i>
+                    <h6 class="card-title">Today's Sessions</h6>
+                    <p class="stat-number text-warning">{{ today_sessions|length }}</p>
+                    <a href="{{ url_for('trainer_routes.schedule') }}" class="btn btn-sm btn-outline-warning">
+                        View Schedule
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card info h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-clipboard-list fa-2x text-info mb-2"></i>
+                    <h6 class="card-title">Active Plans</h6>
+                    <p class="stat-number text-info">{{ active_workout_plans }}</p>
+                    <small class="text-muted">Workout Plans</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card danger h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-line fa-2x text-danger mb-2"></i>
+                    <h6 class="card-title">Progress Updates</h6>
+                    <p class="stat-number text-danger">{{ recent_progress|length }}</p>
+                    <small class="text-muted">Recent Records</small>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<h2>Today's Schedule</h2>
-<ul>
-  {% for session in todays_schedule %}
-    <li>{{ session.session_date }} - {{ session.session_time }} with {{ session.member_name }}</li>
-  {% else %}
-    <li>No sessions today.</li>
-  {% endfor %}
-</ul>
+    <div class="row">
+        <!-- Today's Schedule -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-calendar-day"></i> Today's Schedule</h5>
+                </div>
+                <div class="card-body">
+                    {% if todays_schedule %}
+                    <div class="list-group list-group-flush">
+                        {% for session in todays_schedule %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ session.time_slot }}</strong>
+                                <br><small class="text-muted">{{ session.member_name }}</small>
+                            </div>
+                            <span class="badge bg-{{ 'success' if session.status == 'present' else 'warning' }}">
+                                {{ session.status.title() }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('trainer_routes.schedule') }}" class="btn btn-outline-primary btn-sm">
+                            View Full Schedule
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-calendar-times fa-3x text-muted mb-2"></i>
+                        <p class="text-muted">No sessions scheduled for today</p>
+                        <small class="text-muted">Enjoy your day off!</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
 
-<h2>Recent Progress Updates</h2>
-<ul>
-  {% for prog in recent_progress %}
-    <li>{{ prog.recorded_date }} - {{ prog.weight }}kg</li>
-  {% else %}
-    <li>No recent progress recorded.</li>
-  {% endfor %}
-</ul>
+        <!-- Recent Progress Updates -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-line"></i> Recent Progress Updates</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_progress %}
+                    <div class="list-group list-group-flush">
+                        {% for progress in recent_progress %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>{{ progress.member_name }}</strong>
+                                    <br><small class="text-muted">{{ progress.recorded_date }}</small>
+                                </div>
+                                <div class="text-end">
+                                    {% if progress.weight %}
+                                    <span class="badge bg-primary">{{ progress.weight }} kg</span>
+                                    {% endif %}
+                                    {% if progress.body_fat_percentage %}
+                                    <span class="badge bg-success">{{ progress.body_fat_percentage }}% BF</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-chart-line fa-3x text-muted mb-2"></i>
+                        <p class="text-muted">No recent progress updates</p>
+                        <small class="text-muted">Record client progress during sessions</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 
-<h2>Announcements</h2>
-<ul>
-  {% for ann in announcements %}
-    <li><strong>{{ ann.title }}</strong>: {{ ann.content }}</li>
-  {% else %}
-    <li>No announcements.</li>
-  {% endfor %}
-</ul>
+    <!-- Assigned Clients -->
+    {% if assigned_clients %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-users"></i> My Clients</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for client in assigned_clients %}
+                        <div class="col-lg-4 col-md-6 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ client[1] }}</h6>
+                                    <p class="card-text">
+                                        <small class="text-muted">
+                                            Joined: {{ client[2] }}<br>
+                                            Expires: {{ client[3] }}
+                                        </small>
+                                    </p>
+                                    <a href="{{ url_for('trainer_routes.client_details', member_id=client[0]) }}" 
+                                       class="btn btn-sm btn-primary">
+                                        View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="text-center">
+                        <a href="{{ url_for('trainer_routes.clients') }}" class="btn btn-outline-primary">
+                            View All Clients
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Announcements -->
+    {% if announcements %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-bullhorn"></i> Latest Announcements</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for announcement in announcements %}
+                        <div class="col-lg-6 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start">
+                                        <div class="me-3">
+                                            {% if announcement.announcement_type == 'offer' %}
+                                            <i class="fas fa-tag fa-2x text-success"></i>
+                                            {% elif announcement.announcement_type == 'event' %}
+                                            <i class="fas fa-calendar-star fa-2x text-warning"></i>
+                                            {% elif announcement.announcement_type == 'maintenance' %}
+                                            <i class="fas fa-tools fa-2x text-danger"></i>
+                                            {% else %}
+                                            <i class="fas fa-bullhorn fa-2x text-primary"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <h6 class="card-title">{{ announcement.title }}</h6>
+                                            <p class="card-text">{{ announcement.content[:100] }}...</p>
+                                            <small class="text-muted">{{ announcement.announcement_type.title() }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 {% endblock %}

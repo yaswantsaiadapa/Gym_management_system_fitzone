@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Create Workout Plan - Gym Management{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="fas fa-clipboard-list"></i> Create Workout Plan</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="member_id" class="form-label">Select Member *</label>
+                                <select class="form-select" id="member_id" name="member_id" required>
+                                    <option value="">Choose a member</option>
+                                    {% for member in members %}
+                                    <option value="{{ member.id }}">{{ member.full_name }} - {{ member.phone }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="trainer_id" class="form-label">Assign Trainer *</label>
+                                <select class="form-select" id="trainer_id" name="trainer_id" required>
+                                    <option value="">Choose a trainer</option>
+                                    {% for trainer in trainers %}
+                                    <option value="{{ trainer.id }}">{{ trainer.full_name }} - {{ trainer.specialization }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Plan Name *</label>
+                            <input type="text" class="form-control" id="name" name="name" required 
+                                   placeholder="e.g., Beginner Strength Training, Weight Loss Program">
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" 
+                                      placeholder="Brief description of the workout plan"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="start_date" class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="start_date" name="start_date">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="end_date" class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="end_date" name="end_date">
+                            </div>
+                        </div>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('admin.workout_plans') }}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-arrow-left"></i> Back to Plans
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Create Plan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
