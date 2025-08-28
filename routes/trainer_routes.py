@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from models.equipment import Equipment
 from models.trainer import Trainer
 from models.member import Member
 from models.workout import Workout
@@ -6,7 +7,8 @@ from models.diet import Diet
 from models.progress import Progress
 from models.attendance import Attendance
 from models.announcement import Announcement
-from utils.decorators import login_required, trainer_required
+
+from utils.decorators import  trainer_required
 from datetime import date, datetime
 from models.workout_plan import MemberWorkoutPlan, WorkoutPlanDetail
 from datetime import date, datetime
