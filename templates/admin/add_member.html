@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Add Member</h2>
+  <form method="POST" action="{{ url_for('admin.add_member') }}">
+    <div class="form-group">
+      <label>Full Name</label>
+      <input type="text" name="full_name" class="form-control" required>
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" name="email" class="form-control" required>
+    </div>
+    <div class="form-group">
+      <label>Phone</label>
+      <input type="text" name="phone" class="form-control">
+    </div>
+    <div class="form-group">
+      <label>Membership Plan</label>
+      <select name="membership_plan_id" class="form-control">
+        {% for plan in membership_plans %}
+          <option value="{{ plan.id }}">{{ plan.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Trainer</label>
+      <select name="trainer_id" class="form-control">
+        <option value="">-- None --</option>
+        {% for trainer in trainers %}
+          <option value="{{ trainer.id }}">{{ trainer.full_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary mt-3">Save</button>
+    <a href="{{ url_for('admin.members') }}" class="btn btn-secondary mt-3">Cancel</a>
+  </form>
+</div>
+{% endblock %}

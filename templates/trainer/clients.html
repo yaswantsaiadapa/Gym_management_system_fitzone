@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>My Clients</h1>
+
+<table>
+  <tr>
+    <th>Name</th><th>Email</th><th>Actions</th>
+  </tr>
+  {% for client in clients %}
+    <tr>
+      <td>{{ client.name }}</td>
+      <td>{{ client.email }}</td>
+      <td>
+        <a href="{{ url_for('trainer_routes.client_details', member_id=client.id) }}">View</a>
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="3">No clients assigned.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

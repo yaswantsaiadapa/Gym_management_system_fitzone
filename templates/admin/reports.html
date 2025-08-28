@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Reports</h2>
+  <hr>
+
+  <h4>Member Statistics</h4>
+  <pre>{{ member_stats | tojson(indent=2) }}</pre>
+
+  <h4>Revenue Statistics</h4>
+  <pre>{{ revenue_stats | tojson(indent=2) }}</pre>
+
+  <h4>Attendance This Month</h4>
+  <pre>{{ attendance_stats | tojson(indent=2) }}</pre>
+</div>
+{% endblock %}

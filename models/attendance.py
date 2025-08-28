@@ -13,6 +13,28 @@ class Attendance:
         self.status = status
     
     @classmethod
+    def get_by_id(cls, attendance_id):
+        db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')
+        rows = execute_query("SELECT * FROM attendance WHERE id = ?", (attendance_id,), db_path, fetch=True)
+        if not rows:
+            return None
+        r = rows[0]
+        return cls(id=r[0], member_id=r[1], trainer_id=r[2], date=r[3], time_slot=r[4], status=r[5])
+
+    @classmethod
+    def get_for_trainer_member_slot(cls, trainer_id, member_id, attendance_date, time_slot):
+        db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')
+        rows = execute_query(
+            "SELECT * FROM attendance WHERE trainer_id=? AND member_id=? AND date=? AND time_slot=?",
+            (trainer_id, member_id, attendance_date, time_slot),
+            db_path, fetch=True
+        )
+        if not rows:
+            return None
+        r = rows[0]
+        return cls(id=r[0], member_id=r[1], trainer_id=r[2], date=r[3], time_slot=r[4], status=r[5])
+
+    @classmethod
     def get_todays_attendance(cls):
         """Get today's attendance count"""
         db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')
@@ -27,8 +49,8 @@ class Attendance:
         query = '''
             SELECT a.*, m.name as member_name, t.name as trainer_name
             FROM attendance a
-            JOIN members m ON a.member_id = m.id
-            JOIN trainers t ON a.trainer_id = t.id
+            LEFT JOIN members m ON a.member_id = m.id
+            LEFT JOIN trainers t ON a.trainer_id = t.id
             WHERE a.date = ?
             ORDER BY a.time_slot
         '''
@@ -45,6 +67,32 @@ class Attendance:
             attendance_list.append(attendance)
         return attendance_list
     
+    @classmethod
+    def get_trainer_daily_sessions(cls, trainer_id, attendance_date=None):
+        """Get all sessions for a trainer on a specific date"""
+        if attendance_date is None:
+            attendance_date = date.today()
+
+        db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')
+        query = '''
+            SELECT a.*, m.name as member_name
+            FROM attendance a
+            LEFT JOIN members m ON a.member_id = m.id
+            WHERE a.trainer_id = ? AND a.date = ?
+            ORDER BY a.time_slot
+        '''
+        results = execute_query(query, (trainer_id, attendance_date), db_path, fetch=True)
+
+        sessions = []
+        for row in results:
+            attendance = cls(
+                id=row[0], member_id=row[1], trainer_id=row[2],
+                date=row[3], time_slot=row[4], status=row[5]
+            )
+            attendance.member_name = row[6]
+            sessions.append(attendance)
+        return sessions
+
     @classmethod
     def get_member_attendance(cls, member_id, limit=10):
         """Get recent attendance records for a member"""
@@ -79,7 +127,7 @@ class Attendance:
         query = '''
             SELECT a.*, m.name as member_name
             FROM attendance a
-            JOIN members m ON a.member_id = m.id
+            LEFT JOIN members m ON a.member_id = m.id
             WHERE a.trainer_id = ? AND a.date = ?
             ORDER BY a.time_slot
         '''
@@ -112,24 +160,29 @@ class Attendance:
     def save(self):
         """Save attendance record to database"""
         db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')
-        
+        date_str = self.date if isinstance(self.date, str) else self.date.isoformat()
+
         if self.id:
             # Update existing attendance
-            query = '''UPDATE attendance SET member_id = ?, trainer_id = ?, 
-                      date = ?, time_slot = ?, status = ? WHERE id = ?'''
-            params = (self.member_id, self.trainer_id, self.date, 
-                     self.time_slot, self.status, self.id)
+            query = '''UPDATE attendance 
+                    SET member_id = ?, trainer_id = ?, date = ?, 
+                        time_slot = ?, status = ? 
+                    WHERE id = ?'''
+            params = (self.member_id, self.trainer_id, date_str, 
+                    self.time_slot, self.status, self.id)
         else:
             # Create new attendance record
-            query = '''INSERT INTO attendance (member_id, trainer_id, date, 
-                      time_slot, status) VALUES (?, ?, ?, ?, ?)'''
-            params = (self.member_id, self.trainer_id, self.date, 
-                     self.time_slot, self.status)
-        
+            query = '''INSERT INTO attendance 
+                    (member_id, trainer_id, date, time_slot, status) 
+                    VALUES (?, ?, ?, ?, ?)'''
+            params = (self.member_id, self.trainer_id, date_str, 
+                    self.time_slot, self.status)
+
         result = execute_query(query, params, db_path)
         if not self.id:
             self.id = result
         return self.id
+
     
     def mark_absent(self):
         """Mark attendance as absent"""

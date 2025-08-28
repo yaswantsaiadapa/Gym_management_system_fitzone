@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Your Workout Plans</h2>
+
+  {% for plan in workout_plans %}
+    <h4>{{ plan.plan.name }} ({{ plan.plan.start_date }} - {{ plan.plan.end_date }})</h4>
+    <ul>
+      {% for detail in plan.details %}
+        <li>
+          Day {{ detail.day_of_week }}:
+          {{ detail.sets }}x{{ detail.reps }} of {{ detail.workout_name }} 
+          ({{ detail.weight }} kg, Rest {{ detail.rest_seconds }}s)
+        </li>
+      {% endfor %}
+    </ul>
+  {% endfor %}
+
+  <h3>Available Workouts</h3>
+  <h4>Strength</h4>
+  <ul>
+    {% for w in strength_workouts %}<li>{{ w.name }}</li>{% endfor %}
+  </ul>
+
+  <h4>Cardio</h4>
+  <ul>
+    {% for w in cardio_workouts %}<li>{{ w.name }}</li>{% endfor %}
+  </ul>
+
+  <h4>Flexibility</h4>
+  <ul>
+    {% for w in flexibility_workouts %}<li>{{ w.name }}</li>{% endfor %}
+  </ul>
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Announcements</h2>
+  <a href="{{ url_for('admin.add_announcement') }}" class="btn btn-primary mb-3">+ Add Announcement</a>
+
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Title</th><th>Type</th><th>Audience</th><th>Active Period</th><th>Public?</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for announcement in announcements %}
+      <tr>
+        <td>{{ announcement.title }}</td>
+        <td>{{ announcement.announcement_type }}</td>
+        <td>{{ announcement.target_audience }}</td>
+        <td>
+          {{ announcement.start_date or "N/A" }} → {{ announcement.end_date or "Ongoing" }}
+        </td>
+        <td>{{ "Yes" if announcement.is_public else "No" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

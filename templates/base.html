@@ -3,179 +3,897 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}{% endblock %}</title>
+    <title>{% block title %}FitZone Gym - Professional Fitness Management{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Custom Styles -->
     <style>
+        :root {
+            --primary-color: #1a73e8;
+            --secondary-color: #2962ff;
+            --success-color: #00c851;
+            --danger-color: #ff4444;
+            --warning-color: #ffbb33;
+            --info-color: #33b5e5;
+            --dark-color: #212529;
+            --light-color: #f8f9fa;
+            --gradient-primary: linear-gradient(135deg, #1a73e8 0%, #2962ff 100%);
+            --gradient-dark: linear-gradient(135deg, #000000 0%, #1a237e 50%, #0d47a1 100%);
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 8px rgba(0,0,0,0.15);
+            --shadow-lg: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        /* Global Styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Navigation Styles */
+        .navbar {
+            background: var(--gradient-dark) !important;
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-lg);
+            border-bottom: 3px solid var(--primary-color);
+            padding: 1rem 0;
+        }
+
         .navbar-brand {
-    font-weight: bold;
-    color: #4a9eff !important; /* Bright blue */
-}
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: white !important;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
 
-.card {
-    transition: transform 0.2s, box-shadow 0.2s;
-    border: none;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    background-color: #1a1a1a; /* Dark charcoal */
-    color: #e0e0e0; /* Light gray text */
-    border: 1px solid #333333; /* Dark border */
-}
+        .navbar-brand i {
+            color: var(--primary-color) !important;
+            font-size: 1.8rem;
+        }
 
-.card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 16px rgba(26, 115, 232, 0.4); /* Blue shadow on hover */
-}
+        .navbar-nav .nav-link {
+            color: rgba(255,255,255,0.9) !important;
+            font-weight: 500;
+            margin: 0 0.25rem;
+            padding: 0.75rem 1rem !important;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
 
-.dashboard-card {
-    cursor: pointer;
-    background: linear-gradient(135deg, #0d1421 0%, #1a73e8 50%, #000814 100%);
-    color: #ffffff;
-    border-radius: 15px;
-    border: 1px solid #2962ff;
-}
+        .navbar-nav .nav-link:hover {
+            color: white !important;
+            background: rgba(26, 115, 232, 0.2);
+        }
 
-.dashboard-card:hover {
-    background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 50%, #000051 100%);
-    box-shadow: 0 12px 24px rgba(26, 115, 232, 0.3);
-}
+        .navbar-nav .nav-link.active {
+            color: white !important;
+            background: var(--primary-color);
+        }
 
-body {
-    background: linear-gradient(135deg, #000000 0%, #0d1421 25%, #1a237e 75%, #000051 100%);
-    background-attachment: fixed;
-    color: #e0e0e0;
-    min-height: 100vh;
-}
+        .navbar-text {
+            color: rgba(255,255,255,0.8) !important;
+            font-weight: 500;
+        }
 
-.login-container {
-    min-height: 100vh;
-    background: linear-gradient(135deg, #000000 0%, #1a237e 50%, #0d47a1 100%);
-}
+        .dropdown-menu {
+            border: none;
+            box-shadow: var(--shadow-lg);
+            border-radius: 12px;
+            padding: 0.5rem;
+        }
 
-.login-card {
-    background: rgba(13, 20, 33, 0.95); /* Dark blue-black with transparency */
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    border: 1px solid #2962ff;
-    color: #ffffff;
-    box-shadow: 0 8px 32px rgba(26, 115, 232, 0.2);
-}
+        .dropdown-item {
+            border-radius: 8px;
+            margin: 0.25rem 0;
+            transition: all 0.3s ease;
+        }
 
-/* Additional complementary styles for better cohesion */
-.btn-primary {
-    background: linear-gradient(135deg, #1a73e8 0%, #2962ff 100%);
-    border: none;
-    color: #ffffff;
-    transition: all 0.3s ease;
-}
+        .dropdown-item:hover {
+            background: var(--primary-color);
+            color: white;
+        }
 
-.btn-primary:hover {
-    background: linear-gradient(135deg, #0d47a1 0%, #1a237e 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4);
-}
+        /* Card Styles */
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: var(--shadow-md);
+            background: white;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
 
-.text-primary {
-    color: #4a9eff !important;
-}
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
 
-.bg-primary {
-    background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%) !important;
-}
+        .card-header {
+            border: none;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 1.5rem;
+            font-weight: 600;
+        }
 
-/* Form elements styling */
-.form-control {
-    background-color: #0d1421;
-    border: 1px solid #333333;
-    color: #ffffff;
-    border-radius: 8px;
-}
+        .card-body {
+            padding: 2rem;
+        }
 
-.form-control:focus {
-    background-color: #1a1a1a;
-    border-color: #4a9eff;
-    box-shadow: 0 0 0 0.2rem rgba(74, 158, 255, 0.25);
-    color: #ffffff;
-}
+        /* Dashboard Card Styles */
+        .dashboard-card {
+            background: var(--gradient-primary);
+            color: white;
+            border-radius: 20px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
 
-/* Navigation and header elements */
-.navbar {
-    background: linear-gradient(90deg, #000000 0%, #0d1421 50%, #1a237e 100%) !important;
-    border-bottom: 1px solid #2962ff;
-}
+        .dashboard-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(26, 115, 232, 0.4);
+            border-color: rgba(255,255,255,0.3);
+        }
 
-.navbar-nav .nav-link {
-    color: #e0e0e0 !important;
-    transition: color 0.3s ease;
-}
+        .dashboard-card .card-body {
+            padding: 2.5rem 1.5rem;
+        }
 
-.navbar-nav .nav-link:hover {
-    color: #4a9eff !important;
-}
+        .dashboard-card i {
+            opacity: 0.9;
+            margin-bottom: 1rem;
+        }
 
-/* Table styling */
-.table-dark {
-    background-color: #0d1421;
-    color: #e0e0e0;
-}
+        /* Stat Card Styles */
+        .stat-card {
+            border-left: 4px solid var(--primary-color);
+            background: linear-gradient(135deg, white 0%, #f8f9fa 100%);
+        }
 
-.table-dark th,
-.table-dark td {
-    border-color: #333333;
-}
+        .stat-card.success {
+            border-left-color: var(--success-color);
+        }
 
-/* Alert styling */
-.alert-info {
-    background: linear-gradient(135deg, rgba(26, 115, 232, 0.1) 0%, rgba(13, 71, 161, 0.1) 100%);
-    border: 1px solid #2962ff;
-    color: #4a9eff;
-}
+        .stat-card.warning {
+            border-left-color: var(--warning-color);
+        }
 
-.alert-success {
-    background: linear-gradient(135deg, rgba(0, 150, 136, 0.1) 0%, rgba(0, 77, 64, 0.1) 100%);
-    border: 1px solid #00695c;
-    color: #4db6ac;
-}
+        .stat-card.danger {
+            border-left-color: var(--danger-color);
+        }
+
+        .stat-card.info {
+            border-left-color: var(--info-color);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Button Styles */
+        .btn {
+            border-radius: 8px;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.3s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            box-shadow: 0 4px 15px rgba(26, 115, 232, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #0d47a1 0%, #1a237e 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(26, 115, 232, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #00c851 0%, #00a847 100%);
+            box-shadow: 0 4px 15px rgba(0, 200, 81, 0.3);
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #00a847 0%, #008f39 100%);
+            transform: translateY(-2px);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffbb33 0%, #ff8800 100%);
+            box-shadow: 0 4px 15px rgba(255, 187, 51, 0.3);
+        }
+
+        .btn-warning:hover {
+            background: linear-gradient(135deg, #ff8800 0%, #e67e00 100%);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+            box-shadow: 0 4px 15px rgba(255, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #cc0000 0%, #990000 100%);
+            transform: translateY(-2px);
+        }
+
+        .btn-outline-primary {
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            background: transparent;
+        }
+
+        .btn-outline-primary:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* Form Styles */
+        .form-control, .form-select {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 0.75rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(26, 115, 232, 0.25);
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--dark-color);
+            margin-bottom: 0.75rem;
+        }
+
+        .input-group-text {
+            background: var(--light-color);
+            border: 2px solid #e9ecef;
+            border-right: none;
+        }
+
+        .input-group .form-control {
+            border-left: none;
+        }
+
+        /* Table Styles */
+        .table {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .table thead th {
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            padding: 1rem;
+            font-weight: 600;
+        }
+
+        .table tbody td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .table tbody tr:hover {
+            background: rgba(26, 115, 232, 0.05);
+        }
+
+        /* Badge Styles */
+        .badge {
+            font-size: 0.85rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .badge.bg-success {
+            background: var(--success-color) !important;
+        }
+
+        .badge.bg-warning {
+            background: var(--warning-color) !important;
+            color: var(--dark-color) !important;
+        }
+
+        .badge.bg-danger {
+            background: var(--danger-color) !important;
+        }
+
+        .badge.bg-primary {
+            background: var(--primary-color) !important;
+        }
+
+        /* Alert Styles */
+        .alert {
+            border: none;
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .alert-info {
+            background: linear-gradient(135deg, rgba(26, 115, 232, 0.1) 0%, rgba(13, 71, 161, 0.1) 100%);
+            border-left: 4px solid var(--primary-color);
+            color: #0d47a1;
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, rgba(0, 200, 81, 0.1) 0%, rgba(0, 168, 71, 0.1) 100%);
+            border-left: 4px solid var(--success-color);
+            color: #00a847;
+        }
+
+        .alert-warning {
+            background: linear-gradient(135deg, rgba(255, 187, 51, 0.1) 0%, rgba(255, 136, 0, 0.1) 100%);
+            border-left: 4px solid var(--warning-color);
+            color: #e67e00;
+        }
+
+        .alert-danger {
+            background: linear-gradient(135deg, rgba(255, 68, 68, 0.1) 0%, rgba(204, 0, 0, 0.1) 100%);
+            border-left: 4px solid var(--danger-color);
+            color: #cc0000;
+        }
+
+        /* Progress Bar Styles */
+        .progress {
+            height: 8px;
+            border-radius: 10px;
+            background: #e9ecef;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: var(--gradient-primary);
+            transition: width 0.6s ease;
+        }
+
+        /* Modal Styles */
+        .modal-content {
+            border: none;
+            border-radius: 15px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-header {
+            background: var(--gradient-primary);
+            color: white;
+            border-radius: 15px 15px 0 0;
+            border: none;
+            padding: 1.5rem;
+        }
+
+        .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+        }
+
+        /* Loading Animation */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .navbar-brand {
+                font-size: 1.25rem;
+            }
+            
+            .card-body {
+                padding: 1.5rem;
+            }
+            
+            .dashboard-card .card-body {
+                padding: 2rem 1rem;
+            }
+            
+            .btn {
+                padding: 0.6rem 1.25rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+
+        /* Animation Classes */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Utility Classes */
+        .text-gradient {
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+        }
+
+        .bg-gradient-primary {
+            background: var(--gradient-primary) !important;
+        }
+
+        .bg-gradient-dark {
+            background: var(--gradient-dark) !important;
+        }
+
+        .shadow-custom {
+            box-shadow: var(--shadow-lg);
+        }
+
+        .border-radius-custom {
+            border-radius: 15px;
+        }
     </style>
+
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
-    {% if session.admin_id %}
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="{{ url_for('dashboard.index') }}">
-                <i class="fas fa-dumbbell"></i> FitZone Gym
+    <!-- Navigation Bar -->
+    {% if session.user_id %}
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <!-- Brand -->
+            <a class="navbar-brand" href="{% if session.role == 'admin' %}{{ url_for('admin.dashboard') }}{% elif session.role == 'member' %}{{ url_for('member_routes.dashboard') }}{% elif session.role == 'trainer' %}{{ url_for('trainer_routes.dashboard') }}{% else %}{{ url_for('home') }}{% endif %}">
+                <i class="fas fa-dumbbell"></i>
+                FitZone Gym
             </a>
-            <div class="navbar-nav ms-auto">
-                <span class="navbar-text me-3">
-                    <i class="fas fa-user-circle"></i> Welcome, {{ session.admin_name }}
-                </span>
-                <a class="nav-link" href="{{ url_for('auth.logout') }}">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
+
+            <!-- Toggle button for mobile -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Navigation items -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <!-- Role-specific navigation -->
+                {% if session.role == 'admin' %}
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-users"></i> Members
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('admin.members') }}">All Members</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.add_member_form') }}">Add Member</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-tie"></i> Trainers
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('admin.trainers') }}">All Trainers</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.add_trainer_form') }}">Add Trainer</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.payments') }}">
+                            <i class="fas fa-credit-card"></i> Payments
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.reports') }}">
+                            <i class="fas fa-chart-bar"></i> Reports
+                        </a>
+                    </li>
+                </ul>
+                
+                {% elif session.role == 'member' %}
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('member_routes.dashboard') }}">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('member_routes.workouts') }}">
+                            <i class="fas fa-dumbbell"></i> Workouts
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('member_routes.diet') }}">
+                            <i class="fas fa-utensils"></i> Diet Plans
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('member_routes.progress') }}">
+                            <i class="fas fa-chart-line"></i> Progress
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('member_routes.payments') }}">
+                            <i class="fas fa-credit-card"></i> Payments
+                        </a>
+                    </li>
+                </ul>
+                
+                {% elif session.role == 'trainer' %}
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('trainer_routes.dashboard') }}">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('trainer_routes.clients') }}">
+                            <i class="fas fa-users"></i> My Clients
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('trainer_routes.schedule') }}">
+                            <i class="fas fa-calendar-alt"></i> Schedule
+                        </a>
+                    </li>
+                </ul>
+                {% endif %}
+
+                <!-- User menu -->
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle"></i>
+                            {{ session.full_name }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            {% if session.role == 'member' %}
+                            <li><a class="dropdown-item" href="{{ url_for('member_routes.profile') }}">
+                                <i class="fas fa-user"></i> My Profile
+                            </a></li>
+                            {% endif %}
+                            <li><a class="dropdown-item" href="{{ url_for('auth.change_password_form') }}">
+                                <i class="fas fa-key"></i> Change Password
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
             </div>
         </div>
     </nav>
     {% endif %}
 
-    <div class="container-fluid">
-        {% with messages = get_flashed_messages() %}
+    <!-- Flash Messages -->
+    <div class="container-fluid mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-        <div class="row mt-3">
-            <div class="col-12">
-                {% for message in messages %}
-                <div class="alert alert-info alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-                {% endfor %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show slide-in" role="alert">
+                {% if category == 'error' or category == 'danger' %}
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                {% elif category == 'success' %}
+                    <i class="fas fa-check-circle me-2"></i>
+                {% elif category == 'warning' %}
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                {% else %}
+                    <i class="fas fa-info-circle me-2"></i>
+                {% endif %}
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
-        </div>
+            {% endfor %}
         {% endif %}
         {% endwith %}
-
-        {% block content %}{% endblock %}
     </div>
 
+    <!-- Main Content -->
+    <main class="fade-in">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer (only show on public pages) -->
+    {% if not session.user_id %}
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="mb-3">
+                        <i class="fas fa-dumbbell text-primary"></i> FitZone Gym
+                    </h5>
+                    <p class="mb-0">Transform your body, transform your life. Join our fitness community today!</p>
+                    <div class="mt-3">
+                        <a href="#" class="text-light me-3"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-light me-3"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-light me-3"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-light"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <h6 class="mb-3">Quick Access</h6>
+                    <div class="mb-3">
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-primary me-2">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </a>
+                    </div>
+                    <small class="text-muted">© {{ datetime.now().year }} FitZone Gym. All rights reserved.</small>
+                </div>
+            </div>
+        </div>
+    </footer>
+    {% endif %}
+
+    <!-- Bootstrap 5 JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    {% block scripts %}{% endblock %}
+    
+    <!-- Custom JavaScript -->
+    <script>
+        // Auto-hide alerts after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }, 5000);
+            });
+        });
+
+        // Add loading spinner to forms on submit
+        document.addEventListener('DOMContentLoaded', function() {
+            const forms = document.querySelectorAll('form');
+            forms.forEach(function(form) {
+                form.addEventListener('submit', function() {
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        const originalText = submitBtn.innerHTML;
+                        submitBtn.innerHTML = '<span class="loading-spinner me-2"></span>Processing...';
+                        submitBtn.disabled = true;
+                        
+                        // Re-enable after 10 seconds (fallback)
+                        setTimeout(function() {
+                            submitBtn.innerHTML = originalText;
+                            submitBtn.disabled = false;
+                        }, 10000);
+                    }
+                });
+            });
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add animation to cards on hover
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.dashboard-card');
+            cards.forEach(function(card) {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-8px) scale(1.02)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
+                });
+            });
+        });
+
+        // Progress bar animation
+        function animateProgressBars() {
+            const progressBars = document.querySelectorAll('.progress-bar');
+            progressBars.forEach(function(bar) {
+                const width = bar.style.width || bar.getAttribute('aria-valuenow') + '%';
+                bar.style.width = '0%';
+                setTimeout(function() {
+                    bar.style.width = width;
+                }, 100);
+            });
+        }
+
+        // Initialize progress bar animation on page load
+        document.addEventListener('DOMContentLoaded', animateProgressBars);
+
+        // Table row click functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const clickableRows = document.querySelectorAll('tr[data-href]');
+            clickableRows.forEach(function(row) {
+                row.style.cursor = 'pointer';
+                row.addEventListener('click', function() {
+                    window.location.href = this.getAttribute('data-href');
+                });
+            });
+        });
+
+        // Confirmation dialogs for delete actions
+        document.addEventListener('DOMContentLoaded', function() {
+            const deleteButtons = document.querySelectorAll('.btn-delete, .delete-btn');
+            deleteButtons.forEach(function(button) {
+                button.addEventListener('click', function(e) {
+                    const message = this.getAttribute('data-confirm') || 'Are you sure you want to delete this item?';
+                    if (!confirm(message)) {
+                        e.preventDefault();
+                    }
+                });
+            });
+        });
+
+        // Auto-refresh for real-time data (every 5 minutes)
+        if (window.location.pathname.includes('dashboard')) {
+            setInterval(function() {
+                // Only refresh if page is visible
+                if (!document.hidden) {
+                    const refreshElements = document.querySelectorAll('[data-auto-refresh]');
+                    refreshElements.forEach(function(element) {
+                        // You can implement AJAX refresh here
+                        console.log('Auto-refresh triggered for:', element);
+                    });
+                }
+            }, 300000); // 5 minutes
+        }
+
+        // Copy to clipboard functionality
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                // Show success message
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-success alert-dismissible fade show position-fixed';
+                alert.style.top = '20px';
+                alert.style.right = '20px';
+                alert.style.zIndex = '9999';
+                alert.innerHTML = `
+                    <i class="fas fa-check-circle me-2"></i>
+                    Copied to clipboard!
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.body.appendChild(alert);
+                
+                setTimeout(function() {
+                    alert.remove();
+                }, 3000);
+            });
+        }
+
+        // Add tooltips to all elements with title attribute
+        document.addEventListener('DOMContentLoaded', function() {
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+            const tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+
+        // Form validation enhancement
+        document.addEventListener('DOMContentLoaded', function() {
+            const forms = document.querySelectorAll('form[data-validate]');
+            forms.forEach(function(form) {
+                form.addEventListener('submit', function(e) {
+                    if (!form.checkValidity()) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        // Show first invalid field
+                        const firstInvalidField = form.querySelector(':invalid');
+                        if (firstInvalidField) {
+                            firstInvalidField.focus();
+                            firstInvalidField.scrollIntoView({ behavior: 'smooth' });
+                        }
+                    }
+                    form.classList.add('was-validated');
+                });
+            });
+        });
+
+        // Dynamic search functionality
+        function setupDynamicSearch(searchInputId, targetTableId) {
+            const searchInput = document.getElementById(searchInputId);
+            const targetTable = document.getElementById(targetTableId);
+            
+            if (searchInput && targetTable) {
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase();
+                    const rows = targetTable.querySelectorAll('tbody tr');
+                    
+                    rows.forEach(function(row) {
+                        const text = row.textContent.toLowerCase();
+                        if (text.includes(searchTerm)) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                });
+            }
+        }
+
+        // Initialize dynamic search on tables with search functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchTables = document.querySelectorAll('table[data-search]');
+            searchTables.forEach(function(table, index) {
+                const searchId = 'dynamicSearch' + index;
+                const searchInput = document.createElement('input');
+                searchInput.type = 'text';
+                searchInput.id = searchId;
+                searchInput.className = 'form-control mb-3';
+                searchInput.placeholder = 'Search...';
+                
+                table.parentNode.insertBefore(searchInput, table);
+                setupDynamicSearch(searchId, table.id || 'table' + index);
+            });
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

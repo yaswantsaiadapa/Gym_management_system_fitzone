@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Admin Dashboard</h2>
+  <hr>
+
+  <div class="row">
+    <div class="col-md-3">
+      <div class="card shadow-sm p-3 mb-4">
+        <h5>Total Members</h5>
+        <p class="h4">{{ total_members }}</p>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-sm p-3 mb-4">
+        <h5>Total Trainers</h5>
+        <p class="h4">{{ total_trainers }}</p>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-sm p-3 mb-4">
+        <h5>Today’s Attendance</h5>
+        <p class="h4">{{ today_attendance }}</p>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-sm p-3 mb-4">
+        <h5>Monthly Revenue</h5>
+        <p class="h4">₹{{ monthly_revenue }}</p>
+      </div>
+    </div>
+  </div>
+
+  <h4>Recent Members</h4>
+  <ul>
+    {% for member in recent_members %}
+      <li>{{ member.full_name }} (Joined {{ member.membership_start_date }})</li>
+    {% endfor %}
+  </ul>
+
+  <h4>Recent Payments</h4>
+  <ul>
+    {% for payment in recent_payments %}
+      <li>{{ payment.member_name }} - ₹{{ payment.amount }} ({{ payment.payment_status }})</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

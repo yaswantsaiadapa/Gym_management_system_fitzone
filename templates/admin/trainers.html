@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Trainers</h2>
+  <a href="{{ url_for('admin.add_trainer_form') }}" class="btn btn-primary mb-3">+ Add Trainer</a>
+
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>Name</th><th>Email</th><th>Phone</th><th>Specialization</th><th>Experience</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for trainer in trainers %}
+      <tr>
+        <td>{{ trainer.full_name }}</td>
+        <td>{{ trainer.email }}</td>
+        <td>{{ trainer.phone }}</td>
+        <td>{{ trainer.specialization }}</td>
+        <td>{{ trainer.experience_years }} years</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

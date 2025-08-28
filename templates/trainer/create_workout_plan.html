@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Create Workout Plan for {{ member.name }}</h1>
+
+<form method="POST">
+  <label>Name: <input type="text" name="name" required></label><br>
+  <label>Description: <textarea name="description"></textarea></label><br>
+  <label>Start Date: <input type="date" name="start_date" required></label><br>
+  <label>End Date: <input type="date" name="end_date"></label><br>
+  <button type="submit">Create Plan</button>
+</form>
+
+<h2>Available Workouts</h2>
+<ul>
+  {% for w in available_workouts %}
+    <li>{{ w.name }} - {{ w.description }}</li>
+  {% else %}
+    <li>No workouts available.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

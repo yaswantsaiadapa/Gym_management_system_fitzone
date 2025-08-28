@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Welcome, {{ trainer.name }}</h1>
+
+<h2>Stats</h2>
+<ul>
+  <li>Total Clients: {{ total_clients }}</li>
+  <li>Today's Sessions: {{ today_sessions }}</li>
+  <li>Active Workout Plans: {{ active_workout_plans }}</li>
+</ul>
+
+<h2>Today's Schedule</h2>
+<ul>
+  {% for session in todays_schedule %}
+    <li>{{ session.session_date }} - {{ session.session_time }} with {{ session.member_name }}</li>
+  {% else %}
+    <li>No sessions today.</li>
+  {% endfor %}
+</ul>
+
+<h2>Recent Progress Updates</h2>
+<ul>
+  {% for prog in recent_progress %}
+    <li>{{ prog.recorded_date }} - {{ prog.weight }}kg</li>
+  {% else %}
+    <li>No recent progress recorded.</li>
+  {% endfor %}
+</ul>
+
+<h2>Announcements</h2>
+<ul>
+  {% for ann in announcements %}
+    <li><strong>{{ ann.title }}</strong>: {{ ann.content }}</li>
+  {% else %}
+    <li>No announcements.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

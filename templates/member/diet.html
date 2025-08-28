@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Your Diet Plans</h2>
+  {% for d in diet_plans %}
+    <h4>{{ d.name }}</h4>
+    <p>{{ d.description }}</p>
+  {% else %}
+    <p>No diet plans available.</p>
+  {% endfor %}
+</div>
+{% endblock %}

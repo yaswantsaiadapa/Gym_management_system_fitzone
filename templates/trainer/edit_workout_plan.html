@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Edit Workout Plan: {{ workout_plan.name }}</h1>
+
+<p>Member: {{ member.name }}</p>
+
+<h2>Plan Details</h2>
+<ul>
+  {% for d in plan_details %}
+    <li>{{ d.workout_name }} - {{ d.sets }} sets x {{ d.reps }} reps</li>
+  {% else %}
+    <li>No workouts added yet.</li>
+  {% endfor %}
+</ul>
+
+<h2>Available Workouts</h2>
+<ul>
+  {% for w in available_workouts %}
+    <li>{{ w.name }}</li>
+  {% else %}
+    <li>No workouts available.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

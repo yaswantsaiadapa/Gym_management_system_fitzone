@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Schedule a Training Session</h2>
+  <form method="POST" action="{{ url_for('member.schedule_session_post') }}">
+    <label>Trainer</label>
+    <select name="trainer_id">
+      {% for t in trainers %}
+        <option value="{{ t.id }}">{{ t.full_name }}</option>
+      {% endfor %}
+    </select><br>
+
+    <label>Date</label>
+    <input type="date" name="session_date" required><br>
+
+    <label>Time Slot</label>
+    <select name="time_slot">
+      {% for slot in time_slots %}
+        <option value="{{ slot }}">{{ slot }}</option>
+      {% endfor %}
+    </select><br>
+
+    <button type="submit">Schedule</button>
+  </form>
+</div>
+{% endblock %}

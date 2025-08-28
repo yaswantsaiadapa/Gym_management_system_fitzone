@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Payments</h2>
+
+  <h4>Pending Payments</h4>
+  <table class="table table-warning">
+    <thead>
+      <tr>
+        <th>Member</th><th>Plan</th><th>Amount</th><th>Status</th><th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for payment in pending_payments %}
+      <tr>
+        <td>{{ payment.member_name }}</td>
+        <td>{{ payment.plan_name }}</td>
+        <td>₹{{ payment.amount }}</td>
+        <td>{{ payment.payment_status }}</td>
+        <td>
+          <form action="{{ url_for('admin.update_payment_status', payment_id=payment.id) }}" method="POST">
+            <select name="status" class="form-select">
+              <option value="pending">Pending</option>
+              <option value="completed">Completed</option>
+              <option value="failed">Failed</option>
+              <option value="refunded">Refunded</option>
+            </select>
+            <button type="submit" class="btn btn-success btn-sm mt-1">Update</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h4>All Payments</h4>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Member</th><th>Amount</th><th>Status</th><th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for payment in payments %}
+      <tr>
+        <td>{{ payment.member_name }}</td>
+        <td>₹{{ payment.amount }}</td>
+        <td>{{ payment.payment_status }}</td>
+        <td>{{ payment.payment_date or "Not Paid" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

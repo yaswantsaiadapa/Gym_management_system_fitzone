@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Members</h2>
+  <a href="{{ url_for('admin.add_member_form') }}" class="btn btn-primary mb-3">+ Add Member</a>
+
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Name</th><th>Email</th><th>Phone</th><th>Plan</th><th>Trainer</th><th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for member in members %}
+      <tr>
+        <td>{{ member.full_name }}</td>
+        <td>{{ member.email }}</td>
+        <td>{{ member.phone }}</td>
+        <td>{{ member.membership_plan_name }}</td>
+        <td>{{ member.trainer_name or "Not Assigned" }}</td>
+        <td>{{ "Active" if member.is_active else "Expired" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

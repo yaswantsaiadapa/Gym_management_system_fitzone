@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Profile</h2>
+
+  <form method="POST" action="{{ url_for('member.update_profile') }}">
+    <label>Full Name</label>
+    <input type="text" name="full_name" value="{{ user.full_name }}" required><br>
+
+    <label>Email</label>
+    <input type="email" name="email" value="{{ user.email }}" required><br>
+
+    <label>Phone</label>
+    <input type="text" name="phone" value="{{ user.phone }}"><br>
+
+    <label>Weight</label>
+    <input type="number" name="weight" step="0.1" value="{{ member.weight }}"><br>
+
+    <label>Height</label>
+    <input type="number" name="height" step="0.1" value="{{ member.height }}"><br>
+
+    <label>Emergency Contact</label>
+    <input type="text" name="emergency_contact" value="{{ member.emergency_contact }}"><br>
+
+    <label>Emergency Phone</label>
+    <input type="text" name="emergency_phone" value="{{ member.emergency_phone }}"><br>
+
+    <label>Medical Conditions</label>
+    <textarea name="medical_conditions">{{ member.medical_conditions }}</textarea><br>
+
+    <label>Fitness Goals</label>
+    <textarea name="fitness_goals">{{ member.fitness_goals }}</textarea><br>
+
+    <button type="submit">Update</button>
+  </form>
+</div>
+{% endblock %}

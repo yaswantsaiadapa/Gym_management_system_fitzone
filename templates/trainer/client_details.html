@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Client: {{ member.name }}</h1>
+
+<h2>Attendance (last 10)</h2>
+<ul>
+  {% for a in attendance_records %}
+    <li>{{ a.date }} - {{ a.status }}</li>
+  {% else %}
+    <li>No attendance records.</li>
+  {% endfor %}
+</ul>
+
+<h2>Progress (last 5)</h2>
+<ul>
+  {% for p in progress_records %}
+    <li>{{ p.recorded_date }} - {{ p.weight }}kg</li>
+  {% else %}
+    <li>No progress records.</li>
+  {% endfor %}
+</ul>
+
+<h2>Workout Plan</h2>
+{% if current_workout_plan %}
+  <p>{{ current_workout_plan.name }} ({{ current_workout_plan.start_date }} - {{ current_workout_plan.end_date or "ongoing" }})</p>
+{% else %}
+  <p>No active workout plan. <a href="{{ url_for('trainer_routes.create_workout_plan', member_id=member.id) }}">Create one</a></p>
+{% endif %}
+
+<h2>Diet Plan</h2>
+{% if current_diet_plan %}
+  <p>{{ current_diet_plan.name }} ({{ current_diet_plan.start_date }} - {{ current_diet_plan.end_date or "ongoing" }})</p>
+{% else %}
+  <p>No active diet plan. <a href="{{ url_for('trainer_routes.create_diet_plan', member_id=member.id) }}">Create one</a></p>
+{% endif %}
+{% endblock %}

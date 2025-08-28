@@ -52,11 +52,40 @@ class Trainer:
         return result[0][0] if result else 0
     
     @classmethod
-    def get_available_for_slot(cls, time_slot, date=None):
-        """Get trainers available for a specific time slot"""
-        # This is a simplified version - you can enhance with actual scheduling logic
-        return cls.get_all_active()
-    
+    def get_available_for_slot(cls, time_slot, check_date=None):
+        """Return trainers who are free in a given time slot and date"""
+        from datetime import date
+        if check_date is None:
+            check_date = date.today()
+
+        db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')
+
+        # Trainers who already have a session at that slot/date
+        query = '''
+            SELECT trainer_id 
+            FROM attendance 
+            WHERE date = ? AND time_slot = ?
+        '''
+        busy = execute_query(query, (check_date, time_slot), db_path, fetch=True)
+        busy_ids = [row[0] for row in busy] if busy else []
+
+        # Now fetch active trainers excluding busy ones
+        if busy_ids:
+            placeholders = ','.join('?' * len(busy_ids))
+            query = f'SELECT * FROM trainers WHERE status = "active" AND id NOT IN ({placeholders})'
+            results = execute_query(query, busy_ids, db_path, fetch=True)
+        else:
+            query = 'SELECT * FROM trainers WHERE status = "active"'
+            results = execute_query(query, db_path=db_path, fetch=True)
+
+        return [cls(
+            id=row[0], name=row[1], phone=row[2], email=row[3],
+            salary=row[4], working_hours=row[5], status=row[6]
+        ) for row in results] if results else []
+
+
+
+        
     def save(self):
         """Save trainer to database"""
         db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')

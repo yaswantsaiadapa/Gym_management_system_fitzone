@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Schedule for {{ selected_date }}</h1>
+
+<form method="GET">
+  <input type="date" name="date" value="{{ selected_date }}">
+  <button type="submit">Go</button>
+</form>
+
+<ul>
+  {% for s in schedule %}
+    <li>{{ s.session_time }} - {{ s.member_name }}</li>
+  {% else %}
+    <li>No sessions scheduled.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

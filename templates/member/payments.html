@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Payment History</h2>
+  <table>
+    <tr><th>Date</th><th>Amount</th><th>Status</th></tr>
+    {% for p in payment_records %}
+    <tr>
+      <td>{{ p.date }}</td>
+      <td>{{ p.amount }}</td>
+      <td>{{ p.status }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

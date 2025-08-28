@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Welcome, {{ member.user.full_name }}</h2>
+  <p>Status: {{ stats.membership_status }}</p>
+  <p>Membership expires: {{ stats.membership_expires }}</p>
+  <p>Days left: {{ stats.days_until_expiry }}</p>
+
+  <h4>Recent Attendance</h4>
+  <ul>
+    {% for a in stats.recent_attendance %}
+      <li>{{ a.date }} - {{ a.status }}</li>
+    {% endfor %}
+  </ul>
+
+  <h4>Pending Payments</h4>
+  <ul>
+    {% for p in stats.pending_payments %}
+      <li>{{ p.amount }} on {{ p.due_date }}</li>
+    {% endfor %}
+  </ul>
+
+  <h4>Latest Progress</h4>
+  {% if latest_progress %}
+    <p>Weight: {{ latest_progress.weight }} | Body Fat: {{ latest_progress.body_fat }}</p>
+  {% else %}
+    <p>No progress records yet.</p>
+  {% endif %}
+
+  <h4>Announcements</h4>
+  <ul>
+    {% for ann in announcements %}
+      <li>{{ ann.title }} - {{ ann.message }}</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}
