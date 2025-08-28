@@ -19,7 +19,96 @@ from models.workout import Workout
 from models.workout_plan import MemberWorkoutPlan, WorkoutPlanDetail
 
 
-admin_bp = Blueprint('admin', __name__)
+admin_bp = Blueprint('admin', __name__,url_prefix='/admin')
+
+@admin_bp.route('/equipment')
+def equipment_list():
+    """View all equipment"""
+    try:
+        equipment = Equipment.get_all()
+        return render_template('admin/equipment_list.html', equipment=equipment)
+    except Exception as e:
+        flash(f"Error loading equipment list: {str(e)}", "danger")
+        return render_template('admin/equipment_list.html', equipment=[])
+    
+@admin_bp.route('/equipment/add', methods=['GET', 'POST'])
+def add_equipment():
+    """Add new equipment"""
+    if request.method == 'POST':
+        try:
+            equipment = Equipment(
+                name=request.form['name'],
+                category=request.form.get('category'),
+                brand=request.form.get('brand'),
+                model=request.form.get('model'),
+                purchase_date=request.form.get('purchase_date'),
+                warranty_end_date=request.form.get('warranty_end_date'),
+                status=request.form.get('status', 'working'),
+                location=request.form.get('location')
+            )
+            equipment.save()
+            flash('Equipment added successfully.', 'success')
+            return redirect(url_for('admin.equipment_list'))
+        except Exception as e:
+            flash(f"Error adding equipment: {str(e)}", "danger")
+    return render_template('admin/add_equipment.html')
+
+@admin_bp.route('/equipment/edit/<int:equipment_id>', methods=['GET', 'POST'])
+def edit_equipment(equipment_id):
+    """Edit equipment details"""
+    equipment = Equipment.get_by_id(equipment_id)
+    if not equipment:
+        flash('Equipment not found.', 'danger')
+        return redirect(url_for('admin.equipment_list'))
+
+    if request.method == 'POST':
+        try:
+            equipment.name = request.form['name']
+            equipment.category = request.form.get('category')
+            equipment.brand = request.form.get('brand')
+            equipment.model = request.form.get('model')
+            equipment.purchase_date = request.form.get('purchase_date')
+            equipment.warranty_end_date = request.form.get('warranty_end_date')
+            equipment.status = request.form.get('status', equipment.status)
+            equipment.location = request.form.get('location')
+            equipment.save()
+            flash('Equipment updated successfully.', 'success')
+            return redirect(url_for('admin.equipment_list'))
+        except Exception as e:
+            flash(f"Error updating equipment: {str(e)}", "danger")
+
+    return render_template('admin/edit_equipment.html', equipment=equipment)
+
+@admin_bp.route('/equipment/maintenance/<int:equipment_id>', methods=['POST'])
+def update_equipment_status(equipment_id):
+    """Update maintenance status of equipment"""
+    equipment = Equipment.get_by_id(equipment_id)
+    if not equipment:
+        flash('Equipment not found.', 'danger')
+        return redirect(url_for('admin.equipment_list'))
+
+    try:
+        action = request.form.get('action')
+        notes = request.form.get('maintenance_notes')
+        next_date = request.form.get('next_maintenance_date')
+
+        if action == 'maintenance':
+            equipment.mark_for_maintenance(notes=notes, next_date=next_date)
+            flash('Equipment marked for maintenance.', 'success')
+        elif action == 'working':
+            equipment.mark_as_working()
+            flash('Equipment marked as working.', 'success')
+        elif action == 'out_of_order':
+            equipment.mark_out_of_order(notes=notes)
+            flash('Equipment marked as out of order.', 'warning')
+        else:
+            flash('Invalid action.', 'danger')
+
+    except Exception as e:
+        flash(f"Error updating status: {str(e)}", "danger")
+
+    return redirect(url_for('admin.equipment_list'))
+
 
 # -------------------- Dashboard --------------------
 @admin_bp.route('/dashboard')

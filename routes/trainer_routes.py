@@ -21,7 +21,7 @@ def _parse_date(value):
 
 
 
-trainer_routes_bp = Blueprint('trainer_routes', __name__)
+trainer_routes_bp = Blueprint('trainer_routes', __name__,url_prefix='/trainer')
 
 @trainer_routes_bp.route('/dashboard')
 @trainer_required
@@ -130,7 +130,7 @@ def create_workout_plan(member_id):
                 flash('End date cannot be before start date!')
                 return redirect(url_for('trainer_routes.create_workout_plan', member_id=member_id))
 
-            # ...then pass parsed dates...
+            # Create workout plan
             workout_plan = MemberWorkoutPlan(
                 member_id=member_id,
                 trainer_id=trainer_id,
@@ -150,13 +150,17 @@ def create_workout_plan(member_id):
         except Exception as e:
             flash(f'An error occurred: {str(e)}')
     
-    # Get available workouts
+    # Get available workouts and equipment
     available_workouts = Workout.get_all()
-
+    available_equipment = [eq for eq in Equipment.get_all() if eq.is_working()]
     
-    return render_template('trainer/create_workout_plan.html',
-                         member=member,
-                         available_workouts=available_workouts)
+    return render_template(
+        'trainer/create_workout_plan.html',
+        member=member,
+        available_workouts=available_workouts,
+        available_equipment=available_equipment
+    )
+
 
 @trainer_routes_bp.route('/workout-plans/<int:plan_id>/edit')
 @trainer_required
@@ -170,17 +174,20 @@ def edit_workout_plan(plan_id):
         flash('Workout plan not found!')
         return redirect(url_for('trainer_routes.clients'))
     
-    # Get plan details and available workouts
+    # Get plan details, workouts, equipment, and member info
     plan_details = WorkoutPlanDetail.get_plan_details(plan_id)
-
     available_workouts = Workout.get_all()
+    available_equipment = [eq for eq in Equipment.get_all() if eq.is_working()]
     member = Member.get_by_id(workout_plan.member_id)
     
-    return render_template('trainer/edit_workout_plan.html',
-                         workout_plan=workout_plan,
-                         plan_details=plan_details,
-                         available_workouts=available_workouts,
-                         member=member)
+    return render_template(
+        'trainer/edit_workout_plan.html',
+        workout_plan=workout_plan,
+        plan_details=plan_details,
+        available_workouts=available_workouts,
+        available_equipment=available_equipment,
+        member=member
+    )
 
 @trainer_routes_bp.route('/clients/<int:member_id>/diet-plan/create', methods=['GET', 'POST'])
 @trainer_required
