@@ -1,85 +1,377 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitZone Gym - Your Fitness Journey Starts Here</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .hero-section {
+            background: linear-gradient(135deg, #000000 0%, #1a237e 50%, #0d47a1 100%);
+            color: white;
+            padding: 100px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><polygon fill="%23ffffff" fill-opacity="0.05" points="0,1000 1000,0 1000,1000"/></svg>');
+            background-size: cover;
+        }
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+        .feature-card {
+            border: none;
+            border-radius: 15px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(26, 115, 232, 0.3);
+        }
+        .pricing-card {
+            border: none;
+            border-radius: 20px;
+            transition: transform 0.3s;
+            background: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .pricing-card:hover {
+            transform: translateY(-5px);
+        }
+        .pricing-card.featured {
+            border: 3px solid #1a73e8;
+            transform: scale(1.05);
+        }
+        .btn-login {
+            background: linear-gradient(135deg, #1a73e8 0%, #2962ff 100%);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .btn-login:hover {
+            background: linear-gradient(135deg, #0d47a1 0%, #1a237e 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(26, 115, 232, 0.4);
+        }
+        .navbar {
+            background: rgba(0,0,0,0.9) !important;
+            backdrop-filter: blur(10px);
+        }
+        .announcement-card {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border: none;
+            border-radius: 15px;
+            border-left: 5px solid #1a73e8;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">
+                <i class="fas fa-dumbbell text-primary"></i> FitZone Gym
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#features">Features</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#plans">Membership Plans</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#announcements">News</a>
+                    </li>
+                </ul>
+                <div class="navbar-nav">
+                    <a class="btn btn-login me-2" href="{{ url_for('auth.login') }}">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
 
-{% block title %}Home - FitZone Gym{% endblock %}
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container hero-content">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="display-4 fw-bold mb-4">
+                        Transform Your Body, <br>
+                        <span class="text-primary">Transform Your Life</span>
+                    </h1>
+                    <p class="lead mb-4">
+                        Welcome to FitZone Gym - where fitness meets technology. 
+                        Join our community and achieve your fitness goals with expert guidance.
+                    </p>
+                    <div class="d-flex gap-3 mb-4">
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-login btn-lg">
+                            <i class="fas fa-user-plus"></i> Get Started Today
+                        </a>
+                        <a href="#plans" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-info-circle"></i> View Plans
+                        </a>
+                    </div>
+                    <div class="row g-3 text-center">
+                        <div class="col-4">
+                            <div class="border-end border-light">
+                                <h3 class="text-primary fw-bold">500+</h3>
+                                <small>Happy Members</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border-end border-light">
+                                <h3 class="text-primary fw-bold">50+</h3>
+                                <small>Equipment</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <h3 class="text-primary fw-bold">24/7</h3>
+                            <small>Support</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <div class="position-relative">
+                        <i class="fas fa-dumbbell fa-10x text-primary opacity-75"></i>
+                        <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center">
+                            <div class="bg-white bg-opacity-10 rounded-circle p-4">
+                                <i class="fas fa-play fa-2x text-white"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-{% block head %}
-<style>
-  /* you can move styles here if needed */
-</style>
-{% endblock %}
+    <!-- Features Section -->
+    <section id="features" class="py-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold mb-3">Why Choose FitZone Gym?</h2>
+                <p class="lead text-muted">Experience the difference with our comprehensive fitness ecosystem</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card feature-card h-100">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-3">
+                                <i class="fas fa-user-tie fa-3x text-primary"></i>
+                            </div>
+                            <h5 class="card-title">Expert Trainers</h5>
+                            <p class="card-text">Certified personal trainers with years of experience to guide your fitness journey.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card h-100">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-3">
+                                <i class="fas fa-dumbbell fa-3x text-success"></i>
+                            </div>
+                            <h5 class="card-title">Modern Equipment</h5>
+                            <p class="card-text">State-of-the-art fitness equipment for all your workout needs.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card h-100">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-3">
+                                <i class="fas fa-chart-line fa-3x text-warning"></i>
+                            </div>
+                            <h5 class="card-title">Progress Tracking</h5>
+                            <p class="card-text">Advanced digital tracking to monitor your fitness progress and achievements.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card h-100">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-3">
+                                <i class="fas fa-utensils fa-3x text-danger"></i>
+                            </div>
+                            <h5 class="card-title">Nutrition Plans</h5>
+                            <p class="card-text">Personalized diet plans designed by nutrition experts to complement your workouts.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card h-100">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-3">
+                                <i class="fas fa-users fa-3x text-info"></i>
+                            </div>
+                            <h5 class="card-title">Community Support</h5>
+                            <p class="card-text">Join a supportive community of fitness enthusiasts on similar journeys.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card h-100">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-3">
+                                <i class="fas fa-mobile-alt fa-3x text-secondary"></i>
+                            </div>
+                            <h5 class="card-title">Digital Platform</h5>
+                            <p class="card-text">Access your workouts, progress, and schedules from anywhere with our digital platform.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-{% block content %}
-
-<!-- Hero -->
-<section class="hero-section text-white text-center py-5">
-  <div class="container">
-    <h1 class="display-4">Transform Your Body, <span class="text-primary">Transform Your Life</span></h1>
-    <p class="lead">Welcome to FitZone Gym - where fitness meets technology.</p>
-    <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">Get Started</a>
-  </div>
-</section>
-
-<!-- Features -->
-<section id="features" class="py-5">
-  <div class="container text-center">
-    <h2 class="fw-bold mb-4">Why Choose Us?</h2>
-    <div class="row">
-      <div class="col-md-4"><i class="fas fa-user-tie fa-3x text-primary mb-3"></i><p>Expert Trainers</p></div>
-      <div class="col-md-4"><i class="fas fa-dumbbell fa-3x text-success mb-3"></i><p>Modern Equipment</p></div>
-      <div class="col-md-4"><i class="fas fa-chart-line fa-3x text-warning mb-3"></i><p>Progress Tracking</p></div>
-    </div>
-  </div>
-</section>
-
-<!-- Membership Plans -->
-<section id="plans" class="py-5 bg-light">
-  <div class="container text-center">
-    <h2 class="fw-bold mb-4">Membership Plans</h2>
-    <div class="row g-4 justify-content-center">
-      {% for plan in membership_plans %}
-      <div class="col-md-4">
-        <div class="card h-100">
-          <div class="card-body">
-            <h5 class="card-title">{{ plan.name }}</h5>
-            <p>{{ plan.description }}</p>
-            <h3>${{ "%.2f"|format(plan.price) }}</h3>
-            <p>{{ plan.duration_months }} month{{ 's' if plan.duration_months > 1 else '' }}</p>
-            {% if plan.features %}
-            <ul class="list-unstyled">
-              {% for feature in plan.features %}
-              <li><i class="fas fa-check text-success me-2"></i>{{ feature }}</li>
-              {% endfor %}
-            </ul>
+    <!-- Membership Plans Section -->
+    <section id="plans" class="py-5 bg-light">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold mb-3">Choose Your Membership Plan</h2>
+                <p class="lead text-muted">Flexible plans designed to fit your lifestyle and budget</p>
+            </div>
+            {% if membership_plans %}
+            <div class="row g-4 justify-content-center">
+                {% for plan in membership_plans %}
+                <div class="col-lg-3 col-md-6">
+                    <div class="card pricing-card h-100 {% if 'Premium' in plan.name or 'VIP' in plan.name %}featured{% endif %}">
+                        {% if 'Premium' in plan.name or 'VIP' in plan.name %}
+                        <div class="badge bg-primary position-absolute top-0 start-50 translate-middle px-3 py-2 rounded-pill">
+                            <i class="fas fa-star"></i> Popular
+                        </div>
+                        {% endif %}
+                        <div class="card-body text-center p-4">
+                            <h5 class="card-title text-primary fw-bold">{{ plan.name }}</h5>
+                            <p class="text-muted">{{ plan.description }}</p>
+                            <div class="my-4">
+                                <span class="h2 fw-bold text-dark">${{ "%.2f"|format(plan.price) }}</span>
+                                <span class="text-muted">/ {{ plan.duration_months }} month{{ 's' if plan.duration_months > 1 else '' }}</span>
+                            </div>
+                            {% if plan.features %}
+                                {% set features = plan.features|tojson|from_json %}
+                                <ul class="list-unstyled">
+                                    {% for feature in features %}
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        {{ feature }}
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                            <div class="mt-4">
+                                <a href="{{ url_for('auth.login') }}" class="btn btn-primary w-100">
+                                    Choose Plan
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
             {% endif %}
-            <a href="{{ url_for('auth.login') }}" class="btn btn-primary">Choose Plan</a>
-          </div>
         </div>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-</section>
+    </section>
 
-<!-- Announcements -->
-{% if announcements %}
-<section id="announcements" class="py-5">
-  <div class="container">
-    <h2 class="fw-bold text-center mb-4">Latest Announcements</h2>
-    <div class="row g-4">
-      {% for announcement in announcements %}
-      <div class="col-md-6">
-        <div class="card h-100">
-          <div class="card-body">
-            <h5 class="card-title">{{ announcement.title }}</h5>
-            <small class="text-muted">{{ announcement.announcement_type }}</small>
-            <p class="mt-2">{{ announcement.content }}</p>
-          </div>
+    <!-- Announcements Section -->
+    {% if announcements %}
+    <section id="announcements" class="py-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold mb-3">Latest News & Updates</h2>
+                <p class="lead text-muted">Stay updated with our latest announcements and offers</p>
+            </div>
+            <div class="row g-4">
+                {% for announcement in announcements %}
+                <div class="col-lg-6">
+                    <div class="card announcement-card h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="me-3">
+                                    {% if announcement.announcement_type == 'offer' %}
+                                        <i class="fas fa-tag fa-2x text-success"></i>
+                                    {% elif announcement.announcement_type == 'event' %}
+                                        <i class="fas fa-calendar-star fa-2x text-warning"></i>
+                                    {% elif announcement.announcement_type == 'maintenance' %}
+                                        <i class="fas fa-tools fa-2x text-danger"></i>
+                                    {% else %}
+                                        <i class="fas fa-bullhorn fa-2x text-primary"></i>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <h5 class="card-title mb-1">{{ announcement.title }}</h5>
+                                    <small class="text-muted text-uppercase">{{ announcement.announcement_type }}</small>
+                                </div>
+                            </div>
+                            <p class="card-text">{{ announcement.content }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
         </div>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-{% endif %}
+    </section>
+    {% endif %}
 
-{% endblock %}
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="mb-3">
+                        <i class="fas fa-dumbbell text-primary"></i> FitZone Gym
+                    </h5>
+                    <p class="mb-0">Transform your body, transform your life. Join our fitness community today!</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <div class="mb-3">
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-primary me-2">
+                            <i class="fas fa-sign-in-alt"></i> Member Login
+                        </a>
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light">
+                            <i class="fas fa-user-tie"></i> Staff Login
+                        </a>
+                    </div>
+                    <small class="text-muted">© 2024 FitZone Gym. All rights reserved.</small>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Smooth scrolling for anchor links -->
+    <script>
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

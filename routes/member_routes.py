@@ -16,7 +16,7 @@ from models.workout_plan import MemberWorkoutPlan, WorkoutPlanDetail
 
 
 
-member_routes_bp = Blueprint('member', __name__,url_prefix='/member')
+member_routes_bp = Blueprint('member', __name__)
 
 @member_routes_bp.route('/dashboard')
 @login_required
