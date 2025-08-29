@@ -1,35 +1,234 @@
 {% extends "base.html" %}
+{% block title %}My Workouts - Gym Management{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-  <h2>Your Workout Plans</h2>
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold"><i class="fas fa-dumbbell"></i> My Workouts</h2>
+            <p class="text-muted">Track your workout plans and explore available exercises</p>
+        </div>
+    </div>
 
-  {% for plan in workout_plans %}
-    <h4>{{ plan.plan.name }} ({{ plan.plan.start_date }} - {{ plan.plan.end_date }})</h4>
-    <ul>
-      {% for detail in plan.details %}
-        <li>
-          Day {{ detail.day_of_week }}:
-          {{ detail.sets }}x{{ detail.reps }} of {{ detail.workout_name }} 
-          ({{ detail.weight }} kg, Rest {{ detail.rest_seconds }}s)
-        </li>
-      {% endfor %}
-    </ul>
-  {% endfor %}
+    <!-- My Workout Plans -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-clipboard-list"></i> My Workout Plans</h5>
+                </div>
+                <div class="card-body">
+                    {% if workout_plans %}
+                    {% for plan_data in workout_plans %}
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h6 class="mb-0">{{ plan_data.plan.name }}</h6>
+                                    {% if plan_data.plan.description %}
+                                    <small class="text-muted">{{ plan_data.plan.description }}</small>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4 text-md-end">
+                                    <span class="badge bg-success">
+                                        {{ plan_data.plan.start_date }} - {{ plan_data.plan.end_date or 'Ongoing' }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            {% if plan_data.details %}
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Day</th>
+                                            <th>Exercise</th>
+                                            <th>Sets x Reps</th>
+                                            <th>Weight</th>
+                                            <th>Rest</th>
+                                            <th>Notes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for detail in plan_data.details %}
+                                        <tr>
+                                            <td>
+                                                {% if detail.day_of_week %}
+                                                <span class="badge bg-secondary">
+                                                    {% set days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] %}
+                                                    {{ days[detail.day_of_week - 1] }}
+                                                </span>
+                                                {% else %}
+                                                <span class="text-muted">Any</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <strong>{{ detail.workout.name }}</strong>
+                                                {% if detail.workout.category %}
+                                                <br><small class="text-muted">{{ detail.workout.category }}</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if detail.sets and detail.reps %}
+                                                {{ detail.sets }} x {{ detail.reps }}
+                                                {% else %}
+                                                <span class="text-muted">N/A</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if detail.weight %}
+                                                {{ detail.weight }} kg
+                                                {% else %}
+                                                <span class="text-muted">Bodyweight</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if detail.rest_seconds %}
+                                                {{ detail.rest_seconds }}s
+                                                {% else %}
+                                                <span class="text-muted">N/A</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if detail.notes %}
+                                                <small>{{ detail.notes }}</small>
+                                                {% else %}
+                                                <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-3">
+                                <i class="fas fa-clipboard fa-2x text-muted mb-2"></i>
+                                <p class="text-muted">No exercises added to this plan yet</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-clipboard-list fa-4x text-muted mb-3"></i>
+                        <h5 class="text-muted">No workout plans assigned</h5>
+                        <p class="text-muted">Your trainer will create personalized workout plans for you.</p>
+                        <a href="{{ url_for('member_routes.schedule_session') }}" class="btn btn-primary">
+                            <i class="fas fa-calendar-plus"></i> Schedule Session with Trainer
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 
-  <h3>Available Workouts</h3>
-  <h4>Strength</h4>
-  <ul>
-    {% for w in strength_workouts %}<li>{{ w.name }}</li>{% endfor %}
-  </ul>
+    <!-- Available Workouts -->
+    <div class="row">
+        <div class="col-12">
+            <h4 class="mb-3"><i class="fas fa-list"></i> Available Workouts</h4>
+        </div>
+    </div>
 
-  <h4>Cardio</h4>
-  <ul>
-    {% for w in cardio_workouts %}<li>{{ w.name }}</li>{% endfor %}
-  </ul>
+    <div class="row">
+        <!-- Strength Workouts -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-danger text-white">
+                    <h6 class="mb-0"><i class="fas fa-dumbbell"></i> Strength Training</h6>
+                </div>
+                <div class="card-body">
+                    {% if strength_workouts %}
+                    <div class="list-group list-group-flush">
+                        {% for workout in strength_workouts %}
+                        <div class="list-group-item d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>{{ workout.name }}</strong>
+                                {% if workout.description %}
+                                <br><small class="text-muted">{{ workout.description[:50] }}...</small>
+                                {% endif %}
+                            </div>
+                            {% if workout.difficulty_level %}
+                            <span class="badge bg-{{ 'success' if workout.difficulty_level == 'beginner' else 'warning' if workout.difficulty_level == 'intermediate' else 'danger' }}">
+                                {{ workout.difficulty_level.title() }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No strength workouts available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
 
-  <h4>Flexibility</h4>
-  <ul>
-    {% for w in flexibility_workouts %}<li>{{ w.name }}</li>{% endfor %}
-  </ul>
+        <!-- Cardio Workouts -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0"><i class="fas fa-heartbeat"></i> Cardio</h6>
+                </div>
+                <div class="card-body">
+                    {% if cardio_workouts %}
+                    <div class="list-group list-group-flush">
+                        {% for workout in cardio_workouts %}
+                        <div class="list-group-item d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>{{ workout.name }}</strong>
+                                {% if workout.description %}
+                                <br><small class="text-muted">{{ workout.description[:50] }}...</small>
+                                {% endif %}
+                            </div>
+                            {% if workout.difficulty_level %}
+                            <span class="badge bg-{{ 'success' if workout.difficulty_level == 'beginner' else 'warning' if workout.difficulty_level == 'intermediate' else 'danger' }}">
+                                {{ workout.difficulty_level.title() }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No cardio workouts available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Flexibility Workouts -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0"><i class="fas fa-leaf"></i> Flexibility</h6>
+                </div>
+                <div class="card-body">
+                    {% if flexibility_workouts %}
+                    <div class="list-group list-group-flush">
+                        {% for workout in flexibility_workouts %}
+                        <div class="list-group-item d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>{{ workout.name }}</strong>
+                                {% if workout.description %}
+                                <br><small class="text-muted">{{ workout.description[:50] }}...</small>
+                                {% endif %}
+                            </div>
+                            {% if workout.difficulty_level %}
+                            <span class="badge bg-{{ 'success' if workout.difficulty_level == 'beginner' else 'warning' if workout.difficulty_level == 'intermediate' else 'danger' }}">
+                                {{ workout.difficulty_level.title() }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No flexibility workouts available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

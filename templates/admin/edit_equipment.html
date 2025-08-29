@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Edit Equipment - Gym Management{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="fas fa-edit"></i> Edit Equipment: {{ equipment.name }}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="name" class="form-label">Equipment Name *</label>
+                                <input type="text" class="form-control" id="name" name="name" 
+                                       value="{{ equipment.name }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="category" class="form-label">Category</label>
+                                <select class="form-select" id="category" name="category">
+                                    <option value="">Select Category</option>
+                                    <option value="Cardio" {{ 'selected' if equipment.category == 'Cardio' }}>Cardio</option>
+                                    <option value="Strength" {{ 'selected' if equipment.category == 'Strength' }}>Strength</option>
+                                    <option value="Free Weights" {{ 'selected' if equipment.category == 'Free Weights' }}>Free Weights</option>
+                                    <option value="Functional" {{ 'selected' if equipment.category == 'Functional' }}>Functional</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="brand" class="form-label">Brand</label>
+                                <input type="text" class="form-control" id="brand" name="brand" 
+                                       value="{{ equipment.brand or '' }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="model" class="form-label">Model</label>
+                                <input type="text" class="form-control" id="model" name="model" 
+                                       value="{{ equipment.model or '' }}">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="purchase_date" class="form-label">Purchase Date</label>
+                                <input type="date" class="form-control" id="purchase_date" name="purchase_date"
+                                       value="{{ equipment.purchase_date or '' }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="warranty_end_date" class="form-label">Warranty End Date</label>
+                                <input type="date" class="form-control" id="warranty_end_date" name="warranty_end_date"
+                                       value="{{ equipment.warranty_end_date or '' }}">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="location" class="form-label">Location</label>
+                                <input type="text" class="form-control" id="location" name="location" 
+                                       value="{{ equipment.location or '' }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="status" class="form-label">Status *</label>
+                                <select class="form-select" id="status" name="status" required>
+                                    <option value="working" {{ 'selected' if equipment.status == 'working' }}>Working</option>
+                                    <option value="maintenance" {{ 'selected' if equipment.status == 'maintenance' }}>Under Maintenance</option>
+                                    <option value="out_of_order" {{ 'selected' if equipment.status == 'out_of_order' }}>Out of Order</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="maintenance_notes" class="form-label">Maintenance Notes</label>
+                            <textarea class="form-control" id="maintenance_notes" name="maintenance_notes" rows="3">{{ equipment.maintenance_notes or '' }}</textarea>
+                        </div>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('admin.equipment_list') }}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-arrow-left"></i> Back to Equipment
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-save"></i> Update Equipment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

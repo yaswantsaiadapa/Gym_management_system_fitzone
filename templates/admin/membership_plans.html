@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Membership Plans - Gym Management{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-credit-card"></i> Membership Plans</h4>
+                    <a href="{{ url_for('admin.add_membership_plan') }}" class="btn btn-dark btn-sm">
+                        <i class="fas fa-plus"></i> Add Plan
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if plans %}
+                    <div class="row">
+                        {% for plan in plans %}
+                        <div class="col-lg-4 col-md-6 mb-4">
+                            <div class="card h-100 {% if 'Premium' in plan.name or 'VIP' in plan.name %}border-primary{% endif %}">
+                                {% if 'Premium' in plan.name or 'VIP' in plan.name %}
+                                <div class="badge bg-primary position-absolute top-0 start-50 translate-middle px-3 py-2 rounded-pill">
+                                    <i class="fas fa-star"></i> Popular
+                                </div>
+                                {% endif %}
+                                <div class="card-body text-center">
+                                    <h5 class="card-title text-primary fw-bold">{{ plan.name }}</h5>
+                                    <p class="text-muted">{{ plan.description or 'No description available' }}</p>
+                                    <div class="my-4">
+                                        <span class="h2 fw-bold text-dark">₹{{ "%.2f"|format(plan.price) }}</span>
+                                        <span class="text-muted">/ {{ plan.duration_months }} month{{ 's' if plan.duration_months > 1 else '' }}</span>
+                                    </div>
+                                    {% if plan.features %}
+                                        {% set features = plan.features|tojson|from_json %}
+                                        <ul class="list-unstyled">
+                                            {% for feature in features %}
+                                            <li class="mb-2">
+                                                <i class="fas fa-check text-success me-2"></i>
+                                                {{ feature }}
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                    <div class="mt-4">
+                                        <span class="badge bg-{{ 'success' if plan.is_active else 'secondary' }}">
+                                            {{ 'Active' if plan.is_active else 'Inactive' }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-transparent text-center">
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        {% if plan.is_active %}
+                                        <button type="button" class="btn btn-outline-warning btn-sm">
+                                            <i class="fas fa-pause"></i> Deactivate
+                                        </button>
+                                        {% else %}
+                                        <button type="button" class="btn btn-outline-success btn-sm">
+                                            <i class="fas fa-play"></i> Activate
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-credit-card fa-4x text-muted mb-3"></i>
+                        <h5 class="text-muted">No membership plans found</h5>
+                        <p class="text-muted">Create your first membership plan to get started.</p>
+                        <a href="{{ url_for('admin.add_membership_plan') }}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add Plan
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

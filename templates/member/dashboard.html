@@ -1,37 +1,215 @@
 {% extends "base.html" %}
+{% block title %}Member Dashboard - Gym Management{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-  <h2>Welcome, {{ member.user.full_name }}</h2>
-  <p>Status: {{ stats.membership_status }}</p>
-  <p>Membership expires: {{ stats.membership_expires }}</p>
-  <p>Days left: {{ stats.days_until_expiry }}</p>
+<div class="container py-4">
+    <!-- Welcome Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-gradient-primary text-white">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="mb-1">Welcome back, {{ member.full_name }}!</h2>
+                            <p class="mb-0 opacity-75">Ready for your fitness journey today?</p>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <i class="fas fa-user-circle fa-4x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-  <h4>Recent Attendance</h4>
-  <ul>
-    {% for a in stats.recent_attendance %}
-      <li>{{ a.date }} - {{ a.status }}</li>
-    {% endfor %}
-  </ul>
+    <!-- Alert Message -->
+    {% if alert_message %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-warning alert-dismissible fade show">
+                {{ alert_message|safe }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
-  <h4>Pending Payments</h4>
-  <ul>
-    {% for p in stats.pending_payments %}
-      <li>{{ p.amount }} on {{ p.due_date }}</li>
-    {% endfor %}
-  </ul>
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card success h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-id-card fa-2x text-success mb-2"></i>
+                    <h6 class="card-title">Membership Status</h6>
+                    <p class="stat-number text-success">{{ stats.membership_status.title() }}</p>
+                    <a href="{{ url_for('member_routes.membership_status') }}" class="btn btn-sm btn-outline-success">
+                        View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card warning h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-calendar-alt fa-2x text-warning mb-2"></i>
+                    <h6 class="card-title">Days Until Expiry</h6>
+                    <p class="stat-number text-warning">{{ stats.days_until_expiry }}</p>
+                    {% if stats.days_until_expiry <= 7 %}
+                    <span class="badge bg-warning">Renewal Due</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card info h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-calendar-check fa-2x text-info mb-2"></i>
+                    <h6 class="card-title">Recent Sessions</h6>
+                    <p class="stat-number text-info">{{ stats.recent_attendance|length }}</p>
+                    <a href="{{ url_for('member_routes.attendance') }}" class="btn btn-sm btn-outline-info">
+                        View All
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card danger h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-credit-card fa-2x text-danger mb-2"></i>
+                    <h6 class="card-title">Pending Payments</h6>
+                    <p class="stat-number text-danger">{{ stats.pending_payments|length }}</p>
+                    {% if stats.pending_payments %}
+                    <a href="{{ url_for('member_routes.payments') }}" class="btn btn-sm btn-outline-danger">
+                        Pay Now
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 
-  <h4>Latest Progress</h4>
-  {% if latest_progress %}
-    <p>Weight: {{ latest_progress.weight }} | Body Fat: {{ latest_progress.body_fat }}</p>
-  {% else %}
-    <p>No progress records yet.</p>
-  {% endif %}
+    <div class="row">
+        <!-- Recent Attendance -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-calendar-check"></i> Recent Attendance</h5>
+                </div>
+                <div class="card-body">
+                    {% if stats.recent_attendance %}
+                    <div class="list-group list-group-flush">
+                        {% for attendance in stats.recent_attendance %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ attendance.date }}</strong>
+                                <br><small class="text-muted">{{ attendance.time_slot }}</small>
+                            </div>
+                            <span class="badge bg-{{ 'success' if attendance.status == 'present' else 'danger' }}">
+                                {{ attendance.status.title() }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('member_routes.attendance') }}" class="btn btn-outline-primary btn-sm">
+                            View All Attendance
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-calendar-times fa-3x text-muted mb-2"></i>
+                        <p class="text-muted">No recent attendance records</p>
+                        <a href="{{ url_for('member_routes.schedule_session') }}" class="btn btn-primary btn-sm">
+                            Schedule Session
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
 
-  <h4>Announcements</h4>
-  <ul>
-    {% for ann in announcements %}
-      <li>{{ ann.title }} - {{ ann.message }}</li>
-    {% endfor %}
-  </ul>
+        <!-- Latest Progress -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-line"></i> Latest Progress</h5>
+                </div>
+                <div class="card-body">
+                    {% if latest_progress %}
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h4 class="text-primary">{{ latest_progress.weight or 'N/A' }}</h4>
+                                <small class="text-muted">Weight (kg)</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h4 class="text-success">{{ latest_progress.body_fat_percentage or 'N/A' }}</h4>
+                                <small class="text-muted">Body Fat (%)</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center mt-3">
+                        <small class="text-muted">Recorded on {{ latest_progress.recorded_date }}</small>
+                        <br>
+                        <a href="{{ url_for('member_routes.progress') }}" class="btn btn-outline-success btn-sm mt-2">
+                            View All Progress
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-chart-line fa-3x text-muted mb-2"></i>
+                        <p class="text-muted">No progress records yet</p>
+                        <small class="text-muted">Your trainer will record your progress during sessions</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Announcements -->
+    {% if announcements %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-bullhorn"></i> Latest Announcements</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for announcement in announcements %}
+                        <div class="col-lg-6 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start">
+                                        <div class="me-3">
+                                            {% if announcement.announcement_type == 'offer' %}
+                                            <i class="fas fa-tag fa-2x text-success"></i>
+                                            {% elif announcement.announcement_type == 'event' %}
+                                            <i class="fas fa-calendar-star fa-2x text-warning"></i>
+                                            {% elif announcement.announcement_type == 'maintenance' %}
+                                            <i class="fas fa-tools fa-2x text-danger"></i>
+                                            {% else %}
+                                            <i class="fas fa-bullhorn fa-2x text-primary"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <h6 class="card-title">{{ announcement.title }}</h6>
+                                            <p class="card-text">{{ announcement.content[:100] }}...</p>
+                                            <small class="text-muted">{{ announcement.announcement_type.title() }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
