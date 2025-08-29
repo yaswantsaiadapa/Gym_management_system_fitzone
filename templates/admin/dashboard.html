@@ -115,7 +115,7 @@
                             <div class="text-sm text-gray-500">{{ member.email }}</div>
                         </div>
                         <div class="text-sm text-gray-500">
-                            {{ member.created_at.strftime('%b %d') }}
+                            {{ member.created_at|datetimeformat('%b %d') }}
                         </div>
                     </div>
                 </div>

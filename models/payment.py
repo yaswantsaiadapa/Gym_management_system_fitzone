@@ -114,6 +114,60 @@ class Payment:
             )
         return None
 
+    @classmethod
+    def get_all_with_details(cls):
+        """Get all payments with member and plan details"""
+        db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')
+        query = '''
+            SELECT p.*, u.full_name as member_name, mp.name as plan_name
+            FROM payments p
+            JOIN members m ON p.member_id = m.id
+            JOIN users u ON m.user_id = u.id
+            JOIN membership_plans mp ON p.membership_plan_id = mp.id
+            ORDER BY p.created_at DESC
+        '''
+        results = execute_query(query, (), db_path, fetch=True)
+
+        payments = []
+        for row in results:
+            payment = cls(
+                id=row[0], member_id=row[1], membership_plan_id=row[2],
+                amount=row[3], payment_method=row[4], payment_status=row[5],
+                transaction_id=row[6], payment_date=row[7], due_date=row[8],
+                notes=row[9], created_at=row[10]
+            )
+            payment.member_name = row[11]  # u.full_name
+            payment.plan_name = row[12]    # mp.name
+            payments.append(payment)
+        return payments
+
+    @classmethod
+    def get_recent(cls, limit=5):
+        """Get the most recent payments"""
+        db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')
+        query = '''SELECT p.*, u.full_name as member_name, mp.name as plan_name
+                FROM payments p
+                JOIN members m ON p.member_id = m.id
+                JOIN users u ON m.user_id = u.id
+                JOIN membership_plans mp ON p.membership_plan_id = mp.id
+                ORDER BY p.created_at DESC
+                LIMIT ?'''
+        results = execute_query(query, (limit,), db_path, fetch=True)
+        
+        payments = []
+        for row in results:
+            payment = cls(
+                id=row[0], member_id=row[1], membership_plan_id=row[2],
+                amount=row[3], payment_method=row[4], payment_status=row[5],
+                transaction_id=row[6], payment_date=row[7], due_date=row[8],
+                notes=row[9], created_at=row[10]
+            )
+            payment.member_name = row[11]  # full_name
+            payment.plan_name = row[12]    # plan_name
+            payments.append(payment)
+        return payments
+
+
     def save(self):
         """Save payment to database"""
         db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')
@@ -141,3 +195,4 @@ class Payment:
         if not self.id:
             self.id = result
         return self.id
+        

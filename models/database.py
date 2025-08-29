@@ -68,7 +68,8 @@ def init_db(db_path='gym_management.db'):
             price DECIMAL(10,2) NOT NULL,
             features TEXT, -- JSON string
             is_active BOOLEAN DEFAULT 1,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
     

@@ -83,6 +83,34 @@ class Trainer:
             salary=row[4], working_hours=row[5], status=row[6]
         ) for row in results] if results else []
 
+    @classmethod
+    def get_all_with_details(cls):
+        """Get all trainers with user details"""
+        db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')
+        query = '''
+            SELECT t.id, u.username, u.email, t.phone, t.specialization, 
+                t.experience_years, t.certification, t.salary, 
+                t.working_hours, t.bio, t.status
+            FROM trainers t
+            JOIN users u ON t.user_id = u.id
+            ORDER BY t.id DESC
+        '''
+        results = execute_query(query, (), db_path, fetch=True)
+
+        trainers = []
+        for row in results:
+            trainer = cls(
+                id=row[0],
+                name=row[1],       # comes from users table
+                email=row[2],      # comes from users table
+                phone=row[3],
+                salary=row[7],
+                working_hours=row[8],
+                status=row[10]
+            )
+            trainers.append(trainer)
+        return trainers
+
 
 
         

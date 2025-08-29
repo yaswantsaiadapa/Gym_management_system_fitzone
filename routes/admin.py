@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify, current_app
+import traceback
 from dateutil.relativedelta import relativedelta
 from models.user import User
 from models.member import Member
@@ -155,7 +156,11 @@ def dashboard():
             expiring_memberships=expiring_memberships
         )
     except Exception as e:
-        flash('Error loading dashboard data.')
+        print("\n--- DASHBOARD ERROR ---")
+        print("Error:", e)
+        traceback.print_exc()
+        print("--- END ERROR ---\n")
+        flash('Error loading dashboard data. Check logs for details.')
         return render_template(
             'admin/dashboard.html',
             total_members=0, total_trainers=0, today_attendance=0,
@@ -163,6 +168,7 @@ def dashboard():
             working_equipment=0, maintenance_equipment=0,
             recent_members=[], recent_payments=[], expiring_memberships=[]
         )
+
 
 # -------------------- Members --------------------
 @admin_bp.route('/members')
