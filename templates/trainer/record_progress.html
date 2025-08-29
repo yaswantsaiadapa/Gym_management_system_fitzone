@@ -1,23 +1,172 @@
 {% extends "base.html" %}
+
+{% block title %}Record Progress - Trainer{% endblock %}
+
 {% block content %}
-<h1>Record Progress for {{ member.name }}</h1>
+<div class="max-w-4xl mx-auto">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">
+            <i class="fas fa-chart-line mr-3 text-primary"></i>Record Client Progress
+        </h1>
+        <p class="text-gray-600">{{ member.full_name }} - Progress Entry</p>
+    </div>
 
-<form method="POST">
-  <label>Date: <input type="date" name="recorded_date" value="{{ date.today().isoformat() }}"></label><br>
-  <label>Weight (kg): <input type="number" step="0.1" name="weight"></label><br>
-  <label>Body Fat %: <input type="number" step="0.1" name="body_fat_percentage"></label><br>
-  <label>Muscle Mass: <input type="number" step="0.1" name="muscle_mass"></label><br>
-  <label>Chest: <input type="number" step="0.1" name="chest"></label><br>
-  <label>Waist: <input type="number" step="0.1" name="waist"></label><br>
-  <label>Hips: <input type="number" step="0.1" name="hips"></label><br>
-  <label>Bicep: <input type="number" step="0.1" name="bicep"></label><br>
-  <label>Thigh: <input type="number" step="0.1" name="thigh"></label><br>
-  <label>Notes: <textarea name="notes"></textarea></label><br>
-  <button type="submit">Save</button>
-</form>
+    <!-- Previous Record Reference -->
+    {% if last_record %}
+    <div class="card mb-8">
+        <div class="card-header">
+            <h2 class="text-xl font-semibold text-gray-900">Last Recorded Progress</h2>
+            <p class="text-sm text-gray-500">{{ last_record.recorded_date.strftime('%B %d, %Y') }}</p>
+        </div>
+        <div class="card-body">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                {% if last_record.weight %}
+                <div>
+                    <span class="text-gray-500">Weight:</span>
+                    <span class="font-medium ml-1">{{ last_record.weight }}kg</span>
+                </div>
+                {% endif %}
+                {% if last_record.bmi %}
+                <div>
+                    <span class="text-gray-500">BMI:</span>
+                    <span class="font-medium ml-1">{{ last_record.bmi }}</span>
+                </div>
+                {% endif %}
+                {% if last_record.body_fat_percentage %}
+                <div>
+                    <span class="text-gray-500">Body Fat:</span>
+                    <span class="font-medium ml-1">{{ last_record.body_fat_percentage }}%</span>
+                </div>
+                {% endif %}
+                {% if last_record.chest %}
+                <div>
+                    <span class="text-gray-500">Chest:</span>
+                    <span class="font-medium ml-1">{{ last_record.chest }}cm</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
-{% if last_record %}
-<h2>Last Record</h2>
-<p>{{ last_record.recorded_date }} - {{ last_record.weight }}kg</p>
-{% endif %}
+    <!-- Progress Entry Form -->
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('trainer_routes.record_progress', member_id=member.id) }}">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <!-- Basic Measurements -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold text-gray-900 border-b pb-2">Basic Measurements</h3>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="recorded_date">Record Date</label>
+                            <input type="date" id="recorded_date" name="recorded_date" value="{{ date.today().strftime('%Y-%m-%d') }}" class="form-control">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="weight">Weight (kg)</label>
+                            <input type="number" id="weight" name="weight" step="0.1" min="30" max="300" class="form-control" 
+                                   value="{{ last_record.weight if last_record else '' }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="body_fat_percentage">Body Fat Percentage (%)</label>
+                            <input type="number" id="body_fat_percentage" name="body_fat_percentage" step="0.1" min="3" max="50" class="form-control">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="muscle_mass">Muscle Mass (kg)</label>
+                            <input type="number" id="muscle_mass" name="muscle_mass" step="0.1" min="10" max="100" class="form-control">
+                        </div>
+                    </div>
+
+                    <!-- Body Measurements -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold text-gray-900 border-b pb-2">Body Measurements (cm)</h3>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="chest">Chest</label>
+                            <input type="number" id="chest" name="chest" step="0.1" min="50" max="200" class="form-control">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="waist">Waist</label>
+                            <input type="number" id="waist" name="waist" step="0.1" min="40" max="150" class="form-control">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="hips">Hips</label>
+                            <input type="number" id="hips" name="hips" step="0.1" min="50" max="200" class="form-control">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="form-group">
+                                <label class="form-label" for="bicep">Bicep</label>
+                                <input type="number" id="bicep" name="bicep" step="0.1" min="15" max="60" class="form-control">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="thigh">Thigh</label>
+                                <input type="number" id="thigh" name="thigh" step="0.1" min="30" max="100" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Notes -->
+                <div class="form-group">
+                    <label class="form-label" for="notes">Progress Notes</label>
+                    <textarea id="notes" name="notes" rows="4" class="form-control" 
+                              placeholder="Observations, improvements, challenges, recommendations..."></textarea>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="flex space-x-4 mt-6">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-2"></i>Record Progress
+                    </button>
+                    <a href="{{ url_for('trainer_routes.client_details', member_id=member.id) }}" class="btn btn-secondary">
+                        <i class="fas fa-times mr-2"></i>Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Progress Tips -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="text-xl font-semibold text-gray-900">Progress Tracking Tips</h3>
+        </div>
+        <div class="card-body">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-medium text-gray-900 mb-3">Measurement Guidelines</h4>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li>• Take measurements at consistent times</li>
+                        <li>• Use the same equipment for accuracy</li>
+                        <li>• Record measurements in a relaxed state</li>
+                        <li>• Be consistent with measurement locations</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-medium text-gray-900 mb-3">Client Information</h4>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Height:</span>
+                            <span class="font-medium">{{ member.height or 'Not recorded' }}{% if member.height %}cm{% endif %}</span>
+                        </div>
+                        {% if member.fitness_goals %}
+                        <div>
+                            <span class="text-gray-600">Goals:</span>
+                            <div class="font-medium mt-1">{{ member.fitness_goals }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

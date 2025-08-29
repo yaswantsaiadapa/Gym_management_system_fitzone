@@ -1,27 +1,96 @@
 {% extends "base.html" %}
-{% block content %}
-<div class="container mt-4">
-  <h2>Members</h2>
-  <a href="{{ url_for('admin.add_member_form') }}" class="btn btn-primary mb-3">+ Add Member</a>
 
-  <table class="table table-striped">
-    <thead>
-      <tr>
-        <th>Name</th><th>Email</th><th>Phone</th><th>Plan</th><th>Trainer</th><th>Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for member in members %}
-      <tr>
-        <td>{{ member.full_name }}</td>
-        <td>{{ member.email }}</td>
-        <td>{{ member.phone }}</td>
-        <td>{{ member.membership_plan_name }}</td>
-        <td>{{ member.trainer_name or "Not Assigned" }}</td>
-        <td>{{ "Active" if member.is_active else "Expired" }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+{% block title %}Members - Admin{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">
+        <i class="fas fa-users mr-3 text-primary"></i>Members
+    </h1>
+    <a href="{{ url_for('admin.add_member_form') }}" class="btn btn-primary">
+        <i class="fas fa-plus mr-2"></i>Add New Member
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        {% if members %}
+        <div class="overflow-x-auto">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Member</th>
+                        <th>Contact</th>
+                        <th>Plan</th>
+                        <th>Status</th>
+                        <th>Membership</th>
+                        <th>Trainer</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in members %}
+                    <tr>
+                        <td>
+                            <div>
+                                <div class="font-medium text-gray-900">{{ member.full_name or 'N/A' }}</div>
+                                <div class="text-sm text-gray-500">ID: {{ member.id }}</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <div class="text-sm">{{ member.email or 'N/A' }}</div>
+                                <div class="text-sm text-gray-500">{{ member.phone or 'N/A' }}</div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="text-sm">{{ member.plan_name or 'No Plan' }}</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-{{ 'success' if member.status == 'active' else 'danger' }}">
+                                {{ member.status|title }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if member.membership_end_date %}
+                                <div class="text-sm">
+                                    <div>{{ member.membership_start_date.strftime('%b %d, %Y') if member.membership_start_date else 'N/A' }}</div>
+                                    <div class="text-gray-500">to {{ member.membership_end_date.strftime('%b %d, %Y') }}</div>
+                                </div>
+                            {% else %}
+                                <span class="text-gray-500">Not Set</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="text-sm">{{ member.trainer_name or 'Unassigned' }}</span>
+                        </td>
+                        <td>
+                            <div class="flex space-x-2">
+                                <a href="{{ url_for('admin.edit_member', member_id=member.id) }}" 
+                                   class="text-primary hover:text-blue-700" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{{ url_for('admin.renew_membership', member_id=member.id) }}" 
+                                   class="text-success hover:text-green-700" title="Renew">
+                                    <i class="fas fa-refresh"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-8 text-center">
+            <i class="fas fa-users text-gray-400 text-4xl mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No members found</h3>
+            <p class="text-gray-500 mb-4">Get started by adding your first member</p>
+            <a href="{{ url_for('admin.add_member_form') }}" class="btn btn-primary">
+                <i class="fas fa-plus mr-2"></i>Add Member
+            </a>
+        </div>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

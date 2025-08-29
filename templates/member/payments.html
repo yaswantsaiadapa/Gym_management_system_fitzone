@@ -1,16 +1,81 @@
 {% extends "base.html" %}
+
+{% block title %}My Payments - Member{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-  <h2>Payment History</h2>
-  <table>
-    <tr><th>Date</th><th>Amount</th><th>Status</th></tr>
-    {% for p in payment_records %}
-    <tr>
-      <td>{{ p.date }}</td>
-      <td>{{ p.amount }}</td>
-      <td>{{ p.status }}</td>
-    </tr>
-    {% endfor %}
-  </table>
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">
+        <i class="fas fa-credit-card mr-3 text-primary"></i>My Payments
+    </h1>
+    <p class="text-gray-600">View your payment history and outstanding dues</p>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        {% if payment_records %}
+        <div class="overflow-x-auto">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Payment Date</th>
+                        <th>Plan</th>
+                        <th>Amount</th>
+                        <th>Method</th>
+                        <th>Status</th>
+                        <th>Due Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in payment_records %}
+                    <tr>
+                        <td>
+                            {% if payment.payment_date %}
+                            <div class="font-medium">{{ payment.payment_date.strftime('%B %d, %Y') }}</div>
+                            {% else %}
+                            <span class="text-gray-400">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="text-sm">{{ payment.plan_name }}</span>
+                        </td>
+                        <td>
+                            <span class="font-medium text-lg">₹{{ payment.amount }}</span>
+                        </td>
+                        <td>
+                            <span class="text-sm capitalize">{{ payment.payment_method }}</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-{{ 'success' if payment.payment_status == 'completed' else 'warning' if payment.payment_status == 'pending' else 'danger' }}">
+                                {{ payment.payment_status|title }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="text-sm">{{ payment.due_date.strftime('%B %d, %Y') }}</span>
+                        </td>
+                        <td>
+                            {% if payment.payment_status == 'pending' %}
+                            <button class="btn btn-primary text-sm">
+                                <i class="fas fa-credit-card mr-1"></i>Pay Now
+                            </button>
+                            {% else %}
+                            <button class="btn btn-secondary text-sm">
+                                <i class="fas fa-receipt mr-1"></i>Receipt
+                            </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-8 text-center">
+            <i class="fas fa-credit-card text-gray-400 text-4xl mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No payment records</h3>
+            <p class="text-gray-500">Your payment history will appear here</p>
+        </div>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

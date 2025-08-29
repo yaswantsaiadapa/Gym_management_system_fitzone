@@ -1,13 +1,109 @@
 {% extends "base.html" %}
-{% block content %}
-<h1>Create Diet Plan for {{ member.name }}</h1>
 
-<form method="POST">
-  <label>Name: <input type="text" name="name" required></label><br>
-  <label>Description: <textarea name="description"></textarea></label><br>
-  <label>Total Calories: <input type="number" name="total_calories"></label><br>
-  <label>Start Date: <input type="date" name="start_date" required></label><br>
-  <label>End Date: <input type="date" name="end_date"></label><br>
-  <button type="submit">Create Plan</button>
-</form>
+{% block title %}Create Diet Plan - Trainer{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">
+            <i class="fas fa-apple-alt mr-3 text-primary"></i>Create Diet Plan
+        </h1>
+        <p class="text-gray-600">For: {{ member.full_name }}</p>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('trainer_routes.create_diet_plan', member_id=member.id) }}">
+                <div class="space-y-4">
+                    <div class="form-group">
+                        <label class="form-label" for="name">Diet Plan Name *</label>
+                        <input type="text" id="name" name="name" placeholder="e.g., Weight Loss Diet, Muscle Gain Plan" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="description">Description</label>
+                        <textarea id="description" name="description" rows="3" class="form-control" 
+                                  placeholder="Goals, dietary guidelines, and overview..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="total_calories">Daily Calorie Target</label>
+                        <input type="number" id="total_calories" name="total_calories" min="800" max="5000" class="form-control" 
+                               placeholder="e.g., 2000">
+                        <small class="text-gray-500">Optional: Recommended daily calorie intake</small>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label class="form-label" for="start_date">Start Date *</label>
+                            <input type="date" id="start_date" name="start_date" value="{{ date.today().strftime('%Y-%m-%d') }}" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="end_date">End Date</label>
+                            <input type="date" id="end_date" name="end_date" class="form-control">
+                            <small class="text-gray-500">Leave empty for ongoing plan</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex space-x-4 mt-6">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-2"></i>Create Diet Plan
+                    </button>
+                    <a href="{{ url_for('trainer_routes.client_details', member_id=member.id) }}" class="btn btn-secondary">
+                        <i class="fas fa-times mr-2"></i>Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Diet Guidelines -->
+    <div class="card mt-8">
+        <div class="card-header">
+            <h3 class="text-xl font-semibold text-gray-900">Diet Plan Guidelines</h3>
+        </div>
+        <div class="card-body">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-medium text-gray-900 mb-3">General Recommendations</h4>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li>• Include 5-6 meals throughout the day</li>
+                        <li>• Maintain proper hydration (8-10 glasses water)</li>
+                        <li>• Balance proteins, carbs, and healthy fats</li>
+                        <li>• Avoid processed and sugary foods</li>
+                        <li>• Include plenty of fruits and vegetables</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-medium text-gray-900 mb-3">Client Information</h4>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Current Weight:</span>
+                            <span class="font-medium">{{ member.weight or 'Not recorded' }}{% if member.weight %}kg{% endif %}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Height:</span>
+                            <span class="font-medium">{{ member.height or 'Not recorded' }}{% if member.height %}cm{% endif %}</span>
+                        </div>
+                        {% if member.fitness_goals %}
+                        <div>
+                            <span class="text-gray-600">Fitness Goals:</span>
+                            <div class="font-medium mt-1">{{ member.fitness_goals }}</div>
+                        </div>
+                        {% endif %}
+                        {% if member.medical_conditions %}
+                        <div>
+                            <span class="text-gray-600">Medical Conditions:</span>
+                            <div class="font-medium mt-1 text-red-600">{{ member.medical_conditions }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

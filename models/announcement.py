@@ -1,13 +1,12 @@
 from datetime import date
 from flask import current_app
-
 from models.database import execute_query
 
 
 class Announcement:
     def __init__(self, id=None, title=None, content=None, announcement_type=None,
                  target_audience=None, is_public=False, is_active=True,
-                 start_date=None, end_date=None, created_by=None):
+                 start_date=None, end_date=None, created_by=None, created_at=None):
         self.id = id
         self.title = title
         self.content = content
@@ -18,7 +17,24 @@ class Announcement:
         self.start_date = start_date
         self.end_date = end_date
         self.created_by = created_by
-    
+        self.created_at = created_at   # ✅ timestamp when created
+
+    @classmethod
+    def get_all(cls):
+        """Fetch all announcements (admin use only)"""
+        db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')
+        query = '''SELECT * FROM announcements ORDER BY id DESC'''
+        results = execute_query(query, fetch=True)
+        
+        announcements = []
+        for row in results:
+            announcements.append(cls(
+                id=row[0], title=row[1], content=row[2], announcement_type=row[3],
+                target_audience=row[4], is_public=bool(row[5]), is_active=bool(row[6]),
+                start_date=row[7], end_date=row[8], created_by=row[9], created_at=row[10]
+            ))
+        return announcements
+
     @classmethod
     def get_public_announcements(cls):
         """Get public announcements for home page"""
@@ -33,12 +49,11 @@ class Announcement:
         
         announcements = []
         for row in results:
-            announcement = cls(
+            announcements.append(cls(
                 id=row[0], title=row[1], content=row[2], announcement_type=row[3],
                 target_audience=row[4], is_public=bool(row[5]), is_active=bool(row[6]),
-                start_date=row[7], end_date=row[8], created_by=row[9]
-            )
-            announcements.append(announcement)
+                start_date=row[7], end_date=row[8], created_by=row[9], created_at=row[10]
+            ))
         return announcements
     
     @classmethod
@@ -56,13 +71,13 @@ class Announcement:
         
         announcements = []
         for row in results:
-            announcement = cls(
+            announcements.append(cls(
                 id=row[0], title=row[1], content=row[2], announcement_type=row[3],
                 target_audience=row[4], is_public=bool(row[5]), is_active=bool(row[6]),
-                start_date=row[7], end_date=row[8], created_by=row[9]
-            )
-            announcements.append(announcement)
+                start_date=row[7], end_date=row[8], created_by=row[9], created_at=row[10]
+            ))
         return announcements
+
     @classmethod
     def get_by_id(cls, announcement_id):
         """Fetch a single announcement by ID"""
@@ -75,7 +90,7 @@ class Announcement:
             return cls(
                 id=row[0], title=row[1], content=row[2], announcement_type=row[3],
                 target_audience=row[4], is_public=bool(row[5]), is_active=bool(row[6]),
-                start_date=row[7], end_date=row[8], created_by=row[9]
+                start_date=row[7], end_date=row[8], created_by=row[9], created_at=row[10]
             )
         return None
 
@@ -91,7 +106,7 @@ class Announcement:
             announcements.append(cls(
                 id=row[0], title=row[1], content=row[2], announcement_type=row[3],
                 target_audience=row[4], is_public=bool(row[5]), is_active=bool(row[6]),
-                start_date=row[7], end_date=row[8], created_by=row[9]
+                start_date=row[7], end_date=row[8], created_by=row[9], created_at=row[10]
             ))
         return announcements
 
@@ -106,21 +121,22 @@ class Announcement:
                       is_active = ?, start_date = ?, end_date = ?, created_by = ?
                       WHERE id = ?'''
             params = (self.title, self.content, self.announcement_type,
-                     self.target_audience, self.is_public, self.is_active,
-                     self.start_date, self.end_date, self.created_by, self.id)
+                      self.target_audience, self.is_public, self.is_active,
+                      self.start_date, self.end_date, self.created_by, self.id)
         else:
-            # Create new announcement
+            # Create new announcement (✅ let DB handle created_at default timestamp)
             query = '''INSERT INTO announcements (title, content, announcement_type,
                       target_audience, is_public, is_active, start_date, end_date,
                       created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'''
             params = (self.title, self.content, self.announcement_type,
-                     self.target_audience, self.is_public, self.is_active,
-                     self.start_date, self.end_date, self.created_by)
+                      self.target_audience, self.is_public, self.is_active,
+                      self.start_date, self.end_date, self.created_by)
         
         result = execute_query(query, params, db_path)
         if not self.id:
             self.id = result
         return self.id
+
     def deactivate(self):
         """Soft delete / deactivate the announcement"""
         if not self.id:

@@ -1,11 +1,52 @@
 {% extends "base.html" %}
+
+{% block title %}Login - FitZone Gym{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
-  <h2>Select Login Type</h2>
-  <div class="list-group">
-    <a href="{{ url_for('auth.login_form', role='admin') }}" class="list-group-item list-group-item-action">Admin Login</a>
-    <a href="{{ url_for('auth.login_form', role='member') }}" class="list-group-item list-group-item-action">Member Login</a>
-    <a href="{{ url_for('auth.login_form', role='trainer') }}" class="list-group-item list-group-item-action">Trainer Login</a>
-  </div>
+<div class="min-h-[80vh] flex items-center justify-center">
+    <div class="max-w-md w-full">
+        <div class="text-center mb-8">
+            <div class="w-20 h-20 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-dumbbell text-white text-3xl"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-900">Welcome Back</h1>
+            <p class="text-gray-600 mt-2">Select your login type to continue</p>
+        </div>
+
+        <div class="space-y-4">
+            <a href="{{ url_for('auth.login_form', role='admin') }}" 
+               class="w-full flex items-center justify-center p-4 border-2 border-gray-200 rounded-xl hover:border-primary hover:bg-primary hover:text-white transition-all duration-200 group">
+                <i class="fas fa-shield-alt text-2xl mr-4 group-hover:text-white text-primary"></i>
+                <div class="text-left">
+                    <div class="font-semibold">Admin Login</div>
+                    <div class="text-sm text-gray-500 group-hover:text-gray-200">Manage gym operations</div>
+                </div>
+            </a>
+
+            <a href="{{ url_for('auth.login_form', role='member') }}" 
+               class="w-full flex items-center justify-center p-4 border-2 border-gray-200 rounded-xl hover:border-secondary hover:bg-secondary hover:text-white transition-all duration-200 group">
+                <i class="fas fa-user text-2xl mr-4 group-hover:text-white text-secondary"></i>
+                <div class="text-left">
+                    <div class="font-semibold">Member Login</div>
+                    <div class="text-sm text-gray-500 group-hover:text-gray-200">Access your fitness portal</div>
+                </div>
+            </a>
+
+            <a href="{{ url_for('auth.login_form', role='trainer') }}" 
+               class="w-full flex items-center justify-center p-4 border-2 border-gray-200 rounded-xl hover:border-accent hover:bg-accent hover:text-white transition-all duration-200 group">
+                <i class="fas fa-users text-2xl mr-4 group-hover:text-white text-accent"></i>
+                <div class="text-left">
+                    <div class="font-semibold">Trainer Login</div>
+                    <div class="text-sm text-gray-500 group-hover:text-gray-200">Manage your clients</div>
+                </div>
+            </a>
+        </div>
+
+        <div class="mt-8 text-center">
+            <a href="{{ url_for('auth.forgot_password_form') }}" class="text-sm text-primary hover:underline">
+                Forgot your password?
+            </a>
+        </div>
+    </div>
 </div>
 {% endblock %}

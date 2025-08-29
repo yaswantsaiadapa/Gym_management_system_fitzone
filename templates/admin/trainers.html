@@ -1,26 +1,87 @@
 {% extends "base.html" %}
-{% block content %}
-<div class="container mt-4">
-  <h2>Trainers</h2>
-  <a href="{{ url_for('admin.add_trainer_form') }}" class="btn btn-primary mb-3">+ Add Trainer</a>
 
-  <table class="table table-bordered">
-    <thead>
-      <tr>
-        <th>Name</th><th>Email</th><th>Phone</th><th>Specialization</th><th>Experience</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for trainer in trainers %}
-      <tr>
-        <td>{{ trainer.full_name }}</td>
-        <td>{{ trainer.email }}</td>
-        <td>{{ trainer.phone }}</td>
-        <td>{{ trainer.specialization }}</td>
-        <td>{{ trainer.experience_years }} years</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+{% block title %}Trainers - Admin{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">
+        <i class="fas fa-user-tie mr-3 text-primary"></i>Trainers
+    </h1>
+    <a href="{{ url_for('admin.add_trainer_form') }}" class="btn btn-primary">
+        <i class="fas fa-plus mr-2"></i>Add New Trainer
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        {% if trainers %}
+        <div class="overflow-x-auto">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Trainer</th>
+                        <th>Contact</th>
+                        <th>Specialization</th>
+                        <th>Experience</th>
+                        <th>Status</th>
+                        <th>Salary</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for trainer in trainers %}
+                    <tr>
+                        <td>
+                            <div>
+                                <div class="font-medium text-gray-900">{{ trainer.full_name }}</div>
+                                <div class="text-sm text-gray-500">ID: {{ trainer.id }}</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <div class="text-sm">{{ trainer.email }}</div>
+                                <div class="text-sm text-gray-500">{{ trainer.phone }}</div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="text-sm">{{ trainer.specialization }}</span>
+                        </td>
+                        <td>
+                            <span class="text-sm">{{ trainer.experience_years }} years</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-{{ 'success' if trainer.status == 'active' else 'danger' }}">
+                                {{ trainer.status|title }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="text-sm">{{ '₹{:,.0f}'.format(trainer.salary) if trainer.salary else 'N/A' }}</span>
+                        </td>
+                        <td>
+                            <div class="flex space-x-2">
+                                <button class="text-primary hover:text-blue-700" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="text-secondary hover:text-green-700" title="View Clients">
+                                    <i class="fas fa-users"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-8 text-center">
+            <i class="fas fa-user-tie text-gray-400 text-4xl mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No trainers found</h3>
+            <p class="text-gray-500 mb-4">Get started by adding your first trainer</p>
+            <a href="{{ url_for('admin.add_trainer_form') }}" class="btn btn-primary">
+                <i class="fas fa-plus mr-2"></i>Add Trainer
+            </a>
+        </div>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

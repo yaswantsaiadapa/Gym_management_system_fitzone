@@ -1,24 +1,131 @@
 {% extends "base.html" %}
+
+{% block title %}Edit Workout Plan - Trainer{% endblock %}
+
 {% block content %}
-<h1>Edit Workout Plan: {{ workout_plan.name }}</h1>
+<div class="max-w-6xl mx-auto">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">
+            <i class="fas fa-edit mr-3 text-primary"></i>Edit Workout Plan
+        </h1>
+        <p class="text-gray-600">{{ workout_plan.name }} - {{ member.full_name }}</p>
+    </div>
 
-<p>Member: {{ member.name }}</p>
+    <!-- Plan Information -->
+    <div class="card mb-8">
+        <div class="card-header">
+            <h2 class="text-xl font-semibold text-gray-900">Plan Details</h2>
+        </div>
+        <div class="card-body">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="text-sm text-gray-500">Plan Name</label>
+                    <div class="font-medium">{{ workout_plan.name }}</div>
+                </div>
+                <div>
+                    <label class="text-sm text-gray-500">Start Date</label>
+                    <div class="font-medium">{{ workout_plan.start_date.strftime('%B %d, %Y') }}</div>
+                </div>
+                <div>
+                    <label class="text-sm text-gray-500">Status</label>
+                    <span class="badge badge-{{ 'success' if workout_plan.status == 'active' else 'warning' }}">
+                        {{ workout_plan.status|title }}
+                    </span>
+                </div>
+            </div>
+            {% if workout_plan.description %}
+            <div class="mt-4">
+                <label class="text-sm text-gray-500">Description</label>
+                <div class="text-gray-700">{{ workout_plan.description }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
 
-<h2>Plan Details</h2>
-<ul>
-  {% for d in plan_details %}
-    <li>{{ d.workout_name }} - {{ d.sets }} sets x {{ d.reps }} reps</li>
-  {% else %}
-    <li>No workouts added yet.</li>
-  {% endfor %}
-</ul>
+    <!-- Current Exercises -->
+    <div class="card mb-8">
+        <div class="card-header flex justify-between items-center">
+            <h2 class="text-xl font-semibold text-gray-900">Exercises in Plan</h2>
+            <a href="{{ url_for('admin.add_workout_plan_detail', plan_id=workout_plan.id) }}" class="btn btn-primary">
+                <i class="fas fa-plus mr-2"></i>Add Exercise
+            </a>
+        </div>
+        <div class="card-body p-0">
+            {% if plan_details %}
+            <div class="overflow-x-auto">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Exercise</th>
+                            <th>Day</th>
+                            <th>Sets</th>
+                            <th>Reps</th>
+                            <th>Weight</th>
+                            <th>Rest</th>
+                            <th>Notes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for detail in plan_details %}
+                        <tr>
+                            <td>
+                                <div class="font-medium text-gray-900">{{ detail.workout_name }}</div>
+                            </td>
+                            <td>
+                                <span class="badge badge-info">{{ detail.day_of_week|title if detail.day_of_week else 'Any Day' }}</span>
+                            </td>
+                            <td>{{ detail.sets or '-' }}</td>
+                            <td>{{ detail.reps or '-' }}</td>
+                            <td>{{ detail.weight or '-' }}</td>
+                            <td>{{ detail.rest_seconds or '-' }}{% if detail.rest_seconds %}s{% endif %}</td>
+                            <td>
+                                {% if detail.notes %}
+                                <span class="text-sm text-gray-600">{{ detail.notes[:30] }}{% if detail.notes|length > 30 %}...{% endif %}</span>
+                                {% else %}
+                                <span class="text-gray-400">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="text-danger hover:text-red-700" title="Remove">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-8 text-center">
+                <i class="fas fa-dumbbell text-gray-400 text-4xl mb-4"></i>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No exercises added yet</h3>
+                <p class="text-gray-500 mb-4">Add exercises to complete this workout plan</p>
+                <a href="{{ url_for('admin.add_workout_plan_detail', plan_id=workout_plan.id) }}" class="btn btn-primary">
+                    <i class="fas fa-plus mr-2"></i>Add First Exercise
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
 
-<h2>Available Workouts</h2>
-<ul>
-  {% for w in available_workouts %}
-    <li>{{ w.name }}</li>
-  {% else %}
-    <li>No workouts available.</li>
-  {% endfor %}
-</ul>
+    <!-- Available Equipment -->
+    {% if available_equipment %}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="text-xl font-semibold text-gray-900">Available Equipment</h3>
+        </div>
+        <div class="card-body">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {% for equipment in available_equipment %}
+                <div class="p-3 bg-gray-50 rounded-lg text-center">
+                    <div class="font-medium text-sm">{{ equipment.name }}</div>
+                    <div class="text-xs text-gray-500">{{ equipment.location or 'Gym Floor' }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
 {% endblock %}

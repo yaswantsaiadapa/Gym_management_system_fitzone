@@ -1,104 +1,178 @@
 {% extends "base.html" %}
-{% block title %}Membership Status - Gym Management{% endblock %}
+
+{% block title %}Membership Status - Member{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0"><i class="fas fa-id-card"></i> Membership Status</h4>
+<div class="max-w-4xl mx-auto">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">
+            <i class="fas fa-id-card mr-3 text-primary"></i>Membership Status
+        </h1>
+        <p class="text-gray-600">View your current membership details and renewal information</p>
+    </div>
+
+    <!-- Notification Alert -->
+    {% if notification %}
+    <div class="alert alert-{{ 'danger' if days_left < 0 else 'warning' if days_left <= 7 else 'info' }} mb-6">
+        <div class="flex items-center">
+            <i class="fas fa-{{ 'exclamation-triangle' if days_left <= 7 else 'info-circle' }} mr-2"></i>
+            {{ notification }}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Membership Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="stat-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="stat-label">Status</div>
+                    <div class="stat-value text-sm {{ 'text-success' if member.status == 'active' else 'text-danger' }}">
+                        {{ member.status|title }}
+                    </div>
                 </div>
-                <div class="card-body">
-                    <!-- Member Info -->
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <h5><i class="fas fa-user"></i> {{ member.full_name }}</h5>
-                            <p class="text-muted">{{ member.email }}</p>
-                        </div>
-                        <div class="col-md-6 text-md-end">
-                            <span class="badge bg-{{ 'success' if member.status == 'active' else 'warning' }} fs-6">
-                                {{ member.status.title() }} Member
-                            </span>
+                <i class="fas fa-{{ 'check-circle' if member.status == 'active' else 'times-circle' }} text-2xl {{ 'text-success' if member.status == 'active' else 'text-danger' }}"></i>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="stat-label">Plan</div>
+                    <div class="stat-value text-sm">{{ member.plan_name or 'No Plan' }}</div>
+                </div>
+                <i class="fas fa-crown text-accent text-2xl"></i>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="stat-label">Days Remaining</div>
+                    <div class="stat-value text-lg {{ 'text-success' if days_left > 30 else 'text-warning' if days_left > 7 else 'text-danger' }}">
+                        {{ days_left if days_left > 0 else 'Expired' }}
+                    </div>
+                </div>
+                <i class="fas fa-calendar-day text-primary text-2xl"></i>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="stat-label">Trainer</div>
+                    <div class="stat-value text-sm">{{ member.trainer_name or 'Unassigned' }}</div>
+                </div>
+                <i class="fas fa-user-tie text-secondary text-2xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Membership Information -->
+    <div class="card mb-8">
+        <div class="card-header">
+            <h2 class="text-xl font-semibold text-gray-900">Membership Details</h2>
+        </div>
+        <div class="card-body">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-sm text-gray-500">Membership Plan</label>
+                        <div class="font-medium text-lg">{{ member.plan_name or 'No Plan Assigned' }}</div>
+                    </div>
+                    
+                    <div>
+                        <label class="text-sm text-gray-500">Member ID</label>
+                        <div class="font-medium">{{ member.id }}</div>
+                    </div>
+
+                    <div>
+                        <label class="text-sm text-gray-500">Member Since</label>
+                        <div class="font-medium">{{ member.created_at.strftime('%B %d, %Y') if member.created_at else 'N/A' }}</div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-sm text-gray-500">Start Date</label>
+                        <div class="font-medium">{{ member.membership_start_date.strftime('%B %d, %Y') if member.membership_start_date else 'Not Set' }}</div>
+                    </div>
+                    
+                    <div>
+                        <label class="text-sm text-gray-500">Expiry Date</label>
+                        <div class="font-medium {{ 'text-danger' if days_left < 0 else 'text-warning' if days_left <= 7 else '' }}">
+                            {{ member.membership_end_date.strftime('%B %d, %Y') if member.membership_end_date else 'Not Set' }}
                         </div>
                     </div>
 
-                    <!-- Membership Details -->
-                    <div class="card bg-light mb-4">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <p><strong>Plan:</strong> {{ member.plan_name or 'Not assigned' }}</p>
-                                    <p><strong>Start Date:</strong> {{ member.membership_start_date or 'N/A' }}</p>
-                                </div>
-                                <div class="col-md-6">
-                                    <p><strong>Expiry Date:</strong> 
-                                        {% if expiry_date %}
-                                        {{ expiry_date }}
-                                        {% else %}
-                                        <span class="text-muted">Not set</span>
-                                        {% endif %}
-                                    </p>
-                                    <p><strong>Days Remaining:</strong> 
-                                        {% if days_left >= 0 %}
-                                        <span class="badge bg-{{ 'success' if days_left > 7 else 'warning' if days_left > 0 else 'danger' }}">
-                                            {{ days_left }} days
-                                        </span>
-                                        {% else %}
-                                        <span class="badge bg-danger">Expired</span>
-                                        {% endif %}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Status Alert -->
-                    {% if notification %}
-                    <div class="alert alert-{{ 'danger' if days_left < 0 else 'warning' if days_left <= 7 else 'info' }} alert-dismissible fade show">
-                        <i class="fas fa-{{ 'exclamation-triangle' if days_left <= 7 else 'info-circle' }}"></i>
-                        {{ notification }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                    {% endif %}
-
-                    <!-- Progress Bar -->
-                    {% if expiry_date and member.membership_start_date %}
-                    {% set total_days = (expiry_date - member.membership_start_date).days %}
-                    {% set elapsed_days = total_days - days_left if days_left >= 0 else total_days %}
-                    {% set progress_percent = (elapsed_days / total_days * 100) if total_days > 0 else 100 %}
-                    <div class="mb-4">
-                        <label class="form-label">Membership Progress</label>
-                        <div class="progress" style="height: 20px;">
-                            <div class="progress-bar bg-{{ 'success' if progress_percent < 80 else 'warning' if progress_percent < 95 else 'danger' }}" 
-                                 role="progressbar" style="width: {{ progress_percent }}%" 
-                                 aria-valuenow="{{ progress_percent }}" aria-valuemin="0" aria-valuemax="100">
-                                {{ "%.1f"|format(progress_percent) }}%
-                            </div>
-                        </div>
-                        <small class="text-muted">{{ elapsed_days }} of {{ total_days }} days used</small>
-                    </div>
-                    {% endif %}
-
-                    <!-- Action Buttons -->
-                    <div class="text-center">
-                        {% if days_left <= 7 %}
-                        <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <strong>Renewal Required!</strong> Please visit the admin desk to renew your membership.
-                        </div>
-                        {% endif %}
-                        
-                        <a href="{{ url_for('member_routes.dashboard') }}" class="btn btn-primary">
-                            <i class="fas fa-tachometer-alt"></i> Back to Dashboard
-                        </a>
-                        
-                        <a href="{{ url_for('member_routes.payments') }}" class="btn btn-outline-primary">
-                            <i class="fas fa-credit-card"></i> View Payments
-                        </a>
+                    <div>
+                        <label class="text-sm text-gray-500">Assigned Trainer</label>
+                        <div class="font-medium">{{ member.trainer_name or 'No Trainer Assigned' }}</div>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Renewal Information -->
+    {% if days_left <= 30 and days_left >= 0 %}
+    <div class="card border-l-4 border-l-warning">
+        <div class="card-header bg-yellow-50">
+            <h2 class="text-xl font-semibold text-gray-900">
+                <i class="fas fa-refresh text-warning mr-2"></i>Renewal Information
+            </h2>
+        </div>
+        <div class="card-body">
+            <p class="text-gray-700 mb-4">
+                Your membership will expire soon. Please visit the admin desk or contact the gym to renew your membership.
+            </p>
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 class="font-medium text-blue-900 mb-2">How to Renew:</h4>
+                <ul class="text-blue-800 text-sm space-y-1">
+                    <li>• Visit the front desk during operating hours</li>
+                    <li>• Contact admin at the gym reception</li>
+                    <li>• Choose your preferred membership plan</li>
+                    <li>• Make payment and get instant activation</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% elif days_left < 0 %}
+    <div class="card border-l-4 border-l-danger">
+        <div class="card-header bg-red-50">
+            <h2 class="text-xl font-semibold text-gray-900">
+                <i class="fas fa-exclamation-triangle text-danger mr-2"></i>Membership Expired
+            </h2>
+        </div>
+        <div class="card-body">
+            <p class="text-gray-700 mb-4">
+                Your membership has expired. Please renew immediately to continue accessing gym facilities.
+            </p>
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                <h4 class="font-medium text-red-900 mb-2">Immediate Action Required:</h4>
+                <ul class="text-red-800 text-sm space-y-1">
+                    <li>• Visit the admin desk immediately</li>
+                    <li>• Bring your membership ID</li>
+                    <li>• Select a renewal plan</li>
+                    <li>• Complete payment to reactivate access</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Quick Actions -->
+    <div class="mt-8">
+        <div class="flex space-x-4 justify-center">
+            <a href="{{ url_for('member_routes.dashboard') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+            </a>
+            <a href="{{ url_for('member_routes.profile') }}" class="btn btn-secondary">
+                <i class="fas fa-user-edit mr-2"></i>Edit Profile
+            </a>
+            <a href="{{ url_for('member_routes.payments') }}" class="btn bg-accent text-white hover:bg-orange-600">
+                <i class="fas fa-credit-card mr-2"></i>View Payments
+            </a>
         </div>
     </div>
 </div>

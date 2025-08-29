@@ -1,26 +1,107 @@
 {% extends "base.html" %}
+
+{% block title %}Schedule Session - Member{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-  <h2>Schedule a Training Session</h2>
-  <form method="POST" action="{{ url_for('member.schedule_session_post') }}">
-    <label>Trainer</label>
-    <select name="trainer_id">
-      {% for t in trainers %}
-        <option value="{{ t.id }}">{{ t.full_name }}</option>
-      {% endfor %}
-    </select><br>
+<div class="max-w-2xl mx-auto">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">
+            <i class="fas fa-calendar-plus mr-3 text-primary"></i>Schedule Training Session
+        </h1>
+        <p class="text-gray-600">Book a session with an available trainer</p>
+    </div>
 
-    <label>Date</label>
-    <input type="date" name="session_date" required><br>
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('member_routes.schedule_session_post') }}">
+                <div class="space-y-4">
+                    <div class="form-group">
+                        <label class="form-label" for="trainer_id">Select Trainer *</label>
+                        <select id="trainer_id" name="trainer_id" class="form-control" required onchange="loadTrainerSchedule()">
+                            <option value="">Choose Trainer</option>
+                            {% for trainer in trainers %}
+                            <option value="{{ trainer.id }}">{{ trainer.full_name }} - {{ trainer.specialization }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-    <label>Time Slot</label>
-    <select name="time_slot">
-      {% for slot in time_slots %}
-        <option value="{{ slot }}">{{ slot }}</option>
-      {% endfor %}
-    </select><br>
+                    <div class="form-group">
+                        <label class="form-label" for="session_date">Session Date *</label>
+                        <input type="date" id="session_date" name="session_date" 
+                               min="{{ date.today().strftime('%Y-%m-%d') }}" 
+                               class="form-control" required onchange="loadTrainerSchedule()">
+                    </div>
 
-    <button type="submit">Schedule</button>
-  </form>
+                    <div class="form-group">
+                        <label class="form-label" for="time_slot">Time Slot *</label>
+                        <select id="time_slot" name="time_slot" class="form-control" required>
+                            <option value="">Choose Time Slot</option>
+                            {% for slot in time_slots %}
+                            <option value="{{ slot }}">{{ slot }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Trainer Schedule Display -->
+                    <div id="trainer-schedule" class="hidden">
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="font-medium text-gray-900 mb-3">Trainer's Schedule for Selected Date</h4>
+                            <div id="schedule-content" class="space-y-2">
+                                <!-- Schedule will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex space-x-4 mt-6">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-calendar-check mr-2"></i>Book Session
+                    </button>
+                    <a href="{{ url_for('member_routes.attendance') }}" class="btn btn-secondary">
+                        <i class="fas fa-times mr-2"></i>Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
+
+<script>
+function loadTrainerSchedule() {
+    const trainerId = document.getElementById('trainer_id').value;
+    const sessionDate = document.getElementById('session_date').value;
+    const scheduleDiv = document.getElementById('trainer-schedule');
+    const scheduleContent = document.getElementById('schedule-content');
+    
+    if (trainerId && sessionDate) {
+        fetch(`{{ url_for('member_routes.trainer_schedule_api', trainer_id=0) }}`.replace('0', trainerId) + `?date=${sessionDate}`)
+            .then(response => response.json())
+            .then(data => {
+                scheduleContent.innerHTML = '';
+                
+                if (data.length === 0) {
+                    scheduleContent.innerHTML = '<p class="text-gray-500">No bookings for this date</p>';
+                } else {
+                    data.forEach(booking => {
+                        const bookingDiv = document.createElement('div');
+                        bookingDiv.className = 'flex justify-between items-center p-2 bg-white rounded border';
+                        bookingDiv.innerHTML = `
+                            <span class="text-sm">${booking.time_slot}</span>
+                            <span class="text-sm ${booking.status === 'present' ? 'text-success' : 'text-gray-500'}">${booking.member_name || 'Available'}</span>
+                        `;
+                        scheduleContent.appendChild(bookingDiv);
+                    });
+                }
+                
+                scheduleDiv.classList.remove('hidden');
+            })
+            .catch(error => {
+                console.error('Error loading schedule:', error);
+                scheduleContent.innerHTML = '<p class="text-red-500">Error loading schedule</p>';
+            });
+    } else {
+        scheduleDiv.classList.add('hidden');
+    }
+}
+</script>
 {% endblock %}

@@ -1,19 +1,104 @@
 {% extends "base.html" %}
+
+{% block title %}My Progress - Member{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-  <h2>Your Progress</h2>
-  <table>
-    <tr>
-      <th>Date</th><th>Weight</th><th>Body Fat</th><th>Notes</th>
-    </tr>
-    {% for p in progress_records %}
-    <tr>
-      <td>{{ p.date }}</td>
-      <td>{{ p.weight }}</td>
-      <td>{{ p.body_fat }}</td>
-      <td>{{ p.notes }}</td>
-    </tr>
-    {% endfor %}
-  </table>
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">
+        <i class="fas fa-chart-line mr-3 text-primary"></i>My Progress
+    </h1>
+    <p class="text-gray-600">Track your fitness journey and body measurements</p>
 </div>
+
+{% if progress_records %}
+<!-- Progress Chart Placeholder -->
+<div class="card mb-8">
+    <div class="card-header">
+        <h2 class="text-xl font-semibold text-gray-900">Progress Overview</h2>
+    </div>
+    <div class="card-body">
+        <div class="h-64 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
+            <div class="text-center text-gray-500">
+                <i class="fas fa-chart-line text-4xl mb-2"></i>
+                <p>Progress charts will be displayed here</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Records -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="text-xl font-semibold text-gray-900">Progress Records</h2>
+    </div>
+    <div class="card-body p-0">
+        <div class="overflow-x-auto">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Weight (kg)</th>
+                        <th>BMI</th>
+                        <th>Body Fat %</th>
+                        <th>Measurements</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in progress_records %}
+                    <tr>
+                        <td>
+                            <div class="font-medium">{{ record.recorded_date.strftime('%B %d, %Y') }}</div>
+                        </td>
+                        <td>
+                            {% if record.weight %}
+                            <span class="font-medium">{{ record.weight }}</span>
+                            {% else %}
+                            <span class="text-gray-400">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if record.bmi %}
+                            <span class="font-medium">{{ record.bmi }}</span>
+                            {% else %}
+                            <span class="text-gray-400">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if record.body_fat_percentage %}
+                            <span class="font-medium">{{ record.body_fat_percentage }}%</span>
+                            {% else %}
+                            <span class="text-gray-400">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="text-sm space-y-1">
+                                {% if record.chest %}<div>Chest: {{ record.chest }}cm</div>{% endif %}
+                                {% if record.waist %}<div>Waist: {{ record.waist }}cm</div>{% endif %}
+                                {% if record.bicep %}<div>Bicep: {{ record.bicep }}cm</div>{% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if record.notes %}
+                            <span class="text-sm text-gray-600">{{ record.notes[:50] }}{% if record.notes|length > 50 %}...{% endif %}</span>
+                            {% else %}
+                            <span class="text-gray-400">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-12">
+        <i class="fas fa-chart-line text-gray-400 text-4xl mb-4"></i>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No progress records yet</h3>
+        <p class="text-gray-500">Your trainer will record your progress during sessions</p>
+    </div>
+</div>
+{% endif %}
 {% endblock %}

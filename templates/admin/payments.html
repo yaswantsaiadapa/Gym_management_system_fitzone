@@ -1,55 +1,133 @@
 {% extends "base.html" %}
+
+{% block title %}Payments - Admin{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-  <h2>Payments</h2>
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">
+        <i class="fas fa-credit-card mr-3 text-primary"></i>Payments
+    </h1>
+    <p class="text-gray-600">Manage member payments and outstanding dues</p>
+</div>
 
-  <h4>Pending Payments</h4>
-  <table class="table table-warning">
-    <thead>
-      <tr>
-        <th>Member</th><th>Plan</th><th>Amount</th><th>Status</th><th>Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for payment in pending_payments %}
-      <tr>
-        <td>{{ payment.member_name }}</td>
-        <td>{{ payment.plan_name }}</td>
-        <td>₹{{ payment.amount }}</td>
-        <td>{{ payment.payment_status }}</td>
-        <td>
-          <form action="{{ url_for('admin.update_payment_status', payment_id=payment.id) }}" method="POST">
-            <select name="status" class="form-select">
-              <option value="pending">Pending</option>
-              <option value="completed">Completed</option>
-              <option value="failed">Failed</option>
-              <option value="refunded">Refunded</option>
-            </select>
-            <button type="submit" class="btn btn-success btn-sm mt-1">Update</button>
-          </form>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<!-- Pending Payments Alert -->
+{% if pending_payments %}
+<div class="card border-l-4 border-l-warning mb-6">
+    <div class="card-header bg-yellow-50">
+        <h2 class="text-lg font-semibold text-gray-900">
+            <i class="fas fa-exclamation-triangle text-warning mr-2"></i>
+            Pending Payments ({{ pending_payments|length }})
+        </h2>
+    </div>
+    <div class="card-body p-0">
+        <div class="divide-y divide-gray-200">
+            {% for payment in pending_payments %}
+            <div class="p-4 hover:bg-gray-50">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <div class="font-medium text-gray-900">{{ payment.member_name }}</div>
+                        <div class="text-sm text-gray-500">{{ payment.plan_name }} - ₹{{ payment.amount }}</div>
+                        <div class="text-xs text-gray-400">Due: {{ payment.due_date.strftime('%b %d, %Y') }}</div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <form method="POST" action="{{ url_for('admin.update_payment_status', payment_id=payment.id) }}" class="inline">
+                            <input type="hidden" name="status" value="completed">
+                            <button type="submit" class="btn btn-success text-sm">
+                                <i class="fas fa-check mr-1"></i>Mark Paid
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ url_for('admin.update_payment_status', payment_id=payment.id) }}" class="inline">
+                            <input type="hidden" name="status" value="failed">
+                            <button type="submit" class="btn btn-danger text-sm">
+                                <i class="fas fa-times mr-1"></i>Mark Failed
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
 
-  <h4>All Payments</h4>
-  <table class="table table-striped">
-    <thead>
-      <tr>
-        <th>Member</th><th>Amount</th><th>Status</th><th>Date</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for payment in payments %}
-      <tr>
-        <td>{{ payment.member_name }}</td>
-        <td>₹{{ payment.amount }}</td>
-        <td>{{ payment.payment_status }}</td>
-        <td>{{ payment.payment_date or "Not Paid" }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<!-- All Payments -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="text-xl font-semibold text-gray-900">All Payments</h2>
+    </div>
+    <div class="card-body p-0">
+        {% if payments %}
+        <div class="overflow-x-auto">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Member</th>
+                        <th>Plan</th>
+                        <th>Amount</th>
+                        <th>Method</th>
+                        <th>Status</th>
+                        <th>Due Date</th>
+                        <th>Paid Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in payments %}
+                    <tr>
+                        <td>
+                            <div class="font-medium text-gray-900">{{ payment.member_name }}</div>
+                        </td>
+                        <td>
+                            <span class="text-sm">{{ payment.plan_name }}</span>
+                        </td>
+                        <td>
+                            <span class="font-medium">₹{{ payment.amount }}</span>
+                        </td>
+                        <td>
+                            <span class="text-sm capitalize">{{ payment.payment_method }}</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-{{ 'success' if payment.payment_status == 'completed' else 'warning' if payment.payment_status == 'pending' else 'danger' }}">
+                                {{ payment.payment_status|title }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="text-sm">{{ payment.due_date.strftime('%b %d, %Y') }}</span>
+                        </td>
+                        <td>
+                            <span class="text-sm">{{ payment.payment_date.strftime('%b %d, %Y') if payment.payment_date else '-' }}</span>
+                        </td>
+                        <td>
+                            {% if payment.payment_status == 'pending' %}
+                            <div class="flex space-x-1">
+                                <form method="POST" action="{{ url_for('admin.update_payment_status', payment_id=payment.id) }}" class="inline">
+                                    <input type="hidden" name="status" value="completed">
+                                    <button type="submit" class="text-success hover:text-green-700" title="Mark Completed">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ url_for('admin.update_payment_status', payment_id=payment.id) }}" class="inline">
+                                    <input type="hidden" name="status" value="failed">
+                                    <button type="submit" class="text-danger hover:text-red-700" title="Mark Failed">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </form>
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-8 text-center">
+            <i class="fas fa-credit-card text-gray-400 text-4xl mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No payments found</h3>
+            <p class="text-gray-500">Payments will appear here as members join and make payments</p>
+        </div>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

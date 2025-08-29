@@ -1,36 +1,271 @@
 {% extends "base.html" %}
+
+{% block title %}Client Details - Trainer{% endblock %}
+
 {% block content %}
-<h1>Client: {{ member.name }}</h1>
+<div class="max-w-6xl mx-auto">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">
+            <i class="fas fa-user mr-3 text-primary"></i>{{ member.full_name }}
+        </h1>
+        <nav class="text-sm text-gray-500 mt-2">
+            <a href="{{ url_for('trainer_routes.dashboard') }}" class="hover:text-gray-700">Dashboard</a>
+            <span class="mx-2">/</span>
+            <a href="{{ url_for('trainer_routes.clients') }}" class="hover:text-gray-700">Clients</a>
+            <span class="mx-2">/</span>
+            <span>{{ member.full_name }}</span>
+        </nav>
+    </div>
 
-<h2>Attendance (last 10)</h2>
-<ul>
-  {% for a in attendance_records %}
-    <li>{{ a.date }} - {{ a.status }}</li>
-  {% else %}
-    <li>No attendance records.</li>
-  {% endfor %}
-</ul>
+    <!-- Client Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="stat-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="stat-label">Status</div>
+                    <div class="stat-value text-sm {{ 'text-success' if member.status == 'active' else 'text-warning' }}">
+                        {{ member.status|title }}
+                    </div>
+                </div>
+                <i class="fas fa-user text-primary text-2xl"></i>
+            </div>
+        </div>
 
-<h2>Progress (last 5)</h2>
-<ul>
-  {% for p in progress_records %}
-    <li>{{ p.recorded_date }} - {{ p.weight }}kg</li>
-  {% else %}
-    <li>No progress records.</li>
-  {% endfor %}
-</ul>
+        <div class="stat-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="stat-label">Current Weight</div>
+                    <div class="stat-value text-sm">{{ member.weight or 'N/A' }}{% if member.weight %}kg{% endif %}</div>
+                </div>
+                <i class="fas fa-weight text-secondary text-2xl"></i>
+            </div>
+        </div>
 
-<h2>Workout Plan</h2>
-{% if current_workout_plan %}
-  <p>{{ current_workout_plan.name }} ({{ current_workout_plan.start_date }} - {{ current_workout_plan.end_date or "ongoing" }})</p>
-{% else %}
-  <p>No active workout plan. <a href="{{ url_for('trainer_routes.create_workout_plan', member_id=member.id) }}">Create one</a></p>
-{% endif %}
+        <div class="stat-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="stat-label">Attendance</div>
+                    <div class="stat-value text-sm">{{ attendance_records|length }} sessions</div>
+                </div>
+                <i class="fas fa-calendar-check text-accent text-2xl"></i>
+            </div>
+        </div>
 
-<h2>Diet Plan</h2>
-{% if current_diet_plan %}
-  <p>{{ current_diet_plan.name }} ({{ current_diet_plan.start_date }} - {{ current_diet_plan.end_date or "ongoing" }})</p>
-{% else %}
-  <p>No active diet plan. <a href="{{ url_for('trainer_routes.create_diet_plan', member_id=member.id) }}">Create one</a></p>
-{% endif %}
+        <div class="stat-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="stat-label">Progress Records</div>
+                    <div class="stat-value text-sm">{{ progress_records|length }} entries</div>
+                </div>
+                <i class="fas fa-chart-line text-success text-2xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        <a href="{{ url_for('trainer_routes.create_workout_plan', member_id=member.id) }}" class="btn btn-primary text-center">
+            <i class="fas fa-dumbbell block mb-1"></i>Create Workout
+        </a>
+        <a href="{{ url_for('trainer_routes.create_diet_plan', member_id=client.id) }}" class="btn btn-secondary text-center">
+            <i class="fas fa-apple-alt block mb-1"></i>Create Diet
+        </a>
+        <a href="{{ url_for('trainer_routes.record_progress', member_id=member.id) }}" class="btn bg-accent text-white hover:bg-orange-600 text-center">
+            <i class="fas fa-chart-line block mb-1"></i>Record Progress
+        </a>
+        <form method="POST" action="{{ url_for('trainer_routes.mark_attendance', member_id=member.id) }}" class="inline">
+            <input type="hidden" name="date" value="{{ date.today().strftime('%Y-%m-%d') }}">
+            <input type="hidden" name="time_slot" value="General">
+            <input type="hidden" name="status" value="present">
+            <button type="submit" class="btn bg-purple-600 text-white hover:bg-purple-700 w-full text-center">
+                <i class="fas fa-check-circle block mb-1"></i>Mark Present
+            </button>
+        </form>
+        <button onclick="showContactInfo()" class="btn bg-gray-600 text-white hover:bg-gray-700 text-center">
+            <i class="fas fa-phone block mb-1"></i>Contact Info
+        </button>
+    </div>
+
+    <!-- Current Plans -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Current Workout Plan -->
+        <div class="card">
+            <div class="card-header flex justify-between items-center">
+                <h3 class="text-xl font-semibold text-gray-900">Current Workout Plan</h3>
+                {% if current_workout_plan %}
+                <a href="{{ url_for('trainer_routes.edit_workout_plan', plan_id=current_workout_plan.id) }}" 
+                   class="text-primary hover:underline text-sm">Edit Plan</a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if current_workout_plan %}
+                <div class="mb-4">
+                    <h4 class="font-medium text-gray-900">{{ current_workout_plan.name }}</h4>
+                    {% if current_workout_plan.description %}
+                    <p class="text-gray-600 text-sm mt-1">{{ current_workout_plan.description }}</p>
+                    {% endif %}
+                    <div class="text-sm text-gray-500 mt-2">
+                        {{ current_workout_plan.start_date.strftime('%b %d, %Y') }} - 
+                        {{ current_workout_plan.end_date.strftime('%b %d, %Y') if current_workout_plan.end_date else 'Ongoing' }}
+                    </div>
+                </div>
+                <span class="badge badge-{{ 'success' if current_workout_plan.status == 'active' else 'warning' }}">
+                    {{ current_workout_plan.status|title }}
+                </span>
+                {% else %}
+                <div class="text-center py-6">
+                    <i class="fas fa-dumbbell text-gray-400 text-3xl mb-2"></i>
+                    <p class="text-gray-500">No active workout plan</p>
+                    <a href="{{ url_for('trainer_routes.create_workout_plan', member_id=member.id) }}" 
+                       class="btn btn-primary mt-3">Create Workout Plan</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Current Diet Plan -->
+        <div class="card">
+            <div class="card-header flex justify-between items-center">
+                <h3 class="text-xl font-semibold text-gray-900">Current Diet Plan</h3>
+                {% if current_diet_plan %}
+                <a href="{{ url_for('trainer_routes.edit_diet_plan', plan_id=current_diet_plan.id) }}" 
+                   class="text-primary hover:underline text-sm">Edit Plan</a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if current_diet_plan %}
+                <div class="mb-4">
+                    <h4 class="font-medium text-gray-900">{{ current_diet_plan.name }}</h4>
+                    {% if current_diet_plan.description %}
+                    <p class="text-gray-600 text-sm mt-1">{{ current_diet_plan.description }}</p>
+                    {% endif %}
+                    {% if current_diet_plan.total_calories %}
+                    <div class="text-sm text-gray-500 mt-2">Target: {{ current_diet_plan.total_calories }} calories/day</div>
+                    {% endif %}
+                    <div class="text-sm text-gray-500 mt-1">
+                        {{ current_diet_plan.start_date.strftime('%b %d, %Y') }} - 
+                        {{ current_diet_plan.end_date.strftime('%b %d, %Y') if current_diet_plan.end_date else 'Ongoing' }}
+                    </div>
+                </div>
+                <span class="badge badge-{{ 'success' if current_diet_plan.status == 'active' else 'warning' }}">
+                    {{ current_diet_plan.status|title }}
+                </span>
+                {% else %}
+                <div class="text-center py-6">
+                    <i class="fas fa-apple-alt text-gray-400 text-3xl mb-2"></i>
+                    <p class="text-gray-500">No active diet plan</p>
+                    <a href="{{ url_for('trainer_routes.create_diet_plan', member_id=member.id) }}" 
+                       class="btn btn-secondary mt-3">Create Diet Plan</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Recent Attendance -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="text-xl font-semibold text-gray-900">Recent Attendance</h3>
+            </div>
+            <div class="card-body p-0">
+                {% if attendance_records %}
+                <div class="divide-y divide-gray-200">
+                    {% for record in attendance_records %}
+                    <div class="p-4 flex justify-between items-center">
+                        <div>
+                            <div class="font-medium text-gray-900">{{ record.date.strftime('%B %d, %Y') }}</div>
+                            <div class="text-sm text-gray-500">{{ record.time_slot }}</div>
+                        </div>
+                        <span class="badge badge-{{ 'success' if record.status == 'present' else 'danger' if record.status == 'absent' else 'warning' }}">
+                            {{ record.status|title }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="p-4 text-center text-gray-500">No attendance records</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Progress History -->
+        <div class="card">
+            <div class="card-header flex justify-between items-center">
+                <h3 class="text-xl font-semibold text-gray-900">Progress History</h3>
+                <a href="{{ url_for('trainer_routes.record_progress', member_id=member.id) }}" 
+                   class="text-primary hover:underline text-sm">Record New</a>
+            </div>
+            <div class="card-body p-0">
+                {% if progress_records %}
+                <div class="divide-y divide-gray-200">
+                    {% for progress in progress_records %}
+                    <div class="p-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <div class="font-medium text-gray-900">{{ progress.recorded_date.strftime('%B %d, %Y') }}</div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-sm text-gray-600">
+                            {% if progress.weight %}<div>Weight: {{ progress.weight }}kg</div>{% endif %}
+                            {% if progress.bmi %}<div>BMI: {{ progress.bmi }}</div>{% endif %}
+                            {% if progress.body_fat_percentage %}<div>Body Fat: {{ progress.body_fat_percentage }}%</div>{% endif %}
+                            {% if progress.chest %}<div>Chest: {{ progress.chest }}cm</div>{% endif %}
+                        </div>
+                        {% if progress.notes %}
+                        <div class="text-xs text-gray-500 mt-2">{{ progress.notes }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="p-4 text-center text-gray-500">No progress records</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contact Info Modal -->
+<div id="contactModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <div class="mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Contact Information</h3>
+        </div>
+        <div class="space-y-3">
+            <div>
+                <label class="text-sm text-gray-500">Email</label>
+                <div class="font-medium">{{ member.email }}</div>
+            </div>
+            <div>
+                <label class="text-sm text-gray-500">Phone</label>
+                <div class="font-medium">{{ member.phone }}</div>
+            </div>
+            {% if member.emergency_contact %}
+            <div>
+                <label class="text-sm text-gray-500">Emergency Contact</label>
+                <div class="font-medium">{{ member.emergency_contact }}</div>
+            </div>
+            {% endif %}
+            {% if member.emergency_phone %}
+            <div>
+                <label class="text-sm text-gray-500">Emergency Phone</label>
+                <div class="font-medium">{{ member.emergency_phone }}</div>
+            </div>
+            {% endif %}
+        </div>
+        <div class="mt-6 text-right">
+            <button onclick="hideContactInfo()" class="btn btn-secondary">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function showContactInfo() {
+    document.getElementById('contactModal').classList.remove('hidden');
+}
+
+function hideContactInfo() {
+    document.getElementById('contactModal').classList.add('hidden');
+}
+</script>
 {% endblock %}

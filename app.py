@@ -61,6 +61,16 @@ def create_app():
     app.register_blueprint(member_routes_bp, url_prefix='/member')
     app.register_blueprint(trainer_routes_bp, url_prefix='/trainer')
     
+    @app.template_filter('datetimeformat')
+    def datetimeformat(value, format='%b %d, %Y %I:%M %p'):
+        if not value:
+            return ""
+        if isinstance(value, str):
+            try:
+                value = datetime.fromisoformat(value)
+            except ValueError:
+                return value  # return as-is if it can’t parse
+        return value.strftime(format)
     # Context processors (global vars for templates)
     @app.context_processor
     def inject_global_vars():

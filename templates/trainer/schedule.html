@@ -1,17 +1,146 @@
 {% extends "base.html" %}
+
+{% block title %}My Schedule - Trainer{% endblock %}
+
 {% block content %}
-<h1>Schedule for {{ selected_date }}</h1>
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">
+        <i class="fas fa-calendar mr-3 text-primary"></i>My Schedule
+    </h1>
+    <p class="text-gray-600">View your daily training sessions and appointments</p>
+</div>
 
-<form method="GET">
-  <input type="date" name="date" value="{{ selected_date }}">
-  <button type="submit">Go</button>
-</form>
+<!-- Date Selection -->
+<div class="card mb-8">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('trainer_routes.schedule') }}" class="flex items-end space-x-4">
+            <div class="form-group mb-0">
+                <label class="form-label" for="date">Select Date</label>
+                <input type="date" id="date" name="date" value="{{ selected_date.strftime('%Y-%m-%d') }}" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search mr-2"></i>View Schedule
+            </button>
+            <a href="{{ url_for('trainer_routes.schedule', date=date.today().strftime('%Y-%m-%d')) }}" class="btn btn-secondary">
+                <i class="fas fa-calendar-day mr-2"></i>Today
+            </a>
+        </form>
+    </div>
+</div>
 
-<ul>
-  {% for s in schedule %}
-    <li>{{ s.session_time }} - {{ s.member_name }}</li>
-  {% else %}
-    <li>No sessions scheduled.</li>
-  {% endfor %}
-</ul>
+<!-- Schedule Display -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="text-xl font-semibold text-gray-900">
+            Schedule for {{ selected_date.strftime('%A, %B %d, %Y') }}
+        </h2>
+    </div>
+    <div class="card-body p-0">
+        {% if schedule %}
+        <div class="overflow-x-auto">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Time Slot</th>
+                        <th>Client</th>
+                        <th>Contact</th>
+                        <th>Status</th>
+                        <th>Notes</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for session in schedule %}
+                    <tr>
+                        <td>
+                            <div class="font-medium text-gray-900">{{ session.time_slot }}</div>
+                        </td>
+                        <td>
+                            <div>
+                                <div class="font-medium">{{ session.member_name or 'Available' }}</div>
+                                {% if session.member_id %}
+                                <div class="text-sm text-gray-500">ID: {{ session.member_id }}</div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if session.member_phone %}
+                            <div class="text-sm">{{ session.member_phone }}</div>
+                            {% else %}
+                            <span class="text-gray-400">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge badge-{{ 'success' if session.status == 'present' else 'warning' if session.status == 'scheduled' else 'danger' }}">
+                                {{ session.status|title }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if session.notes %}
+                            <span class="text-sm text-gray-600">{{ session.notes[:30] }}{% if session.notes|length > 30 %}...{% endif %}</span>
+                            {% else %}
+                            <span class="text-gray-400">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if session.member_id %}
+                            <div class="flex space-x-2">
+                                {% if session.status == 'scheduled' %}
+                                <form method="POST" action="{{ url_for('trainer_routes.mark_attendance', member_id=session.member_id) }}" class="inline">
+                                    <input type="hidden" name="date" value="{{ selected_date.strftime('%Y-%m-%d') }}">
+                                    <input type="hidden" name="time_slot" value="{{ session.time_slot }}">
+                                    <input type="hidden" name="status" value="present">
+                                    <button type="submit" class="text-success hover:text-green-700" title="Mark Present">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ url_for('trainer_routes.mark_attendance', member_id=session.member_id) }}" class="inline">
+                                    <input type="hidden" name="date" value="{{ selected_date.strftime('%Y-%m-%d') }}">
+                                    <input type="hidden" name="time_slot" value="{{ session.time_slot }}">
+                                    <input type="hidden" name="status" value="absent">
+                                    <button type="submit" class="text-danger hover:text-red-700" title="Mark Absent">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                                <a href="{{ url_for('trainer_routes.client_details', member_id=session.member_id) }}" 
+                                   class="text-primary hover:text-blue-700" title="View Client">
+                                    <i class="fas fa-user"></i>
+                                </a>
+                            </div>
+                            {% else %}
+                            <span class="text-gray-400">Available</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-8 text-center">
+            <i class="fas fa-calendar text-gray-400 text-4xl mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No sessions scheduled</h3>
+            <p class="text-gray-500">No training sessions for this date</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Quick Schedule Navigation -->
+<div class="mt-8 text-center">
+    <div class="space-x-4">
+        <a href="{{ url_for('trainer_routes.schedule', date=(selected_date - timedelta(days=1)).strftime('%Y-%m-%d')) }}" 
+           class="btn btn-secondary">
+            <i class="fas fa-chevron-left mr-2"></i>Previous Day
+        </a>
+        <a href="{{ url_for('trainer_routes.dashboard') }}" class="btn btn-primary">
+            <i class="fas fa-home mr-2"></i>Dashboard
+        </a>
+        <a href="{{ url_for('trainer_routes.schedule', date=(selected_date + timedelta(days=1)).strftime('%Y-%m-%d')) }}" 
+           class="btn btn-secondary">
+            <i class="fas fa-chevron-right ml-2"></i>Next Day
+        </a>
+    </div>
+</div>
 {% endblock %}

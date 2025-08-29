@@ -286,7 +286,7 @@ def init_db(db_path='gym_management.db'):
         )
     ''')
     
-    # Announcements table
+    # cements table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS announcements (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -357,7 +357,7 @@ def insert_default_data(cursor):
     if cursor.fetchone()[0] == 0:
         trainer_users = [
             ('ravi_trainer', 'ravi@fitzonegym.com', 'trainer123', 'Ravi Kumar', '+919000000002'),
-            ('sneha_trainer', 'sneha@fitzonegym.com', 'trainer123', 'Sneha Reddy', '+919000000003')
+            ('sneAnnounha_trainer', 'sneha@fitzonegym.com', 'trainer123', 'Sneha Reddy', '+919000000003')
         ]
 
         for trainer in trainer_users:
