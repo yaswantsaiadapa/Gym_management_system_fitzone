@@ -68,16 +68,17 @@
 
 <!-- Quick Actions -->
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-    <a href="{{ url_for('member_routes.profile') }}" class="btn btn-primary text-center">
+    <a href="{{ url_for('member.profile') }}" class="btn btn-primary text-center">
+
         <i class="fas fa-user-edit block mb-1"></i>Edit Profile
     </a>
-    <a href="{{ url_for('member_routes.workouts') }}" class="btn btn-secondary text-center">
+    <a href="{{ url_for('member.workouts') }}" class="btn btn-secondary text-center">
         <i class="fas fa-dumbbell block mb-1"></i>My Workouts
     </a>
-    <a href="{{ url_for('member_routes.schedule_session') }}" class="btn bg-accent text-white hover:bg-orange-600 text-center">
+    <a href="{{ url_for('member.schedule_session') }}" class="btn bg-accent text-white hover:bg-orange-600 text-center">
         <i class="fas fa-calendar-plus block mb-1"></i>Book Session
     </a>
-    <a href="{{ url_for('member_routes.membership_status') }}" class="btn bg-purple-600 text-white hover:bg-purple-700 text-center">
+    <a href="{{ url_for('member.membership_status') }}" class="btn bg-purple-600 text-white hover:bg-purple-700 text-center">
         <i class="fas fa-id-card block mb-1"></i>Membership
     </a>
 </div>
@@ -88,7 +89,7 @@
     <div class="card">
         <div class="card-header flex justify-between items-center">
             <h2 class="text-xl font-semibold text-gray-900">Recent Attendance</h2>
-            <a href="{{ url_for('member_routes.attendance') }}" class="text-primary hover:underline text-sm">View All</a>
+            <a href="{{ url_for('member.attendance') }}" class="text-primary hover:underline text-sm">View All</a>
         </div>
         <div class="card-body p-0">
             {% if stats.recent_attendance %}
@@ -97,7 +98,9 @@
                 <div class="p-4">
                     <div class="flex justify-between items-center">
                         <div>
-                            <div class="font-medium text-gray-900">{{ attendance.date.strftime('%B %d, %Y') }}</div>
+                            <div class="font-medium text-gray-900">
+                                {{ attendance.date|default("")|datetimeformat('%B %d, %Y') }}
+                            </div>
                             <div class="text-sm text-gray-500">{{ attendance.time_slot }}</div>
                         </div>
                         <div class="badge badge-{{ 'success' if attendance.status == 'present' else 'danger' }}">
@@ -117,7 +120,7 @@
     <div class="card">
         <div class="card-header flex justify-between items-center">
             <h2 class="text-xl font-semibold text-gray-900">Latest Progress</h2>
-            <a href="{{ url_for('member_routes.progress') }}" class="text-primary hover:underline text-sm">View All</a>
+            <a href="{{ url_for('member.progress') }}" class="text-primary hover:underline text-sm">View All</a>
         </div>
         <div class="card-body">
             {% if latest_progress %}
@@ -139,7 +142,7 @@
                 </div>
                 {% endif %}
                 <div class="text-sm text-gray-500 mt-3">
-                    Recorded on {{ latest_progress.recorded_date.strftime('%B %d, %Y') }}
+                    Recorded on {{ latest_progress.recorded_date|default("")|datetimeformat('%B %d, %Y') }}
                 </div>
             </div>
             {% else %}
@@ -167,7 +170,9 @@
                 <div class="flex justify-between items-start">
                     <div>
                         <h3 class="font-medium text-gray-900">{{ announcement.title }}</h3>
-                        <p class="text-sm text-gray-600 mt-1">{{ announcement.content[:100] }}...</p>
+                        <p class="text-sm text-gray-600 mt-1">
+                            {{ announcement.content|truncate(100, True, '...') }}
+                        </p>
                         <div class="text-xs text-gray-500 mt-2">
                             {{ announcement.created_at|datetimeformat }}
                         </div>

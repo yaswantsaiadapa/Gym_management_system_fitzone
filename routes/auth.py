@@ -38,14 +38,14 @@ def login_form(role):
 def login_post(role):
     """Process role-specific login"""
     if role not in ['admin', 'member', 'trainer']:
-        flash('Invalid login type!')
+        flash('Invalid login type!', 'danger')
         return redirect(url_for('auth.login'))
 
     username = request.form.get('username')
     password = request.form.get('password')
 
     if not username or not password:
-        flash('Please enter both username and password!')
+        flash('⚠️ Please enter both username and password!', 'warning')
         return redirect(url_for('auth.login_form', role=role))
 
     # Authenticate user
@@ -65,24 +65,25 @@ def login_post(role):
             if member:
                 session['member_id'] = member.id
                 session['membership_status'] = member.status
+            flash(f'✅ Welcome back, {user.full_name}! Redirecting to Member Dashboard.', 'success')
+            return redirect(url_for('member.dashboard'))
+
         elif role == 'trainer':
             trainer = Trainer.get_by_user_id(user.id)
             if trainer:
                 session['trainer_id'] = trainer.id
                 session['trainer_status'] = trainer.status
-
-        flash(f'Welcome back, {user.full_name}!')
-
-        # Redirect to appropriate dashboard
-        if role == 'admin':
-            return redirect(url_for('admin.dashboard'))
-        elif role == 'member':
-            return redirect(url_for('member_routes.dashboard'))
-        elif role == 'trainer':
+            flash(f'✅ Welcome back, {user.full_name}! Redirecting to Trainer Dashboard.', 'success')
             return redirect(url_for('trainer_routes.dashboard'))
-    else:
-        flash('Invalid credentials! Please check your username and password.')
-        return redirect(url_for('auth.login_form', role=role))
+
+        elif role == 'admin':
+            flash(f'✅ Welcome back, {user.full_name}! Redirecting to Admin Dashboard.', 'success')
+            return redirect(url_for('admin.dashboard'))
+
+    # If authentication fails
+    flash('❌ Invalid credentials! Please check your username and password.', 'danger')
+    return redirect(url_for('auth.login_form', role=role))
+
 
 
 @auth_bp.route('/logout')

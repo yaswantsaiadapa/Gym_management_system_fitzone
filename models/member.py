@@ -474,43 +474,73 @@ class Member:
     @classmethod
     def get_trainer_client_count(cls, trainer_id):
         """Count how many clients are assigned to a trainer"""
-        import sqlite3
-        conn = sqlite3.connect(cls._db_path())
-        cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM members WHERE trainer_id = ?", (trainer_id,))
-        count = cursor.fetchone()[0]
-        conn.close()
-        return count
+        db_path = cls._db_path()
+        query = "SELECT COUNT(*) FROM members WHERE trainer_id = ?"
+        res = execute_query(query, (trainer_id,), db_path, fetch=True)
+        return res[0][0] if res else 0
 
     @classmethod
     def get_trainer_clients(cls, trainer_id):
-        """Get basic list of clients assigned to a trainer"""
-        import sqlite3
-        conn = sqlite3.connect(cls._db_path())
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT id, full_name, membership_date, expiry_date, is_active
-            FROM members
-            WHERE trainer_id = ?
-            ORDER BY full_name
-        """, (trainer_id,))
-        rows = cursor.fetchall()
-        conn.close()
-        return rows
+        """
+        Get basic list of clients assigned to a trainer.
+        Returns a list of Member objects with id, full_name, membership_start_date,
+        membership_end_date, and status.
+        """
+        db_path = cls._db_path()
+        query = """
+            SELECT 
+                m.id, u.full_name,
+                m.membership_start_date, m.membership_end_date,
+                m.status
+            FROM members m
+            LEFT JOIN users u ON m.user_id = u.id
+            WHERE m.trainer_id = ?
+            ORDER BY u.full_name
+        """
+        rows = execute_query(query, (trainer_id,), db_path, fetch=True)
+        return [
+            cls(
+                id=r[0],
+                full_name=r[1],
+                membership_start_date=_to_date(r[2]),
+                membership_end_date=_to_date(r[3]),
+                status=r[4]
+            )
+            for r in rows
+        ]
 
     @classmethod
     def get_trainer_clients_detailed(cls, trainer_id):
-        """Get detailed client info for trainer’s dashboard/clients page"""
-        import sqlite3
-        conn = sqlite3.connect(cls._db_path())
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT id, full_name, email, phone, membership_date, expiry_date, height, is_active
-            FROM members
-            WHERE trainer_id = ?
-            ORDER BY full_name
-        """, (trainer_id,))
-        rows = cursor.fetchall()
-        conn.close()
-        return rows
+        """
+        Get detailed client info for trainer’s dashboard/clients page.
+        Returns Member objects with id, full_name, email, phone,
+        membership_start_date, membership_end_date, height, and status.
+        """
+        db_path = cls._db_path()
+        query = """
+            SELECT 
+                m.id, u.full_name, u.email,
+                m.phone,
+                m.membership_start_date, m.membership_end_date,
+                m.height,
+                m.status
+            FROM members m
+            LEFT JOIN users u ON m.user_id = u.id
+            WHERE m.trainer_id = ?
+            ORDER BY u.full_name
+        """
+        rows = execute_query(query, (trainer_id,), db_path, fetch=True)
+        return [
+            cls(
+                id=r[0],
+                full_name=r[1],
+                email=r[2],
+                phone=r[3],
+                membership_start_date=_to_date(r[4]),
+                membership_end_date=_to_date(r[5]),
+                height=r[6],
+                status=r[7]
+            )
+            for r in rows
+        ]
 

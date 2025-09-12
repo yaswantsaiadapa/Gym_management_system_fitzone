@@ -23,10 +23,13 @@ from routes.admin import admin_bp
 from routes.member_routes import member_routes_bp
 from routes.trainer_routes import trainer_routes_bp
 
+from datetime import timedelta
+
 
 def create_app():
     app = Flask(__name__)
-    
+    app.jinja_env.globals['timedelta'] = timedelta
+
     # Configuration
     app.config['SECRET_KEY'] = os.environ.get(
         'SECRET_KEY',
@@ -50,6 +53,31 @@ def create_app():
     
     # Initialize database
     init_db(app.config['DATABASE_PATH'])
+    app.config.setdefault('SESSION_COOKIE_SECURE', False)   # must be False for http://127.0.0.1
+    app.config.setdefault('SESSION_COOKIE_SAMESITE', 'Lax')
+    app.config.setdefault('SESSION_COOKIE_HTTPONLY', True)
+
+    import logging
+    # ensure debug logging is enabled
+    app.logger.setLevel(logging.DEBUG)
+
+    @app.after_request
+    def log_session_and_cookies(response):
+        try:
+            # log session contents (shallow)
+            app.logger.debug("=== SESSION DEBUG === keys=%s", list(session.keys()))
+            for k in list(session.keys()):
+                app.logger.debug(" session['%s'] = %r", k, session.get(k))
+            # log Set-Cookie headers if present
+            cookies = response.headers.getlist('Set-Cookie')
+            if cookies:
+                for c in cookies:
+                    app.logger.debug(" Set-Cookie -> %s", c)
+            else:
+                app.logger.debug(" No Set-Cookie headers on response")
+        except Exception as e:
+            app.logger.debug("Error logging session: %s", e)
+        return response
     
     # Initialize Mail
     mail = Mail(app)

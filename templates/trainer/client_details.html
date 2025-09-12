@@ -74,7 +74,7 @@
             <i class="fas fa-chart-line block mb-1"></i>Record Progress
         </a>
         <form method="POST" action="{{ url_for('trainer_routes.mark_attendance', member_id=member.id) }}" class="inline">
-            <input type="hidden" name="date" value="{{ date.today().strftime('%Y-%m-%d') }}">
+            <input type="hidden" name="date" value="{{ date.today()|datetimeformat('%B %d, %Y') }}">
             <input type="hidden" name="time_slot" value="General">
             <input type="hidden" name="status" value="present">
             <button type="submit" class="btn bg-purple-600 text-white hover:bg-purple-700 w-full text-center">
@@ -105,8 +105,8 @@
                     <p class="text-gray-600 text-sm mt-1">{{ current_workout_plan.description }}</p>
                     {% endif %}
                     <div class="text-sm text-gray-500 mt-2">
-                        {{ current_workout_plan.start_date.strftime('%b %d, %Y') }} - 
-                        {{ current_workout_plan.end_date.strftime('%b %d, %Y') if current_workout_plan.end_date else 'Ongoing' }}
+                        {{ current_workout_plan.start_date|datetimeformat('%B %d, %Y') }} - 
+                        {{ current_workout_plan.end_date|datetimeformat('%B %d, %Y') if current_workout_plan.end_date else 'Ongoing' }}
                     </div>
                 </div>
                 <span class="badge badge-{{ 'success' if current_workout_plan.status == 'active' else 'warning' }}">
@@ -143,8 +143,8 @@
                     <div class="text-sm text-gray-500 mt-2">Target: {{ current_diet_plan.total_calories }} calories/day</div>
                     {% endif %}
                     <div class="text-sm text-gray-500 mt-1">
-                        {{ current_diet_plan.start_date.strftime('%b %d, %Y') }} - 
-                        {{ current_diet_plan.end_date.strftime('%b %d, %Y') if current_diet_plan.end_date else 'Ongoing' }}
+                        {{ current_diet_plan.start_date|datetimeformat('%B %d, %Y') }} - 
+                        {{ current_diet_plan.end_date|datetimeformat('%B %d, %Y') if current_diet_plan.end_date else 'Ongoing' }}
                     </div>
                 </div>
                 <span class="badge badge-{{ 'success' if current_diet_plan.status == 'active' else 'warning' }}">
@@ -175,7 +175,7 @@
                     {% for record in attendance_records %}
                     <div class="p-4 flex justify-between items-center">
                         <div>
-                            <div class="font-medium text-gray-900">{{ record.date.strftime('%B %d, %Y') }}</div>
+                            <div class="font-medium text-gray-900">{{ record.date|datetimeformat('%B %d, %Y') }}</div>
                             <div class="text-sm text-gray-500">{{ record.time_slot }}</div>
                         </div>
                         <span class="badge badge-{{ 'success' if record.status == 'present' else 'danger' if record.status == 'absent' else 'warning' }}">
@@ -203,7 +203,7 @@
                     {% for progress in progress_records %}
                     <div class="p-4">
                         <div class="flex justify-between items-center mb-2">
-                            <div class="font-medium text-gray-900">{{ progress.recorded_date.strftime('%B %d, %Y') }}</div>
+                            <div class="font-medium text-gray-900">{{ progress.recorded_date|datetimeformat('%B %d, %Y')}}</div>
                         </div>
                         <div class="grid grid-cols-2 gap-2 text-sm text-gray-600">
                             {% if progress.weight %}<div>Weight: {{ progress.weight }}kg</div>{% endif %}

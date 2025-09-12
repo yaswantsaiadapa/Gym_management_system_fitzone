@@ -32,7 +32,7 @@
                     <h3 class="text-xl font-semibold text-gray-900">Profile Information</h3>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ url_for('member_routes.update_profile') }}">
+                    <form method="POST" action="{{ url_for('member.update_profile') }}">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="form-group">
                                 <label class="form-label" for="full_name">Full Name</label>
@@ -88,7 +88,7 @@
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-save mr-2"></i>Update Profile
                             </button>
-                            <a href="{{ url_for('member_routes.dashboard') }}" class="btn btn-secondary">
+                            <a href="{{ url_for('member.dashboard') }}" class="btn btn-secondary">
                                 <i class="fas fa-times mr-2"></i>Cancel
                             </a>
                         </div>

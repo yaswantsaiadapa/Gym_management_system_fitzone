@@ -48,16 +48,17 @@
                             <a href="{{ url_for('admin.equipment_list') }}" class="nav-link">Equipment</a>
                             <a href="{{ url_for('admin.reports') }}" class="nav-link">Reports</a>
                         {% elif session.role == 'member' %}
-                            <a href="{{ url_for('member_routes.dashboard') }}" class="nav-link">Dashboard</a>
-                            <a href="{{ url_for('member_routes.profile') }}" class="nav-link">Profile</a>
-                            <a href="{{ url_for('member_routes.workouts') }}" class="nav-link">Workouts</a>
-                            <a href="{{ url_for('member_routes.attendance') }}" class="nav-link">Attendance</a>
-                            <a href="{{ url_for('member_routes.payments') }}" class="nav-link">Payments</a>
-                        {% elif session.role == 'trainer' %}
-                            <a href="{{ url_for('trainer_routes.dashboard') }}" class="nav-link">Dashboard</a>
-                            <a href="{{ url_for('trainer_routes.clients') }}" class="nav-link">My Clients</a>
-                            <a href="{{ url_for('trainer_routes.schedule') }}" class="nav-link">Schedule</a>
-                        {% endif %}
+    <a href="{{ url_for('member.dashboard') }}" class="nav-link">Dashboard</a>
+    <a href="{{ url_for('member.profile') }}" class="nav-link">Profile</a>
+    <a href="{{ url_for('member.workouts') }}" class="nav-link">Workouts</a>
+    <a href="{{ url_for('member.attendance') }}" class="nav-link">Attendance</a>
+    <a href="{{ url_for('member.payments') }}" class="nav-link">Payments</a>
+{% elif session.role == 'trainer' %}
+    <a href="{{ url_for('trainer_routes.dashboard') }}" class="nav-link">Dashboard</a>
+    <a href="{{ url_for('trainer_routes.clients') }}" class="nav-link">My Clients</a>
+    <a href="{{ url_for('trainer_routes.schedule') }}" class="nav-link">Schedule</a>
+{% endif %}
+
                     </div>
                 </div>
 

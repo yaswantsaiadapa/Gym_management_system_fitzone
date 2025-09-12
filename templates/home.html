@@ -3,34 +3,117 @@
 {% block title %}Welcome to FitZone Gym{% endblock %}
 
 {% block content %}
+<style>
+    /* Hero Section Styling */
+    .hero {
+        position: relative;
+        background: url('https://images.unsplash.com/photo-1558611848-73f7eb4001a1?auto=format&fit=crop&w=1400&q=80') center/cover no-repeat;
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to right, rgba(37, 99, 235, 0.9), rgba(29, 78, 216, 0.7));
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Card Styling */
+    .card {
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease-in-out;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.12);
+    }
+
+    /* Buttons */
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .btn-primary {
+        background: linear-gradient(to right, #2563eb, #3b82f6);
+        color: #fff;
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(to right, #1d4ed8, #2563eb);
+        transform: scale(1.03);
+    }
+
+    /* Membership Plan Header */
+    .card-header {
+        border-bottom: 1px solid #f3f4f6;
+        padding-bottom: 1rem;
+    }
+
+    /* Features Icons */
+    .feature-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem auto;
+        color: #fff;
+        font-size: 1.8rem;
+    }
+
+    #plans {
+  scroll-margin-top: 50px; /* adjust to your navbar height */  
+    }
+
+
+    .feature-icon.primary { background: #2563eb; }
+    .feature-icon.secondary { background: #16a34a; }
+    .feature-icon.accent { background: #f59e0b; }
+</style>
+
 <!-- Hero Section -->
-<div class="bg-gradient-to-r from-primary to-blue-700 text-white rounded-2xl p-12 mb-12">
-    <div class="text-center">
-        <h1 class="text-5xl font-bold mb-6">Welcome to FitZone</h1>
-        <p class="text-xl mb-8 opacity-90">Your complete fitness journey starts here</p>
+<div class="hero text-white p-16 mb-12">
+    <div class="hero-content text-center">
+        <h1 class="text-5xl font-extrabold mb-6">Welcome to FitZone</h1>
+        <p class="text-xl mb-8 opacity-95">Your complete fitness journey starts here</p>
         
         {% if not session.user_id %}
         <div class="space-x-4">
             <a href="{{ url_for('auth.login') }}" class="btn bg-white text-primary hover:bg-gray-100">
-                <i class="fas fa-sign-in-alt mr-2"></i>Member Login
+                <i class="fas fa-sign-in-alt mr-2"></i> Login
             </a>
             <a href="#plans" class="btn border-2 border-white text-white hover:bg-white hover:text-primary">
-                <i class="fas fa-eye mr-2"></i>View Plans
+                <i class="fas fa-eye mr-2"></i> View Plans
             </a>
         </div>
         {% else %}
         <div class="space-x-4">
             {% if session.role == 'admin' %}
                 <a href="{{ url_for('admin.dashboard') }}" class="btn bg-white text-primary hover:bg-gray-100">
-                    <i class="fas fa-tachometer-alt mr-2"></i>Admin Dashboard
+                    <i class="fas fa-tachometer-alt mr-2"></i> Admin Dashboard
                 </a>
             {% elif session.role == 'member' %}
-                <a href="{{ url_for('member_routes.dashboard') }}" class="btn bg-white text-primary hover:bg-gray-100">
-                    <i class="fas fa-user mr-2"></i>My Dashboard
+                <a href="{{ url_for('member.dashboard') }}" class="btn bg-white text-primary hover:bg-gray-100">
+                    <i class="fas fa-user mr-2"></i> My Dashboard
                 </a>
             {% elif session.role == 'trainer' %}
                 <a href="{{ url_for('trainer_routes.dashboard') }}" class="btn bg-white text-primary hover:bg-gray-100">
-                    <i class="fas fa-users mr-2"></i>Trainer Dashboard
+                    <i class="fas fa-users mr-2"></i> Trainer Dashboard
                 </a>
             {% endif %}
         </div>
@@ -42,84 +125,107 @@
 {% if announcements %}
 <div class="mb-12">
     <h2 class="text-3xl font-bold text-gray-900 mb-6">
-        <i class="fas fa-bullhorn mr-3 text-accent"></i>Latest Announcements
+        <i class="fas fa-bullhorn mr-3 text-accent"></i> Latest Announcements
     </h2>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for announcement in announcements %}
-        <div class="card">
-            <div class="card-body">
-                <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ announcement.title }}</h3>
-                <p class="text-gray-600 mb-4">{{ announcement.content[:100] }}{% if announcement.content|length > 100 %}...{% endif %}</p>
-                <div class="flex items-center justify-between text-sm text-gray-500">
-                    <span class="badge badge-info">{{ announcement.announcement_type|title }}</span>
-                    <span>{{ announcement.created_at|datetimeformat }}</span>
-                </div>
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ announcement.title }}</h3>
+            <p class="text-gray-600 mb-4">{{ announcement.content[:100] }}{% if announcement.content|length > 100 %}...{% endif %}</p>
+            <div class="flex items-center justify-between text-sm text-gray-500">
+                <span class="badge badge-info">{{ announcement.announcement_type|title }}</span>
+                <span>{{ announcement.created_at|datetimeformat }}</span>
             </div>
         </div>
         {% endfor %}
     </div>
 </div>
 {% endif %}
-
+<br>
 <!-- Membership Plans -->
-<div id="plans" class="mb-12">
-    <h2 class="text-3xl font-bold text-gray-900 mb-6 text-center">
-        <i class="fas fa-crown mr-3 text-accent"></i>Membership Plans
-    </h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {% for plan in membership_plans %}
-        <div class="card hover:shadow-lg transition-shadow duration-300">
-            <div class="card-header text-center">
-                <h3 class="text-xl font-bold text-gray-900">{{ plan.name }}</h3>
-                <div class="text-3xl font-bold text-primary mt-2">₹{{ plan.price }}</div>
-                <div class="text-sm text-gray-500">{{ plan.duration_months }} months</div>
-            </div>
-            <div class="card-body">
-                {% if plan.description %}
-                <p class="text-gray-600 mb-4">{{ plan.description }}</p>
-                {% endif %}
-                
-                {% if plan.features %}
-                <ul class="space-y-2 mb-6">
-                    {% for feature in plan.features %}
-                    <li class="flex items-center text-sm">
-                        <i class="fas fa-check text-success mr-2"></i>
-                        {{ feature }}
-                    </li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-                
-                {% if not session.user_id %}
-                <a href="{{ url_for('auth.login') }}" class="btn btn-primary w-full">
-                    <i class="fas fa-user-plus mr-2"></i>Join Now
-                </a>
-                {% endif %}
-            </div>
+<div id="plans" class="container mx-auto px-4 py-12">
+    <h2 class="text-3xl font-bold text-center mb-10">Membership Plans</h2>
+    
+    <!-- Plans Row -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        
+        <!-- Basic Plan -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-2xl transition duration-300">
+            <h3 class="text-xl font-semibold mb-4">Basic Plan</h3>
+            <p class="text-gray-600 mb-4">Perfect for beginners</p>
+            <p class="text-3xl font-bold text-primary mb-6">₹999<span class="text-base font-medium text-gray-500">/mo</span></p>
+            <ul class="text-sm text-gray-600 mb-6 space-y-2">
+                <li>✔ Gym Access</li>
+                <li>✔ 2 Trainer Sessions</li>
+                <li>✘ Diet Plan</li>
+            </ul>
+            <button class="w-full bg-primary text-white py-2 rounded-xl hover:bg-primary/90 transition">Choose Plan</button>
         </div>
-        {% endfor %}
+
+        <!-- Standard Plan -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-2xl transition duration-300">
+            <h3 class="text-xl font-semibold mb-4">Standard Plan</h3>
+            <p class="text-gray-600 mb-4">For regular trainers</p>
+            <p class="text-3xl font-bold text-primary mb-6">₹1499<span class="text-base font-medium text-gray-500">/mo</span></p>
+            <ul class="text-sm text-gray-600 mb-6 space-y-2">
+                <li>✔ Gym Access</li>
+                <li>✔ 5 Trainer Sessions</li>
+                <li>✔ Diet Plan</li>
+            </ul>
+            <button class="w-full bg-primary text-white py-2 rounded-xl hover:bg-primary/90 transition">Choose Plan</button>
+        </div>
+
+        <!-- Premium Plan -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-2xl transition duration-300">
+            <h3 class="text-xl font-semibold mb-4">Premium Plan</h3>
+            <p class="text-gray-600 mb-4">Access all facilities</p>
+            <p class="text-3xl font-bold text-primary mb-6">₹1999<span class="text-base font-medium text-gray-500">/mo</span></p>
+            <ul class="text-sm text-gray-600 mb-6 space-y-2">
+                <li>✔ Gym + Cardio</li>
+                <li>✔ Unlimited Trainer Sessions</li>
+                <li>✔ Diet + Fitness Plan</li>
+            </ul>
+            <button class="w-full bg-primary text-white py-2 rounded-xl hover:bg-primary/90 transition">Choose Plan</button>
+        </div>
+
+        <!-- Elite Plan -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-2xl transition duration-300">
+            <h3 class="text-xl font-semibold mb-4">Elite Plan</h3>
+            <p class="text-gray-600 mb-4">For serious athletes</p>
+            <p class="text-3xl font-bold text-primary mb-6">₹2499<span class="text-base font-medium text-gray-500">/mo</span></p>
+            <ul class="text-sm text-gray-600 mb-6 space-y-2">
+                <li>✔ All Facilities + Spa</li>
+                <li>✔ Personal Trainer</li>
+                <li>✔ Full Nutrition Guidance</li>
+            </ul>
+            <button class="w-full bg-primary text-white py-2 rounded-xl hover:bg-primary/90 transition">Choose Plan</button>
+        </div>
+        
     </div>
 </div>
-
+</br>
+</br>
+</br>
+<br>
 <!-- Features Section -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
     <div class="text-center">
-        <div class="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-            <i class="fas fa-users text-white text-2xl"></i>
+        <div class="feature-icon primary">
+            <i class="fas fa-users"></i>
         </div>
         <h3 class="text-xl font-semibold mb-2">Expert Trainers</h3>
         <p class="text-gray-600">Professional certified trainers to guide your fitness journey</p>
     </div>
     <div class="text-center">
-        <div class="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-            <i class="fas fa-chart-line text-white text-2xl"></i>
+        <div class="feature-icon secondary">
+            <i class="fas fa-chart-line"></i>
         </div>
         <h3 class="text-xl font-semibold mb-2">Progress Tracking</h3>
         <p class="text-gray-600">Monitor your progress with detailed analytics and measurements</p>
     </div>
     <div class="text-center">
-        <div class="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
-            <i class="fas fa-dumbbell text-white text-2xl"></i>
+        <div class="feature-icon accent">
+            <i class="fas fa-dumbbell"></i>
         </div>
         <h3 class="text-xl font-semibold mb-2">Modern Equipment</h3>
         <p class="text-gray-600">State-of-the-art fitness equipment for all your workout needs</p>

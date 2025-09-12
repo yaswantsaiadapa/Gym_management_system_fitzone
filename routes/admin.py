@@ -184,7 +184,7 @@ def members():
 @admin_required
 def add_member_form():
     membership_plans = MembershipPlan.get_all_active()
-    trainers = Trainer.get_all_active()
+    trainers = Trainer.get_all_with_details()
     return render_template('admin/add_member.html',
                            membership_plans=membership_plans, trainers=trainers)
 
@@ -217,7 +217,7 @@ def add_member():
         username = email.split('@')[0].lower()
         counter = 1
         original_username = username
-        while User.get_by_username(username):
+        while User.get_by_username_or_email(username):
             username = f"{original_username}{counter}"
             counter += 1
 
@@ -448,131 +448,6 @@ def add_membership_plan():
 
     return render_template('admin/add_membership_plan.html')
 
-@admin_bp.route('/workouts')
-@admin_required
-def workouts():
-    workouts = Workout.get_all()
-    return render_template('admin/workouts.html', workouts=workouts)
-
-@admin_bp.route('/workouts/add', methods=['GET', 'POST'])
-@admin_required
-def add_workout():
-    if request.method == 'POST':
-        try:
-            name = request.form.get('name')
-            description = request.form.get('description')
-            category = request.form.get('category')
-            equipment_needed = request.form.get('equipment_needed')
-
-            if not name:
-                flash('Workout name is required!')
-                return redirect(url_for('admin.add_workout'))
-
-            workout = Workout(
-                name=name,
-                description=description,
-                category=category,
-                equipment_needed=equipment_needed
-            )
-            workout_id = workout.save()
-            if workout_id:
-                flash(f'Workout "{name}" added successfully!')
-            else:
-                flash('Error adding workout!')
-        except Exception as e:
-            flash(f'An error occurred: {str(e)}')
-        return redirect(url_for('admin.workouts'))
-
-    return render_template('admin/add_workout.html')
-
-@admin_bp.route('/workout-plans')
-@admin_required
-def workout_plans():
-    plans = MemberWorkoutPlan.get_all_with_details()
-    members = Member.get_all_active()
-    trainers = Trainer.get_all_active()
-    return render_template('admin/workout_plans.html', plans=plans,
-                           members=members, trainers=trainers)
-
-@admin_bp.route('/workout-plans/add', methods=['GET', 'POST'])
-@admin_required
-def add_workout_plan():
-    if request.method == 'POST':
-        try:
-            member_id = request.form.get('member_id')
-            trainer_id = request.form.get('trainer_id')
-            name = request.form.get('name')
-            description = request.form.get('description')
-            start_date = request.form.get('start_date')
-            end_date = request.form.get('end_date')
-
-            if not all([member_id, trainer_id, name]):
-                flash('Member, Trainer and Plan Name are required!')
-                return redirect(url_for('admin.add_workout_plan'))
-
-            plan = MemberWorkoutPlan(
-                member_id=member_id,
-                trainer_id=trainer_id,
-                name=name,
-                description=description,
-                start_date=start_date,
-                end_date=end_date
-            )
-            plan_id = plan.save()
-            if plan_id:
-                flash(f'Workout Plan "{name}" created successfully!')
-            else:
-                flash('Error creating workout plan!')
-        except Exception as e:
-            flash(f'An error occurred: {str(e)}')
-
-        return redirect(url_for('admin.workout_plans'))
-
-    members = Member.get_all_active()
-    trainers = Trainer.get_all_active()
-    return render_template('admin/add_workout_plan.html',
-                           members=members, trainers=trainers)
-
-@admin_bp.route('/workout-plans/<int:plan_id>/add-detail', methods=['GET', 'POST'])
-@admin_required
-def add_workout_plan_detail(plan_id):
-    if request.method == 'POST':
-        try:
-            workout_id = request.form.get('workout_id')
-            day_of_week = request.form.get('day_of_week')
-            sets = request.form.get('sets')
-            reps = request.form.get('reps')
-            weight = request.form.get('weight')
-            rest_seconds = request.form.get('rest_seconds')
-            notes = request.form.get('notes')
-
-            if not workout_id:
-                flash('Workout is required!')
-                return redirect(url_for('admin.add_workout_plan_detail', plan_id=plan_id))
-
-            detail = WorkoutPlanDetail(
-                plan_id=plan_id,
-                workout_id=workout_id,
-                day_of_week=day_of_week,
-                sets=sets,
-                reps=reps,
-                weight=weight,
-                rest_seconds=rest_seconds,
-                notes=notes
-            )
-            detail_id = detail.save()
-            if detail_id:
-                flash('Workout detail added successfully!')
-            else:
-                flash('Error adding workout detail!')
-        except Exception as e:
-            flash(f'An error occurred: {str(e)}')
-
-        return redirect(url_for('admin.workout_plans'))
-
-    workouts = Workout.get_all()
-    return render_template('admin/add_workout_plan_detail.html',
-                           workouts=workouts, plan_id=plan_id)
 
 
 # -------------------- Payments --------------------

@@ -7,20 +7,26 @@ def login_required(f):
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
             flash('Please login to access this page.', 'warning')
+            # FIXED: redirect to general login, not role-specific form
             return redirect(url_for('auth.login'))
+
         return f(*args, **kwargs)
     return decorated_function
+
 
 def logout_required(f):
     """Decorator to require logout for routes (like login page)"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' in session:
-            role = session.get('role', 'member')
+            role = session.get('role')
+            if not role:
+                # don't assume 'member' — log out or show home
+                return redirect(url_for('home'))
             if role == 'admin':
                 return redirect(url_for('admin.dashboard'))
             elif role == 'member':
-                return redirect(url_for('member_routes.dashboard'))
+                return redirect(url_for('member.dashboard'))
             elif role == 'trainer':
                 return redirect(url_for('trainer_routes.dashboard'))
         return f(*args, **kwargs)
@@ -32,34 +38,53 @@ def admin_required(f):
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
             flash('Please login to access this page.', 'warning')
+            # FIXED: redirect to general login
             return redirect(url_for('auth.login'))
-        
+
         if session.get('role') != 'admin':
             flash('Access denied. Admin privileges required.', 'error')
-            return redirect(url_for('auth.login'))
-        
+            role = session.get('role')
+            if role == 'member':
+                return redirect(url_for('member.dashboard'))
+            elif role == 'trainer':
+                return redirect(url_for('trainer_routes.dashboard'))
+            else:
+                return redirect(url_for('auth.logout'))
+
         return f(*args, **kwargs)
     return decorated_function
 
+
 def member_required(f):
-    """Decorator to require member role"""
+    """Decorator to ensure only logged-in members with valid profiles can access a route."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        # Case 1: User not logged in
         if 'user_id' not in session:
-            flash('Please login to access this page.', 'warning')
-            return redirect(url_for('auth.login_form', role='member'))
-        
-        if session.get('role') != 'member':
-            flash('Access denied. Member login required.', 'error')
-            return redirect(url_for('auth.login_form', role='member'))
-        
-        # Check if member profile exists and is active
-        if 'member_id' not in session:
-            flash('Member profile not found. Please contact admin.', 'error')
+            flash('⚠️ Please login as a member to continue.', 'warning')
+            # FIXED: redirect to general login
+            return redirect(url_for('auth.login'))
+
+        # Case 2: Wrong role logged in
+        role = session.get('role')
+        if role != 'member':
+            flash('❌ Access denied. Member login required.', 'danger')
+            if role == 'admin':
+                return redirect(url_for('admin.dashboard'))
+            elif role == 'trainer':
+                return redirect(url_for('trainer_routes.dashboard'))
+            else:
+                return redirect(url_for('auth.logout'))
+
+        # Case 3: Member profile missing from session
+        if not session.get('member_id'):
+            flash('⚠️ Member profile not found or inactive. Please contact support.', 'warning')
             return redirect(url_for('auth.logout'))
-        
+
+        # ✅ All checks passed → allow access
         return f(*args, **kwargs)
     return decorated_function
+
 
 def trainer_required(f):
     """Decorator to require trainer role"""
@@ -67,17 +92,24 @@ def trainer_required(f):
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
             flash('Please login to access this page.', 'warning')
-            return redirect(url_for('auth.login_form', role='trainer'))
-        
+            # FIXED: redirect to general login
+            return redirect(url_for('auth.login'))
+
         if session.get('role') != 'trainer':
             flash('Access denied. Trainer login required.', 'error')
-            return redirect(url_for('auth.login_form', role='trainer'))
-        
+            role = session.get('role')
+            if role == 'admin':
+                return redirect(url_for('admin.dashboard'))
+            elif role == 'member':
+                return redirect(url_for('member.dashboard'))
+            else:
+                return redirect(url_for('auth.logout'))
+
         # Check if trainer profile exists and is active
         if 'trainer_id' not in session:
             flash('Trainer profile not found. Please contact admin.', 'error')
             return redirect(url_for('auth.logout'))
-        
+
         return f(*args, **kwargs)
     return decorated_function
 
@@ -107,8 +139,7 @@ def check_membership_status(f):
             membership_status = session.get('membership_status', 'inactive')
             if membership_status not in ['active']:
                 flash('Your membership is inactive. Please renew your membership.', 'warning')
-                return redirect(url_for('member_routes.payments'))
-        
+                return redirect(url_for('member.payments'))  # stays as member
         return f(*args, **kwargs)
     return decorated_function
 

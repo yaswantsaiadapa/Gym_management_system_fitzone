@@ -15,7 +15,7 @@ def execute_query(query, params=(), db_path='gym_management.db', fetch=False):
     """Execute a database query with optional parameters"""
     conn = get_db_connection(db_path)
     cursor = conn.cursor()
-    
+
     try:
         cursor.execute(query, params)
         if fetch:
@@ -149,7 +149,7 @@ def init_db(db_path='gym_management.db'):
             date DATE NOT NULL,
             workout_type TEXT,
             notes TEXT,
-            status TEXT DEFAULT 'present' CHECK (status IN ('present', 'absent', 'late')),
+            status TEXT DEFAULT 'scheduled' CHECK (status IN ('present', 'absent', 'late','scheduled')),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (member_id) REFERENCES members (id),
             FOREIGN KEY (trainer_id) REFERENCES trainers (id)
@@ -358,7 +358,7 @@ def insert_default_data(cursor):
     if cursor.fetchone()[0] == 0:
         trainer_users = [
             ('ravi_trainer', 'ravi@fitzonegym.com', 'trainer123', 'Ravi Kumar', '+919000000002'),
-            ('sneAnnounha_trainer', 'sneha@fitzonegym.com', 'trainer123', 'Sneha Reddy', '+919000000003')
+            ('sneha_trainer', 'sneha@fitzonegym.com', 'trainer123', 'Sneha Reddy', '+919000000003')
         ]
 
         for trainer in trainer_users:

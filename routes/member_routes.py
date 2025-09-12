@@ -10,64 +10,107 @@ from models.diet import Diet
 from models.progress import Progress
 from models.attendance import Attendance
 from models.announcement import Announcement
+from routes.admin import members
 from utils.decorators import login_required, member_required
 from models.workout_plan import MemberWorkoutPlan, WorkoutPlanDetail
+from flask import current_app
 
 
 
 
 member_routes_bp = Blueprint('member', __name__,url_prefix='/member')
 
+
+
 @member_routes_bp.route('/dashboard')
 @login_required
 @member_required
 def dashboard():
-    """Member dashboard"""
+    """Member dashboard with defensive error handling"""
     try:
-        user_id = session['user_id']
-        member = Member.get_by_user_id(user_id)
-        
+        user_id = session.get('user_id')
+        if not user_id:
+            flash('Please login again.')
+            return redirect(url_for('auth.login'))
+
+        # --- Get Member record ---
+        try:
+            member = Member.get_by_user_id(user_id)
+        except Exception as ex:
+            current_app.logger.exception("Error fetching member: %s", ex)
+            member = None
+
         if not member:
             flash('Member profile not found')
             return redirect(url_for('auth.login'))
-        
-        # Get member statistics
+
+        # --- Membership stats ---
+        membership_expires = getattr(member, 'membership_end_date', None)
+        days_until_expiry = (
+            (membership_expires - date.today()).days
+            if membership_expires else 0
+        )
+
         stats = {
-            'membership_status': member.status,
-            'membership_expires': member.membership_end_date,
-            'days_until_expiry': (member.membership_end_date - date.today()).days if member.membership_end_date else 0,
-            'recent_attendance': Attendance.get_member_attendance(member.id, limit=5),
-            'pending_payments': Payment.get_member_payments(member.id)[:3]
+            'membership_status': getattr(member, 'status', 'inactive'),
+            'membership_expires': membership_expires,
+            'days_until_expiry': days_until_expiry,
+            'recent_attendance': [],
+            'pending_payments': []
         }
 
-        # 🔔 Alert message for expiry & pending payments
+        # Attendance
+        try:
+            stats['recent_attendance'] = Attendance.get_member_attendance(member.id, limit=5)
+        except Exception as ex:
+            current_app.logger.warning("Attendance fetch failed: %s", ex)
+
+        # Payments
+        try:
+            stats['pending_payments'] = Payment.get_member_payments(member.id)[:3]
+        except Exception as ex:
+            current_app.logger.warning("Payments fetch failed: %s", ex)
+
+        # --- Alerts ---
         alert_message = None
-        if member.membership_end_date:
-            days_left = (member.membership_end_date - date.today()).days
-            if days_left < 0:
-                alert_message = f"⚠️ Your membership expired on {member.membership_end_date}. Please renew at the admin desk."
-            elif days_left <= 7:
-                alert_message = f"⏳ Your membership will expire in {days_left} days (on {member.membership_end_date}). Please renew soon."
-        
+        if membership_expires:
+            if days_until_expiry < 0:
+                alert_message = f"⚠️ Your membership expired on {membership_expires}. Please renew at the admin desk."
+            elif days_until_expiry <= 7:
+                alert_message = f"⏳ Your membership will expire in {days_until_expiry} days (on {membership_expires}). Please renew soon."
+
         if stats['pending_payments']:
             alert_message = (alert_message + " | " if alert_message else "") + \
-                            f"💰 You have {len(stats['pending_payments'])} pending payment(s). Please clear them at the admin desk."
+                f"💰 You have {len(stats['pending_payments'])} pending payment(s). Please clear them at the admin desk."
 
-        # Get announcements for members
-        announcements = Announcement.get_for_role('member')[:5]
-        
-        # Get latest progress record
-        progress_records = Progress.get_member_progress(member.id, limit=1)
-        latest_progress = progress_records[0] if progress_records else None
-        
-        return render_template('member/dashboard.html',
-                             member=member,
-                             stats=stats,
-                             announcements=announcements,
-                             latest_progress=latest_progress,
-                             alert_message=alert_message)   # 🔔 send alert
+        # --- Announcements ---
+        announcements = []
+        try:
+            announcements = Announcement.get_for_role('member')[:5]
+        except Exception as ex:
+            current_app.logger.warning("Announcements fetch failed: %s", ex)
+
+        # --- Progress ---
+        latest_progress = None
+        try:
+            progress_records = Progress.get_member_progress(member.id, limit=1)
+            latest_progress = progress_records[0] if progress_records else None
+        except Exception as ex:
+            current_app.logger.warning("Progress fetch failed: %s", ex)
+
+        # --- Render ---
+        return render_template(
+            'member/dashboard.html',
+            member=member,
+            stats=stats,
+            announcements=announcements,
+            latest_progress=latest_progress,
+            alert_message=alert_message
+        )
+
     except Exception as e:
-        flash('Error loading dashboard')
+        current_app.logger.exception("Critical error in dashboard: %s", e)
+        flash('Unexpected error loading dashboard.')
         return redirect(url_for('auth.login'))
 
 
@@ -188,23 +231,55 @@ def progress():
 @login_required
 @member_required
 def attendance():
-    """Member attendance history"""
+    """Member attendance history with auto-absent handling"""
     user_id = session['user_id']
     member = Member.get_by_user_id(user_id)
-    
-    # Get attendance records
+
+    # Get last 30 records
     attendance_records = Attendance.get_member_attendance(member.id, limit=30)
-    
-    # Calculate attendance statistics
+
+    now = datetime.now()
+
+    # --- Auto-mark scheduled sessions as absent if time has passed ---
+    # --- Auto-mark scheduled sessions as absent if time has passed ---
+    for record in attendance_records:
+        if record.status == "scheduled":
+            try:
+                check_in = record.check_in_time
+                if isinstance(check_in, str):
+                    check_in = Attendance._parse_datetime(check_in)
+                if check_in and record.date:
+                    session_datetime = datetime.combine(record.date, check_in.time())
+                    if now > session_datetime:  # session already passed
+                        record.status = "absent"
+                        record.save()
+            except Exception as e:
+                current_app.logger.warning(
+                    f"Auto-absent failed for record {getattr(record, 'id', 'N/A')}: {e}"
+                )
+
+
+    # --- Re-fetch after updates ---
+    attendance_records = Attendance.get_member_attendance(member.id, limit=30)
+
+    # Stats
     total_sessions = len(attendance_records)
-    present_sessions = len([a for a in attendance_records if a.status == 'present'])
-    attendance_percentage = (present_sessions / total_sessions * 100) if total_sessions > 0 else 0
-    
-    return render_template('member/attendance.html',
-                         attendance_records=attendance_records,
-                         total_sessions=total_sessions,
-                         present_sessions=present_sessions,
-                         attendance_percentage=attendance_percentage)
+    present_sessions = sum(1 for a in attendance_records if a.status == 'present')
+    absent_sessions = sum(1 for a in attendance_records if a.status == 'absent')
+    late_sessions = sum(1 for a in attendance_records if a.status == 'late')
+
+    attendance_percentage = (present_sessions / (present_sessions + absent_sessions + late_sessions) * 100) \
+                            if (present_sessions + absent_sessions + late_sessions) > 0 else 0
+
+    return render_template(
+        'member/attendance.html',
+        attendance_records=attendance_records,
+        total_sessions=total_sessions,
+        present_sessions=present_sessions,
+        absent_sessions=absent_sessions,
+        late_sessions=late_sessions,
+        attendance_percentage=attendance_percentage
+    )
 
 @member_routes_bp.route('/payments')
 @login_required
@@ -228,7 +303,7 @@ def schedule_session():
     member = Member.get_by_user_id(user_id)
     
     # Get available trainers
-    trainers = Trainer.get_all_active()
+    assigned_trainer = Trainer.get_by_id(member.trainer_id)
     
     # Get available time slots
     time_slots = [
@@ -242,9 +317,13 @@ def schedule_session():
         "8:00 PM - 10:00 PM"
     ]
     
-    return render_template('member/schedule_session.html',
-                         trainers=trainers,
-                         time_slots=time_slots)
+    return render_template(
+    'member/schedule_session.html',
+    today=date.today(),
+    assigned_trainer=assigned_trainer,
+    time_slots=time_slots
+)
+
 
 @member_routes_bp.route('/schedule_session', methods=['POST'])
 @login_required
@@ -254,40 +333,60 @@ def schedule_session_post():
     try:
         user_id = session['user_id']
         member = Member.get_by_user_id(user_id)
-        
-        trainer_id = request.form.get('trainer_id')
+        assigned_trainer = Trainer.get_by_id(member.trainer_id)
         session_date = request.form.get('session_date')
         time_slot = request.form.get('time_slot')
-        
-        if not all([trainer_id, session_date, time_slot]):
+
+        if not all([session_date, time_slot]):
             flash('All fields are required')
             return redirect(url_for('member.schedule_session'))
-        
+
         session_date = datetime.strptime(session_date, '%Y-%m-%d').date()
-        
+
+        # ✅ Members can only schedule sessions from NEXT slot onwards
+        today = date.today()
+        now_time = datetime.now().time()
+
+        if session_date == today:
+            if " - " in time_slot:
+                check_in, check_out = time_slot.split(" - ", 1)
+                check_in_time = datetime.strptime(check_in.strip(), "%I:%M %p").time()  # ✅ Fix
+                if now_time >= check_in_time:
+                    flash("You can only schedule upcoming slots, not current or past ones.", "warning")
+                    return redirect(url_for('member.schedule_session'))
+
         # Check if slot is available
-        if not Attendance.check_slot_availability(trainer_id, time_slot, session_date):
+        if not Attendance.check_slot_availability(assigned_trainer.id, time_slot, session_date):
             flash('This time slot is not available')
             return redirect(url_for('member.schedule_session'))
-        
-        # Create attendance record
+
+        # Split time_slot into check-in and check-out
+        if " - " in time_slot:
+            check_in, check_out = time_slot.split(" - ", 1)
+        else:
+            check_in, check_out = time_slot, None  # fallback
+
+        # ✅ Always start with status="scheduled"
         attendance = Attendance(
             member_id=member.id,
-            trainer_id=int(trainer_id),
+            trainer_id=assigned_trainer.id,
             date=session_date,
-            time_slot=time_slot
+            check_in_time=check_in.strip(),
+            check_out_time=check_out.strip() if check_out else None,
+            status="scheduled"
         )
-        
+
         attendance_id = attendance.save()
         if attendance_id:
-            flash('Session scheduled successfully!')
+            flash('Session scheduled successfully!', 'success')
         else:
-            flash('Error scheduling session')
+            flash('Error scheduling session', 'danger')
             
     except Exception as e:
-        flash('Error scheduling session')
+        flash(f'Error scheduling session: {e}', 'danger')
     
     return redirect(url_for('member.attendance'))
+
 
 @member_routes_bp.route('/membership_status')
 @login_required

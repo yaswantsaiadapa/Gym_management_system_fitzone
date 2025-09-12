@@ -47,7 +47,7 @@
 <div class="card">
     <div class="card-header flex justify-between items-center">
         <h2 class="text-xl font-semibold text-gray-900">Attendance History</h2>
-        <a href="{{ url_for('member_routes.schedule_session') }}" class="btn btn-primary">
+        <a href="{{ url_for('member.schedule_session') }}" class="btn btn-primary">
             <i class="fas fa-calendar-plus mr-2"></i>Book Session
         </a>
     </div>
@@ -68,12 +68,26 @@
                     {% for record in attendance_records %}
                     <tr>
                         <td>
-                            <div class="font-medium">{{ record.date.strftime('%B %d, %Y') }}</div>
-                            <div class="text-sm text-gray-500">{{ record.date.strftime('%A') }}</div>
+                            <div class="font-medium">{{ record.date|datetimeformat('%B %d, %Y') }}</div>
+
+                            <div class="text-sm text-gray-500">{{ record.date|datetimeformat('%A') }}</div>
+
                         </td>
-                        <td>
-                            <span class="text-sm">{{ record.time_slot }}</span>
-                        </td>
+            <td>
+    {% if record.check_in_time and record.check_out_time %}
+        <span class="text-sm">
+            {{ record.check_in_time|datetimeformat('%I:%M %p') }} - {{ record.check_out_time|datetimeformat('%I:%M %p') }}
+        </span>
+    {% elif record.check_in_time %}
+        <span class="text-sm">
+            {{ record.check_in_time|datetimeformat('%I:%M %p') }}
+        </span>
+    {% else %}
+        <span class="text-gray-400">Not Checked In</span>
+    {% endif %}
+</td>
+
+
                         <td>
                             <span class="text-sm">{{ record.trainer_name or 'N/A' }}</span>
                         </td>
@@ -99,7 +113,7 @@
             <i class="fas fa-calendar-check text-gray-400 text-4xl mb-4"></i>
             <h3 class="text-lg font-medium text-gray-900 mb-2">No attendance records</h3>
             <p class="text-gray-500 mb-4">Book your first training session to get started</p>
-            <a href="{{ url_for('member_routes.schedule_session') }}" class="btn btn-primary">
+            <a href="{{ url_for('member.schedule_session') }}" class="btn btn-primary">
                 <i class="fas fa-calendar-plus mr-2"></i>Book Session
             </a>
         </div>
