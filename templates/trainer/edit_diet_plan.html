@@ -28,7 +28,7 @@
                 </div>
                 <div>
                     <label class="text-sm text-gray-500">Start Date</label>
-                    <div class="font-medium">{{ diet_plan.start_date.strftime('%B %d, %Y') }}</div>
+                    <div class="font-medium">{{ diet_plan.start_date | datetimeformat("%B %d, %Y") }}</div>
                 </div>
                 <div>
                     <label class="text-sm text-gray-500">Status</label>
@@ -50,7 +50,7 @@
     <div class="card">
         <div class="card-header flex justify-between items-center">
             <h2 class="text-xl font-semibold text-gray-900">Meal Plan</h2>
-            <button onclick="showAddMealForm()" class="btn btn-primary">
+            <button onclick="document.getElementById('addMealModal').classList.remove('hidden')" class="btn btn-primary">
                 <i class="fas fa-plus mr-2"></i>Add Meal
             </button>
         </div>
@@ -61,8 +61,8 @@
                 <div class="border border-gray-200 rounded-lg p-4">
                     <div class="flex justify-between items-start">
                         <div class="flex-1">
-                            <h4 class="font-medium text-gray-900">{{ meal.name }}</h4>
-                            <p class="text-gray-600 text-sm mt-1">{{ meal.description }}</p>
+                            <h4 class="font-medium text-gray-900">{{ meal.meal_name }}</h4>
+                            <p class="text-gray-600 text-sm mt-1">{{ meal.ingredients }}</p>
                             {% if meal.calories %}
                             <div class="text-sm text-gray-500 mt-2">{{ meal.calories }} calories</div>
                             {% endif %}
@@ -84,7 +84,7 @@
                 <i class="fas fa-utensils text-gray-400 text-4xl mb-4"></i>
                 <h3 class="text-lg font-medium text-gray-900 mb-2">No meals added yet</h3>
                 <p class="text-gray-500 mb-4">Start building the diet plan by adding meals</p>
-                <button onclick="showAddMealForm()" class="btn btn-primary">
+                <button onclick="document.getElementById('addMealModal').classList.remove('hidden')" class="btn btn-primary">
                     <i class="fas fa-plus mr-2"></i>Add First Meal
                 </button>
             </div>
@@ -118,31 +118,37 @@
     </div>
 </div>
 
-<!-- Add Meal Modal (Placeholder) -->
+<!-- Add Meal Modal -->
 <div id="addMealModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
     <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-        <div class="mb-4">
+        <div class="mb-4 flex justify-between items-center">
             <h3 class="text-lg font-semibold text-gray-900">Add Meal</h3>
+            <button type="button" onclick="document.getElementById('addMealModal').classList.add('hidden')" class="text-gray-500 hover:text-gray-700">
+                ✕
+            </button>
         </div>
-        <div class="space-y-3">
-            <input type="text" placeholder="Meal name (e.g., Breakfast)" class="form-control">
-            <textarea placeholder="Meal description and items" rows="3" class="form-control"></textarea>
-            <input type="number" placeholder="Calories (optional)" class="form-control">
-        </div>
-        <div class="mt-6 flex space-x-3">
-            <button class="btn btn-primary flex-1">Add Meal</button>
-            <button onclick="hideAddMealForm()" class="btn btn-secondary flex-1">Cancel</button>
-        </div>
+
+        <form method="POST" action="{{ url_for('trainer_routes.add_meal', plan_id=diet_plan.id) }}">
+            <div class="space-y-3">
+                <select name="meal_type" class="form-control" required>
+                    <option value="breakfast">Breakfast</option>
+                    <option value="lunch">Lunch</option>
+                    <option value="dinner">Dinner</option>
+                    <option value="snack">Snack</option>
+                </select>
+
+                <input type="text" name="meal_name" placeholder="Meal name" class="form-control" required>
+
+                <textarea name="ingredients" placeholder="Meal description and items" rows="3" class="form-control"></textarea>
+
+                <input type="number" name="calories" placeholder="Calories (optional)" class="form-control">
+            </div>
+
+            <div class="mt-6 flex space-x-3">
+                <button type="submit" class="btn btn-primary flex-1">Add Meal</button>
+                <button type="button" onclick="document.getElementById('addMealModal').classList.add('hidden')" class="btn btn-secondary flex-1">Cancel</button>
+            </div>
+        </form>
     </div>
 </div>
-
-<script>
-function showAddMealForm() {
-    document.getElementById('addMealModal').classList.remove('hidden');
-}
-
-function hideAddMealForm() {
-    document.getElementById('addMealModal').classList.add('hidden');
-}
-</script>
 {% endblock %}

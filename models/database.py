@@ -75,30 +75,31 @@ def init_db(db_path='gym_management.db'):
     
     # Enhanced Members table
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS members (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            membership_plan_id INTEGER,
-            phone TEXT NOT NULL,
-            emergency_contact TEXT,
-            emergency_phone TEXT,
-            address TEXT,
-            date_of_birth DATE,
-            weight DECIMAL(5,2),
-            height DECIMAL(5,2),
-            medical_conditions TEXT,
-            fitness_goals TEXT,
-            membership_start_date DATE,
-            membership_end_date DATE,
-            status TEXT DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'suspended')),
-            trainer_id INTEGER,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users (id),
-            FOREIGN KEY (membership_plan_id) REFERENCES membership_plans (id),
-            FOREIGN KEY (trainer_id) REFERENCES trainers (id)
+    CREATE TABLE IF NOT EXISTS members (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        membership_plan_id INTEGER,
+        phone TEXT NOT NULL,
+        emergency_contact TEXT,
+        emergency_phone TEXT,
+        address TEXT,
+        date_of_birth DATE,
+        weight DECIMAL(5,2),
+        height DECIMAL(5,2),
+        medical_conditions TEXT,
+        fitness_goals TEXT,
+        membership_start_date DATE,
+        membership_end_date DATE,
+        status TEXT DEFAULT 'pending_payment' CHECK (status IN ('active', 'inactive', 'suspended', 'pending_payment')),
+        trainer_id INTEGER,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id),
+        FOREIGN KEY (membership_plan_id) REFERENCES membership_plans (id),
+        FOREIGN KEY (trainer_id) REFERENCES trainers (id)
         )
     ''')
+
     
     # Enhanced Trainers table
     cursor.execute('''
@@ -121,24 +122,30 @@ def init_db(db_path='gym_management.db'):
     
     # Payments table
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS payments (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            member_id INTEGER NOT NULL,
-            membership_plan_id INTEGER NOT NULL,
-            amount DECIMAL(10,2) NOT NULL,
-            payment_method TEXT CHECK (payment_method IN ('cash', 'card', 'online', 'bank_transfer')),
-            payment_status TEXT DEFAULT 'pending' CHECK (payment_status IN ('pending', 'completed', 'failed', 'refunded')),
-            transaction_id TEXT,
-            payment_date DATE,
-            due_date DATE,
-            notes TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (member_id) REFERENCES members (id),
-            FOREIGN KEY (membership_plan_id) REFERENCES membership_plans (id)
-        )
+        -- Payments table (updated)
+CREATE TABLE IF NOT EXISTS payments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    member_id INTEGER NOT NULL,
+    membership_plan_id INTEGER NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    payment_method TEXT CHECK (payment_method IN ('cash','card','online','bank_transfer','upi')),
+    payment_status TEXT DEFAULT 'pending' CHECK (payment_status IN ('pending', 'completed', 'failed', 'refunded')),
+    transaction_id TEXT,
+    payment_date DATE,
+    due_date DATE,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    invoice_number TEXT,                 -- unique invoice/reference id (optional format)
+    reminder_sent INTEGER DEFAULT 0,     -- 0/1 flag whether a reminder email was already sent
+    reminder_sent_at TIMESTAMP,          -- when reminder was sent (nullable)
+    cancelled_processed INTEGER DEFAULT 0, -- 0/1 flag whether cancellation action was taken
+    FOREIGN KEY (member_id) REFERENCES members (id),
+    FOREIGN KEY (membership_plan_id) REFERENCES membership_plans (id)
+);
+
     ''')
     
-    # Attendance table (enhanced)
+    # Attendance table (enhanced with time_slot column)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS attendance (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -147,6 +154,7 @@ def init_db(db_path='gym_management.db'):
             check_in_time TIMESTAMP,
             check_out_time TIMESTAMP,
             date DATE NOT NULL,
+            time_slot TEXT,
             workout_type TEXT,
             notes TEXT,
             status TEXT DEFAULT 'scheduled' CHECK (status IN ('present', 'absent', 'late','scheduled')),
@@ -287,7 +295,7 @@ def init_db(db_path='gym_management.db'):
         )
     ''')
     
-    # cements table
+    # Announcements table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS announcements (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -319,6 +327,13 @@ def init_db(db_path='gym_management.db'):
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    
+    # Check if time_slot column exists and add it if it doesn't (for existing databases)
+    cursor.execute("PRAGMA table_info(attendance)")
+    columns = [column[1] for column in cursor.fetchall()]
+    if 'time_slot' not in columns:
+        cursor.execute("ALTER TABLE attendance ADD COLUMN time_slot TEXT")
+        print("Added time_slot column to existing attendance table")
     
     # Insert default data
     insert_default_data(cursor)

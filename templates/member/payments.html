@@ -23,45 +23,79 @@
                         <th>Method</th>
                         <th>Status</th>
                         <th>Due Date</th>
+                        <th>Notes</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for payment in payment_records %}
-                    <tr>
+                    <tr class="{% if payment.is_overdue %}bg-red-50{% endif %}">
+                        <!-- Payment Date -->
                         <td>
                             {% if payment.payment_date %}
-                            <div class="font-medium">{{ payment.payment_date.strftime('%B %d, %Y') }}</div>
+                                <div class="font-medium">
+                                    {{ payment.payment_date.strftime('%B %d, %Y') }}
+                                </div>
                             {% else %}
-                            <span class="text-gray-400">Pending</span>
+                                <span class="text-gray-400">Pending</span>
                             {% endif %}
                         </td>
+
+                        <!-- Plan Name -->
+                        <td><span class="text-sm">{{ payment.plan_name or "N/A" }}</span></td>
+
+                        <!-- Amount -->
                         <td>
-                            <span class="text-sm">{{ payment.plan_name }}</span>
+                            <span class="font-medium text-lg {% if payment.is_overdue %}text-red-600{% endif %}">
+                                ₹{{ payment.amount }}
+                            </span>
                         </td>
+
+                        <!-- Method -->
+                        <td><span class="text-sm capitalize">{{ payment.payment_method or "N/A" }}</span></td>
+
+                        <!-- Status -->
                         <td>
-                            <span class="font-medium text-lg">₹{{ payment.amount }}</span>
-                        </td>
-                        <td>
-                            <span class="text-sm capitalize">{{ payment.payment_method }}</span>
-                        </td>
-                        <td>
-                            <span class="badge badge-{{ 'success' if payment.payment_status == 'completed' else 'warning' if payment.payment_status == 'pending' else 'danger' }}">
+                            <span class="badge 
+                                {% if payment.payment_status == 'completed' %}badge-success
+                                {% elif payment.payment_status == 'pending' %}badge-warning
+                                {% elif payment.payment_status == 'refunded' %}badge-info
+                                {% else %}badge-danger{% endif %}">
                                 {{ payment.payment_status|title }}
                             </span>
                         </td>
+
+                        <!-- Due Date -->
                         <td>
-                            <span class="text-sm">{{ payment.due_date.strftime('%B %d, %Y') }}</span>
+                            {% if payment.due_date_obj %}
+                                <span class="text-sm {% if payment.is_overdue %}text-red-600 font-bold{% endif %}">
+                                    {{ payment.due_date_obj.strftime('%B %d, %Y') }}
+                                </span>
+                            {% else %}
+                                <span class="text-gray-400">N/A</span>
+                            {% endif %}
                         </td>
+
+                        <!-- Notes -->
+                        <td>
+                            {% if payment.notes %}
+                                <span class="text-xs text-gray-600">{{ payment.notes }}</span>
+                            {% else %}
+                                <span class="text-xs text-gray-400">-</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Actions -->
                         <td>
                             {% if payment.payment_status == 'pending' %}
-                            <button class="btn btn-primary text-sm">
-                                <i class="fas fa-credit-card mr-1"></i>Pay Now
-                            </button>
+                                <button class="btn btn-primary text-sm {% if member.membership_status != 'active' %}opacity-50 cursor-not-allowed{% endif %}">
+                                    <i class="fas fa-credit-card mr-1"></i>
+                                    {% if payment.is_overdue %}Pay Now (Overdue){% else %}Pay Now{% endif %}
+                                </button>
                             {% else %}
-                            <button class="btn btn-secondary text-sm">
-                                <i class="fas fa-receipt mr-1"></i>Receipt
-                            </button>
+                                <button class="btn btn-secondary text-sm">
+                                    <i class="fas fa-receipt mr-1"></i>Receipt
+                                </button>
                             {% endif %}
                         </td>
                     </tr>

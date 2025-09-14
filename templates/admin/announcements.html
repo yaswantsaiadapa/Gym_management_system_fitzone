@@ -38,23 +38,31 @@
                         {% if announcement.start_date or announcement.end_date %}
                         <div class="flex items-center space-x-4 text-sm text-gray-500 mt-2">
                             {% if announcement.start_date %}
-                            <span>Active from: {{ announcement.start_date.strftime('%b %d, %Y') }}</span>
+                            <span>Active from: {{ announcement.start_date|datetimeformat('%b %d, %Y') }}</span>
                             {% endif %}
                             {% if announcement.end_date %}
-                            <span>Until: {{ announcement.end_date.strftime('%b %d, %Y') }}</span>
+                            <span>Until: {{ announcement.end_date|datetimeformat('%b %d, %Y') }}</span>
                             {% endif %}
                         </div>
                         {% endif %}
                     </div>
                     
                     <div class="flex space-x-2">
-                        <button class="text-primary hover:text-blue-700" title="Edit">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="text-danger hover:text-red-700" title="Delete">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
+    <!-- Edit link -->
+    <a href="{{ url_for('admin.edit_announcement', announcement_id=announcement.id) }}"
+       class="text-primary hover:text-blue-700" title="Edit">
+        <i class="fas fa-edit"></i>
+    </a>
+
+    <!-- Delete form -->
+    <form method="POST" action="{{ url_for('admin.delete_announcement', announcement_id=announcement.id) }}"
+          onsubmit="return confirm('Are you sure you want to delete this announcement?');">
+        <button type="submit" class="text-danger hover:text-red-700" title="Delete">
+            <i class="fas fa-trash"></i>
+        </button>
+    </form>
+</div>
+
                 </div>
             </div>
             {% endfor %}

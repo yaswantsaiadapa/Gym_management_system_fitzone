@@ -12,7 +12,8 @@
 
     <div class="card">
         <div class="card-body">
-            <form method="POST" action="{{ url_for('admin.add_workout_plan_detail', plan_id=plan_id) }}">
+            <form method="POST" action="{{ url_for('trainer_routes.add_workout_plan_detail', plan_id=plan_id) }}">
+
                 <div class="space-y-4">
                     <div class="form-group">
                         <label class="form-label" for="workout_id">Select Workout *</label>
@@ -25,17 +26,18 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="day_of_week">Day of Week</label>
-                        <select id="day_of_week" name="day_of_week" class="form-control">
-                            <option value="">Any Day</option>
-                            <option value="monday">Monday</option>
-                            <option value="tuesday">Tuesday</option>
-                            <option value="wednesday">Wednesday</option>
-                            <option value="thursday">Thursday</option>
-                            <option value="friday">Friday</option>
-                            <option value="saturday">Saturday</option>
-                            <option value="sunday">Sunday</option>
-                        </select>
+                        <label for="day_of_week">Day of Week *</label>
+<select name="day_of_week" id="day_of_week" class="form-control" required>
+    <option value="">Select day</option>
+    <option value="1">Monday</option>
+    <option value="2">Tuesday</option>
+    <option value="3">Wednesday</option>
+    <option value="4">Thursday</option>
+    <option value="5">Friday</option>
+    <option value="6">Saturday</option>
+    <option value="7">Sunday</option>
+</select>
+
                     </div>
 
                     <div class="grid grid-cols-3 gap-4">
@@ -71,7 +73,8 @@
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save mr-2"></i>Add to Plan
                     </button>
-                    <a href="{{ url_for('admin.workout_plans') }}" class="btn btn-secondary">
+                    <a href="{{ url_for('trainer_routes.workout_plans') }}" class="btn btn-secondary">
+
                         <i class="fas fa-times mr-2"></i>Cancel
                     </a>
                 </div>

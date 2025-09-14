@@ -1,5 +1,6 @@
 from .database import execute_query
 from flask import current_app
+import hashlib, hmac, binascii, base64
 from werkzeug.security import check_password_hash, generate_password_hash
 
 class User:
@@ -13,7 +14,7 @@ class User:
         self.full_name = full_name
         self.phone = phone
         self.is_active = is_active
-    
+
     @classmethod
     def authenticate(cls, username, password):
         """Authenticate user with username/email and password"""
@@ -30,15 +31,15 @@ class User:
                 role=row[4], full_name=row[5], phone=row[6], is_active=bool(row[7])
             )
         return None
-    
+
     @classmethod
     def get_by_id(cls, user_id):
         """Get user by ID"""
         db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')
         query = '''SELECT id, username, email, password_hash, role, full_name, phone, is_active
-               FROM users WHERE id = ?'''
+                   FROM users WHERE id = ?'''
         result = execute_query(query, (user_id,), db_path, fetch=True)
-        
+
         if result:
             row = result[0]
             return cls(
@@ -46,14 +47,15 @@ class User:
                 role=row[4], full_name=row[5], phone=row[6], is_active=bool(row[7])
             )
         return None
+
     @classmethod
     def get_by_username_or_email(cls, identifier):
         """Fetch user by username or email"""
         db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')
         query = '''SELECT id, username, email, password_hash, role, full_name, phone, is_active
-               FROM users WHERE username = ? OR email = ?'''
+                   FROM users WHERE username = ? OR email = ?'''
         result = execute_query(query, (identifier, identifier), db_path, fetch=True)
-        
+
         if result:
             row = result[0]
             return cls(
@@ -61,13 +63,13 @@ class User:
                 role=row[4], full_name=row[5], phone=row[6], is_active=bool(row[7])
             )
         return None
-    
+
     def save(self):
-        """Save user to database"""
+        """Save user to database (new/updated). Ensure new passwords are PBKDF2-hashed."""
         db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')
-        
-        # Ensure password is hashed before saving
-        if self.password_hash and not self.password_hash.startswith('pbkdf2:'):
+
+        known_prefixes = ('pbkdf2:', 'scrypt:', 'argon2:', 'bcrypt:')
+        if self.password_hash and not self.password_hash.startswith(known_prefixes):
             self.password_hash = generate_password_hash(self.password_hash)
 
         if self.id:
@@ -75,19 +77,18 @@ class User:
                       role = ?, full_name = ?, phone = ?, is_active = ?, 
                       updated_at = CURRENT_TIMESTAMP WHERE id = ?'''
             params = (self.username, self.email, self.password_hash, self.role,
-                     self.full_name, self.phone, int(self.is_active), self.id)
+                      self.full_name, self.phone, int(self.is_active), self.id)
         else:
             query = '''INSERT INTO users (username, email, password_hash, role, 
                       full_name, phone, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)'''
             params = (self.username, self.email, self.password_hash, self.role,
-                     self.full_name, self.phone, int(self.is_active))
-        
+                      self.full_name, self.phone, int(self.is_active))
+
         result = execute_query(query, params, db_path)
         if not self.id:
-            # Make sure database.py returns lastrowid
             self.id = result
         return self.id
-    
+
     def update_password(self, new_password):
         db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')
         hashed_pw = generate_password_hash(new_password)

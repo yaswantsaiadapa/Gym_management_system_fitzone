@@ -73,20 +73,22 @@
                             <div class="text-sm text-gray-500">{{ record.date|datetimeformat('%A') }}</div>
 
                         </td>
-            <td>
-    {% if record.check_in_time and record.check_out_time %}
+           <td>
+    {% if record.time_slot %}
+        <span class="text-sm font-medium">{{ record.time_slot }}</span>
+    {% elif record.check_in_time and record.check_out_time %}
         <span class="text-sm">
-            {{ record.check_in_time|datetimeformat('%I:%M %p') }} - {{ record.check_out_time|datetimeformat('%I:%M %p') }}
+            {{ record.check_in_time.strftime('%I:%M %p') if record.check_in_time else '' }} - 
+            {{ record.check_out_time.strftime('%I:%M %p') if record.check_out_time else '' }}
         </span>
     {% elif record.check_in_time %}
         <span class="text-sm">
-            {{ record.check_in_time|datetimeformat('%I:%M %p') }}
+            {{ record.check_in_time.strftime('%I:%M %p') }}
         </span>
     {% else %}
-        <span class="text-gray-400">Not Checked In</span>
+        <span class="text-gray-400">Time Not Set</span>
     {% endif %}
 </td>
-
 
                         <td>
                             <span class="text-sm">{{ record.trainer_name or 'N/A' }}</span>

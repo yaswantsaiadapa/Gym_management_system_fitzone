@@ -79,6 +79,30 @@ class Diet:
         query = "UPDATE diet_plans SET is_active = 0 WHERE member_id = ?"
         execute_query(query, (member_id,), db_path)
 
+    @classmethod
+    def add_meal(cls, diet_plan_id, meal_name, meal_type="breakfast",
+                ingredients=None, calories=None, protein=None,
+                carbs=None, fat=None, instructions=None):
+        """Add a meal to a diet plan (meal_type must be: breakfast, lunch, dinner, snack)"""
+        db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')
+        query = '''
+            INSERT INTO diet_plan_meals
+            (diet_plan_id, meal_type, meal_name, ingredients, calories, protein, carbs, fat, instructions)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        '''
+        return execute_query(query, (
+            diet_plan_id,
+            meal_type,  # must be one of 'breakfast', 'lunch', 'dinner', 'snack'
+            meal_name,
+            ingredients,
+            calories,
+            protein,
+            carbs,
+            fat,
+            instructions
+        ), db_path)
+
+
     def get_meals(self):
         """Get meals linked to this diet plan"""
         db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')

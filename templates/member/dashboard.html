@@ -12,10 +12,44 @@
 
 <!-- Alert Messages -->
 {% if alert_message %}
-<div class="alert alert-warning mb-6">
+<div class="alert {% if 'pending payment' in alert_message.lower() or 'expired' in alert_message.lower() %}alert-danger{% else %}alert-warning{% endif %} mb-6">
     {{ alert_message|safe }}
+
+    {% if stats.pending_payments %}
+        <ul class="mt-2 text-sm">
+            {% for p in stats.pending_payments %}
+                <li class="{% if p.is_overdue %}text-red-600 font-bold{% endif %}">
+                    <i class="fas fa-clock mr-1 {% if p.is_overdue %}text-red-600{% else %}text-yellow-500{% endif %}"></i>
+                    Payment of ₹{{ p.amount }} 
+                    {% if p.due_date_obj %}
+                        is due by {{ p.due_date_obj.strftime('%B %d, %Y') }}
+                    {% else %}
+                        (No due date set)
+                    {% endif %}
+                    {% if p.is_overdue %}(Overdue){% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
 </div>
 {% endif %}
+
+<!-- Quick Actions -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <a href="{{ url_for('member.profile') }}" class="btn btn-primary text-center">
+        <i class="fas fa-user-edit block mb-1"></i>Edit Profile
+    </a>
+    <a href="{{ url_for('member.workouts') }}" class="btn btn-secondary text-center">
+        <i class="fas fa-dumbbell block mb-1"></i>My Workouts
+    </a>
+    <a href="{{ url_for('member.schedule_session') }}" 
+       class="btn bg-accent text-white hover:bg-orange-600 text-center {% if stats.membership_status != 'active' %}opacity-50 cursor-not-allowed pointer-events-none{% endif %}">
+        <i class="fas fa-calendar-plus block mb-1"></i>Book Session
+    </a>
+    <a href="{{ url_for('member.membership_status') }}" class="btn bg-purple-600 text-white hover:bg-purple-700 text-center">
+        <i class="fas fa-id-card block mb-1"></i>Membership
+    </a>
+</div>
 
 <!-- Membership Status -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -64,23 +98,6 @@
             <i class="fas fa-credit-card text-warning text-2xl"></i>
         </div>
     </div>
-</div>
-
-<!-- Quick Actions -->
-<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-    <a href="{{ url_for('member.profile') }}" class="btn btn-primary text-center">
-
-        <i class="fas fa-user-edit block mb-1"></i>Edit Profile
-    </a>
-    <a href="{{ url_for('member.workouts') }}" class="btn btn-secondary text-center">
-        <i class="fas fa-dumbbell block mb-1"></i>My Workouts
-    </a>
-    <a href="{{ url_for('member.schedule_session') }}" class="btn bg-accent text-white hover:bg-orange-600 text-center">
-        <i class="fas fa-calendar-plus block mb-1"></i>Book Session
-    </a>
-    <a href="{{ url_for('member.membership_status') }}" class="btn bg-purple-600 text-white hover:bg-purple-700 text-center">
-        <i class="fas fa-id-card block mb-1"></i>Membership
-    </a>
 </div>
 
 <!-- Recent Activity -->

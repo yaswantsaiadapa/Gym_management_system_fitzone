@@ -1,4 +1,4 @@
-# models/attendance.py
+# models/attendance.py - MINIMAL CHANGES VERSION
 from .database import execute_query
 from flask import current_app
 from datetime import date, datetime, time as dtime
@@ -36,7 +36,6 @@ def _parse_datetime(d):
         try:
             return datetime.strptime(str(d), "%Y-%m-%d %H:%M:%S")
         except Exception:
-            # try timestamp-only like "YYYY-MM-DDTHH:MM:SS" handled by fromisoformat above
             return None
 
 def _parse_time_string(ts):
@@ -141,72 +140,42 @@ class Attendance:
     def _from_attendance_row(cls, row, extras_order=None):
         """
         Build an Attendance from a DB row tuple.
-        Defensive about column ordering/length.
-        Handles joins with member_name, trainer_name, and time_slot.
+        NEW: Simplified to handle the consistent column order from updated schema
         """
         if not row:
             return None
 
-        # --- Base mapping (attendance table has 11 cols, no updated_at) ---
-        base_len = min(len(row), 11)
-        base = list(row[:base_len]) + [None] * (11 - base_len)
-
-        id_ = base[0]
-        member_id = base[1]
-        trainer_id = base[2]
-        col3, col4, col5 = base[3], base[4], base[5]
-
-        time_slot_val = None
-        check_in_val = None
-        check_out_val = None
-        date_val = base[6]
-        workout_type = base[7]
-        notes = base[8]
-        status = base[9]
-        created_at = base[10]
-
-        # --- Heuristic: detect if col3 is a time slot string vs datetime ---
-        if isinstance(col3, str) and any(x in col3.upper() for x in ("AM", "PM", "-")):
-            time_slot_val = col3
-            check_in_val, check_out_val = col4, col5
-        else:
-            check_in_val, check_out_val = col3, col4
-            if isinstance(col5, str) and any(x in col5.upper() for x in ("AM", "PM", "-")):
-                time_slot_val = col5
-
-        # --- Derive time_slot if missing ---
-        if not time_slot_val:
-            time_slot_val = _datetimes_to_slot(check_in_val, check_out_val)
-
+        # Expected columns: id, member_id, trainer_id, check_in_time, check_out_time, date, time_slot, workout_type, notes, status, created_at
         att = cls(
-            id=id_,
-            member_id=member_id,
-            trainer_id=trainer_id,
-            time_slot=time_slot_val,
-            check_in_time=_parse_datetime(check_in_val),
-            check_out_time=_parse_datetime(check_out_val),
-            date=_parse_date(date_val) if isinstance(date_val, str) else date_val,
-            workout_type=workout_type,
-            notes=notes,
-            status=status,
-            created_at=created_at,
+            id=row[0],
+            member_id=row[1],
+            trainer_id=row[2],
+            check_in_time=row[3],
+            check_out_time=row[4],
+            date=row[5],
+            time_slot=row[6] if len(row) > 6 else None,
+            workout_type=row[7] if len(row) > 7 else None,
+            notes=row[8] if len(row) > 8 else None,
+            status=row[9] if len(row) > 9 else 'scheduled',
+            created_at=row[10] if len(row) > 10 else None,
         )
 
-        # --- Handle joined extras (member_name, trainer_name, time_slot override) ---
-        extras = list(row[11:])
-        if extras_order:
-            for i, name in enumerate(extras_order):
-                if i < len(extras):
-                    if name == "time_slot" and extras[i]:  # prefer SQL-provided label
-                        att.time_slot = extras[i]
-                    else:
-                        setattr(att, name, extras[i])
-        else:
-            if len(extras) == 1:
-                att.trainer_name = extras[0]
-            elif len(extras) >= 2:
-                att.member_name = extras[0]
-                att.trainer_name = extras[1]
+        # Handle joined extras (member_name, trainer_name, etc.)
+        if len(row) > 11:
+            if extras_order:
+                for i, name in enumerate(extras_order):
+                    if i < len(row) - 11:
+                        setattr(att, name, row[11 + i])
+            else:
+                # Default handling for backwards compatibility
+                if len(row) > 11:
+                    att.member_name = row[11]
+                if len(row) > 12:
+                    att.trainer_name = row[12]
+
+        # If time_slot is missing but we have check_in/check_out, derive it
+        if not att.time_slot and (att.check_in_time or att.check_out_time):
+            att.time_slot = _datetimes_to_slot(att.check_in_time, att.check_out_time)
 
         return att
 
@@ -221,19 +190,17 @@ class Attendance:
     def get_for_trainer_member_slot(cls, trainer_id, member_id, attendance_date, time_slot):
         """
         Locate a single attendance row matching trainer+member+date+time_slot.
-        This query tests both a dedicated time_slot column OR textual match in check_in_time
-        to remain tolerant to schema variations.
+        Updated to use time_slot column directly.
         """
-        check_in, check_out = _slot_to_datetimes(time_slot, on_date=attendance_date)
         db_path = cls._db_path()
         date_param = attendance_date.isoformat() if isinstance(attendance_date, date) else attendance_date
+        
         query = """
-    SELECT * FROM attendance
-    WHERE trainer_id=? AND member_id=? AND date=? AND check_in_time = ?
-    LIMIT 1
-""" 
-        rows = execute_query(query, (trainer_id, member_id, date_param, check_in), db_path, fetch=True)
-
+            SELECT * FROM attendance
+            WHERE trainer_id=? AND member_id=? AND date=? AND time_slot = ?
+            LIMIT 1
+        """ 
+        rows = execute_query(query, (trainer_id, member_id, date_param, time_slot), db_path, fetch=True)
         return cls._from_attendance_row(rows[0]) if rows else None
 
     @classmethod
@@ -254,7 +221,7 @@ class Attendance:
             LEFT JOIN trainers t ON a.trainer_id = t.id
             LEFT JOIN users ut ON t.user_id = ut.id
             WHERE a.date = ?
-            ORDER BY a.check_in_time
+            ORDER BY a.time_slot, a.check_in_time
         '''
         results = execute_query(query, (date_param,), db_path, fetch=True)
         return [cls._from_attendance_row(r, extras_order=['member_name', 'trainer_name']) for r in results]
@@ -271,7 +238,7 @@ class Attendance:
             LEFT JOIN members m ON a.member_id = m.id
             LEFT JOIN users um ON m.user_id = um.id
             WHERE a.trainer_id = ? AND a.date = ?
-            ORDER BY a.check_in_time
+            ORDER BY a.time_slot, a.check_in_time
         '''
         results = execute_query(query, (trainer_id, date_param), db_path, fetch=True)
         return [cls._from_attendance_row(r, extras_order=['member_name']) for r in results]
@@ -280,41 +247,16 @@ class Attendance:
     def get_member_attendance(cls, member_id, limit=10):
         db_path = cls._db_path()
         query = '''
-            SELECT 
-                a.id,
-                a.member_id,
-                a.trainer_id,
-                -- Format time slot nicely
-                CASE 
-                    WHEN a.check_in_time IS NOT NULL AND a.check_out_time IS NOT NULL 
-                    THEN strftime('%I:%M %p', a.check_in_time) || ' - ' || strftime('%I:%M %p', a.check_out_time)
-                    WHEN a.check_in_time IS NOT NULL 
-                    THEN strftime('%I:%M %p', a.check_in_time)
-                    ELSE 'N/A'
-                END AS time_slot,
-                a.check_in_time,
-                a.check_out_time,
-                a.date,
-                a.workout_type,
-                a.notes,
-                a.status,
-                a.created_at,
-                COALESCE(ut.full_name, 'N/A') AS trainer_name
+            SELECT a.*, ut.full_name as trainer_name
             FROM attendance a
             LEFT JOIN trainers t ON a.trainer_id = t.id
             LEFT JOIN users ut ON t.user_id = ut.id
             WHERE a.member_id = ?
-            ORDER BY a.date DESC, a.check_in_time DESC
+            ORDER BY a.date DESC, a.time_slot DESC
             LIMIT ?
         '''
         results = execute_query(query, (member_id, limit), db_path, fetch=True)
-        return [
-            cls._from_attendance_row(r, extras_order=['trainer_name', 'time_slot'])
-            for r in results
-        ]
-
-
-
+        return [cls._from_attendance_row(r, extras_order=['trainer_name']) for r in results]
 
     @classmethod
     def get_trainer_schedule(cls, trainer_id, attendance_date=None):
@@ -323,30 +265,29 @@ class Attendance:
         db_path = cls._db_path()
         date_param = attendance_date.isoformat() if isinstance(attendance_date, date) else attendance_date
         query = '''
-            SELECT a.*, um.full_name as member_name
+            SELECT a.*, um.full_name as member_name, u.phone as member_phone
             FROM attendance a
             LEFT JOIN members m ON a.member_id = m.id
             LEFT JOIN users um ON m.user_id = um.id
+            LEFT JOIN users u ON m.user_id = u.id
             WHERE a.trainer_id = ? AND a.date = ?
-            ORDER BY a.check_in_time
+            ORDER BY a.time_slot, a.check_in_time
         '''
         results = execute_query(query, (trainer_id, date_param), db_path, fetch=True)
-        return [cls._from_attendance_row(r, extras_order=['member_name']) for r in results]
+        return [cls._from_attendance_row(r, extras_order=['member_name', 'member_phone']) for r in results]
 
     @classmethod
     def check_slot_availability(cls, trainer_id, time_slot, attendance_date=None):
         if attendance_date is None:
             attendance_date = date.today()
         db_path = cls._db_path()
-        check_in, check_out = _slot_to_datetimes(time_slot, on_date=attendance_date)
-
         date_param = attendance_date.isoformat() if isinstance(attendance_date, date) else attendance_date
+        
         query = '''
-    SELECT COUNT(*) FROM attendance
-    WHERE trainer_id = ? AND check_in_time = ? AND date = ?
-'''
-        result = execute_query(query, (trainer_id, check_in, date_param), db_path, fetch=True)
-
+            SELECT COUNT(*) FROM attendance
+            WHERE trainer_id = ? AND time_slot = ? AND date = ?
+        '''
+        result = execute_query(query, (trainer_id, time_slot, date_param), db_path, fetch=True)
         return (result[0][0] == 0) if result else True
 
     def save(self):
@@ -375,55 +316,31 @@ class Attendance:
                 check_out_iso = derived_out
 
         # If time_slot missing but check_in/check_out exist, derive a label
-        time_slot_val = self.time_slot or _datetimes_to_slot(check_in_iso, check_out_iso)
+        if not self.time_slot and (check_in_iso or check_out_iso):
+            self.time_slot = _datetimes_to_slot(check_in_iso, check_out_iso)
 
-        # Save to DB: try the modern INSERT/UPDATE with a time_slot column; if DB lacks that column, fall back.
-        # In save()
-
+        # Save to DB with time_slot column
         if self.id:
             # UPDATE
-            try:
-                query = '''UPDATE attendance 
-                        SET member_id=?, trainer_id=?, time_slot=?, check_in_time=?, check_out_time=?, 
-                            date=?, workout_type=?, notes=?, status=?
-                        WHERE id=?'''
-                params = (self.member_id, self.trainer_id, time_slot_val, check_in_iso, check_out_iso,
-                        date_str, self.workout_type, self.notes, self.status, self.id)
-                execute_query(query, params, db_path)
-                return self.id
-            except Exception as e:
-                query = '''UPDATE attendance 
-                        SET member_id=?, trainer_id=?, check_in_time=?, check_out_time=?, 
-                            date=?, workout_type=?, notes=?, status=?
-                        WHERE id=?'''
-                params = (self.member_id, self.trainer_id, check_in_iso, check_out_iso,
-                        date_str, self.workout_type, self.notes, self.status, self.id)
-                execute_query(query, params, db_path)
-                return self.id
-        else:
-            try:
-                query = '''INSERT INTO attendance 
-                        (member_id, trainer_id, time_slot, check_in_time, check_out_time, date, workout_type, notes, status)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'''
-                params = (self.member_id, self.trainer_id, time_slot_val, check_in_iso, check_out_iso,
-                        date_str, self.workout_type, self.notes, self.status)
-                result = execute_query(query, params, db_path)
-            except Exception as e:
-                query = '''INSERT INTO attendance 
-                        (member_id, trainer_id, check_in_time, check_out_time, date, workout_type, notes, status)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)'''
-                params = (self.member_id, self.trainer_id, check_in_iso, check_out_iso,
-                        date_str, self.workout_type, self.notes, self.status)
-                result = execute_query(query, params, db_path)
-
-
-            # execute_query may return inserted id depending on implementation
-            if result:
-                try:
-                    self.id = int(result)
-                except Exception:
-                    self.id = result
+            query = '''UPDATE attendance 
+                    SET member_id=?, trainer_id=?, check_in_time=?, check_out_time=?, 
+                        date=?, time_slot=?, workout_type=?, notes=?, status=?
+                    WHERE id=?'''
+            params = (self.member_id, self.trainer_id, check_in_iso, check_out_iso,
+                    date_str, self.time_slot, self.workout_type, self.notes, self.status, self.id)
+            execute_query(query, params, db_path)
             return self.id
+        else:
+            # INSERT
+            query = '''INSERT INTO attendance 
+                    (member_id, trainer_id, check_in_time, check_out_time, date, time_slot, workout_type, notes, status)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'''
+            params = (self.member_id, self.trainer_id, check_in_iso, check_out_iso,
+                    date_str, self.time_slot, self.workout_type, self.notes, self.status)
+            result = execute_query(query, params, db_path)
+            if result:
+                self.id = result
+            return result
 
     def mark_absent(self):
         self.status = 'absent'
@@ -456,7 +373,6 @@ class Attendance:
             }
         return {'total_sessions': 0, 'unique_members': 0, 'active_trainers': 0}
 
-    
     @classmethod
     def get_member_attendance_percentage(cls, member_id, up_to_date=None):
         """
@@ -486,4 +402,83 @@ class Attendance:
                     present += count
 
         return round((present / total) * 100, 2) if total > 0 else 0.0
+    
+    @classmethod
+    def auto_mark_absent(cls):
+        """
+        Mark all 'scheduled' sessions as 'absent' if their end time has passed.
+        This keeps attendance data consistent even if trainers didn't mark manually.
+        """
+        db_path = cls._db_path()
 
+        # Get all scheduled sessions
+        rows = execute_query(
+            "SELECT * FROM attendance WHERE status = 'scheduled'",
+            (),
+            db_path,
+            fetch=True
+        )
+        now = datetime.now()
+        updated = 0
+
+        for r in rows:
+            att = cls._from_attendance_row(r)
+            if not att or not att.date:
+                continue
+
+            start_iso, end_iso = _slot_to_datetimes(att.time_slot, on_date=att.date)
+
+            # Check if session has expired
+            expired = False
+            if att.date < date.today():
+                expired = True
+            elif end_iso:
+                try:
+                    expired = now > datetime.fromisoformat(end_iso)
+                except Exception:
+                    expired = False
+            elif start_iso:
+                # Fallback: if only start time present, consider expired if past start time + 1hr
+                try:
+                    start_dt = datetime.fromisoformat(start_iso)
+                    expired = now > start_dt.replace(minute=start_dt.minute + 59)
+                except Exception:
+                    expired = False
+
+            if expired:
+                att.status = "absent"
+                att.save()
+                updated += 1
+
+        return updated
+    @classmethod
+    def get_member_scheduled_on_date(cls, member_id, on_date):
+        """
+        Return all scheduled sessions for a given member on a specific date.
+        Used by member_routes to prevent double-booking.
+        """
+        db_path = cls._db_path()
+        date_param = on_date.isoformat() if isinstance(on_date, date) else on_date
+
+        query = """
+            SELECT * FROM attendance
+            WHERE member_id = ? AND date = ? AND status = 'scheduled'
+            ORDER BY time_slot
+        """
+        rows = execute_query(query, (member_id, date_param), db_path, fetch=True)
+        return [cls._from_attendance_row(r) for r in rows] if rows else []
+     
+
+    def __repr__(self):
+        return f"<Attendance id={self.id} member={self.member_name or self.member_id} trainer={self.trainer_name or self.trainer_id} date={self.date} slot={self.time_slot} status={self.status}>"
+
+    def __str__(self):
+        member = self.member_name or f"Member {self.member_id}"
+        trainer = self.trainer_name or f"Trainer {self.trainer_}"
+        d = self.date.isoformat() if isinstance(self.date, date) else str(self.date)
+        return f"{d} | {self.time_slot or 'N/A'} | {member} with {trainer} | Status: {self.status}"
+
+    __repr__ = __str__
+
+
+        

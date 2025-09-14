@@ -212,4 +212,39 @@
         </form>
     </div>
 </div>
+<!-- Recent Announcements -->
+<div class="card mt-6">
+  <div class="card-header flex justify-between items-center">
+    <h2 class="text-lg font-semibold">
+      <i class="fas fa-bullhorn text-primary mr-2"></i>Recent Announcements
+    </h2>
+    <a href="{{ url_for('admin.add_announcement') }}" class="btn btn-sm btn-primary">
+      <i class="fas fa-plus mr-1"></i> New
+    </a>
+  </div>
+  <div class="card-body">
+    {% if announcements %}
+      <ul class="divide-y divide-gray-200">
+        {% for ann in announcements %}
+        <li class="py-2 flex justify-between items-center">
+          <div>
+            <strong>{{ ann.title }}</strong>
+            <p class="text-sm text-gray-600">{{ ann.content[:60] }}{% if ann.content|length > 60 %}...{% endif %}</p>
+          </div>
+          <a href="{{ url_for('admin.edit_announcement', announcement_id=ann.id) }}" 
+             class="text-sm text-primary hover:underline">
+            Edit
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+      <a href="{{ url_for('admin.announcements') }}" class="text-sm text-primary hover:underline block mt-3">
+        View All
+      </a>
+    {% else %}
+      <p class="text-gray-500">No announcements yet.</p>
+    {% endif %}
+  </div>
+</div>
+
 {% endblock %}

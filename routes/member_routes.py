@@ -8,18 +8,20 @@ from models.payment import Payment
 from models.workout import Workout
 from models.diet import Diet
 from models.progress import Progress
-from models.attendance import Attendance
+from models.attendance import Attendance, _slot_to_datetimes
 from models.announcement import Announcement
 from routes.admin import members
 from utils.decorators import login_required, member_required
 from models.workout_plan import MemberWorkoutPlan, WorkoutPlanDetail
 from flask import current_app
 
-
-
-
 member_routes_bp = Blueprint('member', __name__,url_prefix='/member')
 
+@member_routes_bp.route('/announcements')
+@login_required
+def announcements():
+    announcements = Announcement.get_for_role('member')
+    return render_template('member/announcements.html', announcements=announcements)
 
 
 @member_routes_bp.route('/dashboard')
@@ -64,7 +66,6 @@ def dashboard():
             stats['recent_attendance'] = Attendance.get_member_attendance(member.id, limit=5)
         except Exception as ex:
             current_app.logger.warning("Attendance fetch failed: %s", ex)
-
         # Payments
         try:
             stats['pending_payments'] = Payment.get_member_payments(member.id)[:3]
@@ -73,12 +74,19 @@ def dashboard():
 
         # --- Alerts ---
         alert_message = None
-        if membership_expires:
+
+        # ✅ NEW: Show alert if membership is not active (pending or suspended)
+        if member.membership_status != "active":
+            alert_message = "⚠️ Your membership is not active. Please complete payment or contact the admin."
+
+        # Existing expiry warnings (still works for active members)
+        elif membership_expires:
             if days_until_expiry < 0:
                 alert_message = f"⚠️ Your membership expired on {membership_expires}. Please renew at the admin desk."
             elif days_until_expiry <= 7:
                 alert_message = f"⏳ Your membership will expire in {days_until_expiry} days (on {membership_expires}). Please renew soon."
 
+        # Pending payment notice (appended)
         if stats['pending_payments']:
             alert_message = (alert_message + " | " if alert_message else "") + \
                 f"💰 You have {len(stats['pending_payments'])} pending payment(s). Please clear them at the admin desk."
@@ -112,6 +120,7 @@ def dashboard():
         current_app.logger.exception("Critical error in dashboard: %s", e)
         flash('Unexpected error loading dashboard.')
         return redirect(url_for('auth.login'))
+
 
 
 @member_routes_bp.route('/profile')
@@ -231,35 +240,25 @@ def progress():
 @login_required
 @member_required
 def attendance():
-    """Member attendance history with auto-absent handling"""
+    Attendance.auto_mark_absent()
+    """Member attendance history - SIMPLIFIED"""
     user_id = session['user_id']
     member = Member.get_by_user_id(user_id)
 
     # Get last 30 records
     attendance_records = Attendance.get_member_attendance(member.id, limit=30)
 
+    # Simple auto-absent logic (optional - you can remove this if causing issues)
     now = datetime.now()
-
-    # --- Auto-mark scheduled sessions as absent if time has passed ---
-    # --- Auto-mark scheduled sessions as absent if time has passed ---
     for record in attendance_records:
-        if record.status == "scheduled":
+        if record.status == "scheduled" and record.date and record.date < date.today():
             try:
-                check_in = record.check_in_time
-                if isinstance(check_in, str):
-                    check_in = Attendance._parse_datetime(check_in)
-                if check_in and record.date:
-                    session_datetime = datetime.combine(record.date, check_in.time())
-                    if now > session_datetime:  # session already passed
-                        record.status = "absent"
-                        record.save()
-            except Exception as e:
-                current_app.logger.warning(
-                    f"Auto-absent failed for record {getattr(record, 'id', 'N/A')}: {e}"
-                )
+                record.status = "absent"
+                record.save()
+            except Exception:
+                pass  # Ignore errors in auto-absent
 
-
-    # --- Re-fetch after updates ---
+    # Re-fetch after updates
     attendance_records = Attendance.get_member_attendance(member.id, limit=30)
 
     # Stats
@@ -268,8 +267,9 @@ def attendance():
     absent_sessions = sum(1 for a in attendance_records if a.status == 'absent')
     late_sessions = sum(1 for a in attendance_records if a.status == 'late')
 
-    attendance_percentage = (present_sessions / (present_sessions + absent_sessions + late_sessions) * 100) \
-                            if (present_sessions + absent_sessions + late_sessions) > 0 else 0
+    # Only count completed sessions for percentage
+    completed = present_sessions + absent_sessions + late_sessions
+    attendance_percentage = (present_sessions / completed * 100) if completed > 0 else 0
 
     return render_template(
         'member/attendance.html',
@@ -301,10 +301,17 @@ def schedule_session():
     """Schedule training session"""
     user_id = session['user_id']
     member = Member.get_by_user_id(user_id)
-    
+
+    # 🔒 Prevent booking if membership is inactive/pending/expired
+    if member.membership_status != "active" or (
+        member.membership_end_date and member.membership_end_date < date.today()
+    ):
+        flash("Your membership is inactive or expired. Please contact admin to activate or renew.", "danger")
+        return redirect(url_for("member.membership_status"))
+
     # Get available trainers
     assigned_trainer = Trainer.get_by_id(member.trainer_id)
-    
+
     # Get available time slots
     time_slots = [
         "6:00 AM - 8:00 AM",
@@ -318,73 +325,98 @@ def schedule_session():
     ]
     
     return render_template(
-    'member/schedule_session.html',
-    today=date.today(),
-    assigned_trainer=assigned_trainer,
-    time_slots=time_slots
-)
+        'member/schedule_session.html',
+        today=date.today(),
+        assigned_trainer=assigned_trainer,
+        time_slots=time_slots
+    )
 
 
 @member_routes_bp.route('/schedule_session', methods=['POST'])
 @login_required
 @member_required
 def schedule_session_post():
-    """Process session scheduling"""
+    """Process session scheduling with validation: one session per member per date; future slot start only; reschedule allowed."""
     try:
         user_id = session['user_id']
         member = Member.get_by_user_id(user_id)
+
+        # 🔒 Prevent scheduling if membership is inactive/pending/expired
+        if member.membership_status != "active" or (
+            member.membership_end_date and member.membership_end_date < date.today()
+        ):
+            flash("Your membership is inactive or expired. Please contact admin to activate or renew.", "danger")
+            return redirect(url_for("member.membership_status"))
+
         assigned_trainer = Trainer.get_by_id(member.trainer_id)
-        session_date = request.form.get('session_date')
+
+        session_date_raw = request.form.get('session_date')
         time_slot = request.form.get('time_slot')
 
-        if not all([session_date, time_slot]):
-            flash('All fields are required')
+        if not all([session_date_raw, time_slot]):
+            flash('All fields are required', 'warning')
             return redirect(url_for('member.schedule_session'))
 
-        session_date = datetime.strptime(session_date, '%Y-%m-%d').date()
+        session_date = datetime.strptime(session_date_raw, '%Y-%m-%d').date()
 
-        # ✅ Members can only schedule sessions from NEXT slot onwards
-        today = date.today()
-        now_time = datetime.now().time()
+        # 1) Can't book past dates
+        if session_date < date.today():
+            flash('Cannot schedule sessions for past dates', 'warning')
+            return redirect(url_for('member.schedule_session'))
 
-        if session_date == today:
-            if " - " in time_slot:
-                check_in, check_out = time_slot.split(" - ", 1)
-                check_in_time = datetime.strptime(check_in.strip(), "%I:%M %p").time()  # ✅ Fix
-                if now_time >= check_in_time:
-                    flash("You can only schedule upcoming slots, not current or past ones.", "warning")
-                    return redirect(url_for('member.schedule_session'))
+        # 2) Derive slot datetimes and require start > now
+        start_iso, end_iso = _slot_to_datetimes(time_slot, on_date=session_date)
+        if not start_iso:
+            flash('Invalid time slot selected.', 'warning')
+            return redirect(url_for('member.schedule_session'))
 
-        # Check if slot is available
+        start_dt = datetime.fromisoformat(start_iso)
+        if start_dt <= datetime.now():
+            flash('Cannot schedule a session that starts now or in the past. Please select a future slot.', 'warning')
+            return redirect(url_for('member.schedule_session'))
+
+        # 3) Check member already has a scheduled session for this date
+        existing_for_member = Attendance.get_member_scheduled_on_date(member.id, session_date)
+        if existing_for_member:
+            if existing_for_member.time_slot == time_slot:
+                flash('You already have this slot booked for that date.', 'info')
+                return redirect(url_for('member.attendance'))
+
+            if not Attendance.check_slot_availability(
+                assigned_trainer.id,
+                time_slot,
+                session_date,
+                exclude_attendance_id=existing_for_member.id
+            ):
+                flash('Trainer is not available for the new slot. Please choose a different slot.', 'warning')
+                return redirect(url_for('member.schedule_session'))
+
+            existing_for_member.time_slot = time_slot
+            existing_for_member.status = 'scheduled'
+            existing_for_member.save()
+            flash('Your session has been rescheduled.', 'success')
+            return redirect(url_for('member.attendance'))
+
+        # 4) New booking: check trainer's slot availability
         if not Attendance.check_slot_availability(assigned_trainer.id, time_slot, session_date):
-            flash('This time slot is not available')
+            flash('This time slot is not available', 'warning')
             return redirect(url_for('member.schedule_session'))
 
-        # Split time_slot into check-in and check-out
-        if " - " in time_slot:
-            check_in, check_out = time_slot.split(" - ", 1)
-        else:
-            check_in, check_out = time_slot, None  # fallback
-
-        # ✅ Always start with status="scheduled"
+        # 5) Create attendance record
         attendance = Attendance(
             member_id=member.id,
             trainer_id=assigned_trainer.id,
             date=session_date,
-            check_in_time=check_in.strip(),
-            check_out_time=check_out.strip() if check_out else None,
-            status="scheduled"
+            time_slot=time_slot,
+            status='scheduled'
         )
+        attendance.save()
+        flash('Session scheduled successfully!', 'success')
 
-        attendance_id = attendance.save()
-        if attendance_id:
-            flash('Session scheduled successfully!', 'success')
-        else:
-            flash('Error scheduling session', 'danger')
-            
     except Exception as e:
-        flash(f'Error scheduling session: {e}', 'danger')
-    
+        current_app.logger.exception(f'Error scheduling session: {e}')
+        flash('Error scheduling session', 'danger')
+
     return redirect(url_for('member.attendance'))
 
 

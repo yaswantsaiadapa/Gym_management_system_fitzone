@@ -117,6 +117,15 @@ def update_equipment_status(equipment_id):
 def dashboard():
     """Admin dashboard with statistics and overview"""
     try:
+    # Auto-process pending payments (send reminders and cancel expired ones)
+    # Safe to call on dashboard load for small DBs. Remove if you prefer cron-only.
+        try:
+            Payment.process_pending_payments(reminder_before_days=5)
+        except Exception as e:
+            current_app.logger.warning(f"Auto-processing pending payments failed: {e}")
+    except Exception:
+        pass
+    try:
         # Get key statistics
         total_members = Member.get_count_active()
         total_trainers = Trainer.get_count_active()
@@ -140,20 +149,23 @@ def dashboard():
         # Memberships expiring soon
         expiring_memberships = Member.get_expiring_soon(30)
 
+        # 🔹 Get recent announcements (latest 5)
+        announcements = Announcement.get_all()[:5]
+
         return render_template(
             'admin/dashboard.html',
             total_members=total_members,
             total_trainers=total_trainers,
             today_attendance=today_attendance,
-            total_revenue = revenue_stats.get('total_revenue', 0) if revenue_stats else 0,
-            monthly_revenue = monthly_revenue.get('total_revenue', 0) if monthly_revenue else 0,
-
+            total_revenue=revenue_stats.get('total_revenue', 0) if revenue_stats else 0,
+            monthly_revenue=monthly_revenue.get('total_revenue', 0) if monthly_revenue else 0,
             pending_payments=len(pending_payments),
             working_equipment=working_equipment,
             maintenance_equipment=maintenance_equipment,
             recent_members=recent_members,
             recent_payments=recent_payments,
-            expiring_memberships=expiring_memberships
+            expiring_memberships=expiring_memberships,
+            announcements=announcements   # 🔹 pass to template
         )
     except Exception as e:
         print("\n--- DASHBOARD ERROR ---")
@@ -166,7 +178,8 @@ def dashboard():
             total_members=0, total_trainers=0, today_attendance=0,
             total_revenue=0, monthly_revenue=0, pending_payments=0,
             working_equipment=0, maintenance_equipment=0,
-            recent_members=[], recent_payments=[], expiring_memberships=[]
+            recent_members=[], recent_payments=[], expiring_memberships=[],
+            announcements=[]   # 🔹 empty list fallback
         )
 
 
@@ -261,19 +274,21 @@ def add_member():
             fitness_goals=fitness_goals,
             membership_start_date=start_date,
             membership_end_date=end_date,
+            membership_status='pending_payment',   # <- NEW field
             trainer_id=int(trainer_id) if trainer_id else None
         )
         member_id = member.save()
 
         if member_id:
-            # Initial payment
+            # Initial pending payment (due in 15 days)
+            payment_due = start_date + timedelta(days=15)
             payment = Payment(
                 member_id=member_id,
                 membership_plan_id=membership_plan_id,
                 amount=plan.price,
-                payment_method='cash',
+                payment_method=request.form.get('payment_method', 'cash'),
                 payment_status='pending',
-                due_date=start_date
+                due_date=payment_due
             )
             payment.save()
 
@@ -286,7 +301,6 @@ def add_member():
             flash(f'Member {full_name} added successfully! Temporary password: {temp_password}')
         else:
             flash('Error creating member profile!')
-
     except Exception as e:
         flash(f'An error occurred while adding the member: {str(e)}')
 
@@ -472,16 +486,29 @@ def update_payment_status(payment_id):
 
     try:
         payment = Payment.get_by_id(payment_id)
-        if payment:
-            payment.payment_status = new_status
-            if new_status == 'completed':
-                payment.payment_date = date.today()
-            payment.save()
-            flash('Payment status updated successfully!')
-        else:
+        if not payment:
             flash('Payment not found!')
+            return redirect(url_for('admin.payments'))
+
+        transaction_id = request.form.get('transaction_id') or None
+
+        if new_status == 'completed':
+            success = Payment.mark_completed(payment_id, transaction_id=transaction_id)
+            if success:
+                flash('Payment marked as completed and membership activated!')
+            else:
+                flash('Payment updated but failed to activate membership; check logs.', 'warning')
+        else:
+            # For pending/failed/refunded, just update the payment row
+            payment.payment_status = new_status
+            if transaction_id:
+                payment.transaction_id = transaction_id
+            payment.save()
+            flash(f'Payment status updated to {new_status}.')
+
     except Exception as e:
-        flash(f'Error updating payment: {str(e)}')
+        current_app.logger.exception(f'Error updating payment {payment_id}: {e}')
+        flash('Error updating payment. Check logs.')
 
     return redirect(url_for('admin.payments'))
 
@@ -533,6 +560,47 @@ def add_announcement():
         return redirect(url_for('admin.announcements'))
 
     return render_template('admin/add_announcement.html')
+
+@admin_bp.route('/announcements/<int:announcement_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def edit_announcement(announcement_id):
+    announcement = Announcement.get_by_id(announcement_id)
+    if not announcement:
+        flash('Announcement not found.', 'error')
+        return redirect(url_for('admin.announcements'))
+
+    if request.method == 'POST':
+        try:
+            announcement.title = request.form.get('title')
+            announcement.content = request.form.get('content')
+            announcement.announcement_type = request.form.get('announcement_type')
+            announcement.target_audience = request.form.get('target_audience')
+            announcement.is_public = 1 if request.form.get('is_public') else 0
+            announcement.start_date = request.form.get('start_date') or None
+            announcement.end_date = request.form.get('end_date') or None
+
+            announcement.save()
+            flash('Announcement updated successfully!', 'success')
+            return redirect(url_for('admin.announcements'))
+        except Exception as e:
+            flash(f'Error updating announcement: {str(e)}', 'error')
+
+    return render_template('admin/edit_announcement.html', announcement=announcement)
+
+@admin_bp.route('/announcements/<int:announcement_id>/delete', methods=['POST'])
+@admin_required
+def delete_announcement(announcement_id):
+    try:
+        announcement = Announcement.get_by_id(announcement_id)
+        if not announcement:
+            flash('Announcement not found.', 'error')
+        else:
+            announcement.delete()
+            flash('Announcement deleted successfully!', 'success')
+    except Exception as e:
+        flash(f'Error deleting announcement: {str(e)}', 'error')
+
+    return redirect(url_for('admin.announcements'))
 
 # -------------------- Reports --------------------
 @admin_bp.route('/reports')
@@ -600,26 +668,26 @@ def renew_membership(member_id):
 
             amount = float(amount_str) if amount_str else float(plan.price)
 
-            # Create/record payment first
+            # Create/record payment first: due in 15 days by default
+            payment_due = date.today() + timedelta(days=15)
             payment = Payment(
                 member_id=member.id,
                 membership_plan_id=int(plan_id),
                 amount=amount,
                 payment_method=payment_method,
                 payment_status=payment_status,
-                due_date=date.today()  # adjust if you prefer a specific due date
+                due_date=payment_due
             )
             if payment_status == 'completed':
-                payment.payment_date = date.today()
+                payment.payment_date = date.today().isoformat()
 
             payment_id = payment.save()
             if not payment_id:
                 flash('Could not create payment record.', 'danger')
                 return redirect(url_for('admin.renew_membership', member_id=member_id))
 
-            # Extend membership ONLY if payment is completed
+            # Extend membership ONLY if payment is completed now
             if payment_status == 'completed':
-                # Start next period right after current end if active; otherwise start today
                 if member.membership_end_date and member.membership_end_date >= date.today():
                     start_date = member.membership_end_date + timedelta(days=1)
                 else:
@@ -630,7 +698,7 @@ def renew_membership(member_id):
                 member.membership_plan_id = int(plan_id)
                 member.membership_start_date = start_date
                 member.membership_end_date = end_date
-                member.status = 'active'
+                member.membership_status = 'active'   # keep field naming consistent
                 member.save()
 
                 flash(f'Membership renewed successfully until {end_date}.', 'success')

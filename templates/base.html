@@ -39,27 +39,35 @@
                     
                     <!-- Navigation Links -->
                     <div class="hidden md:flex space-x-6">
-                        {% if session.role == 'admin' %}
-                            <a href="{{ url_for('admin.dashboard') }}" class="nav-link">Dashboard</a>
-                            <a href="{{ url_for('admin.members') }}" class="nav-link">Members</a>
-                            <a href="{{ url_for('admin.trainers') }}" class="nav-link">Trainers</a>
-                            <a href="{{ url_for('admin.membership_plans') }}" class="nav-link">Plans</a>
-                            <a href="{{ url_for('admin.payments') }}" class="nav-link">Payments</a>
-                            <a href="{{ url_for('admin.equipment_list') }}" class="nav-link">Equipment</a>
-                            <a href="{{ url_for('admin.reports') }}" class="nav-link">Reports</a>
-                        {% elif session.role == 'member' %}
-    <a href="{{ url_for('member.dashboard') }}" class="nav-link">Dashboard</a>
-    <a href="{{ url_for('member.profile') }}" class="nav-link">Profile</a>
-    <a href="{{ url_for('member.workouts') }}" class="nav-link">Workouts</a>
-    <a href="{{ url_for('member.attendance') }}" class="nav-link">Attendance</a>
-    <a href="{{ url_for('member.payments') }}" class="nav-link">Payments</a>
-{% elif session.role == 'trainer' %}
-    <a href="{{ url_for('trainer_routes.dashboard') }}" class="nav-link">Dashboard</a>
-    <a href="{{ url_for('trainer_routes.clients') }}" class="nav-link">My Clients</a>
-    <a href="{{ url_for('trainer_routes.schedule') }}" class="nav-link">Schedule</a>
-{% endif %}
-
-                    </div>
+    {% if session.role == 'admin' %}
+        <a href="{{ url_for('admin.dashboard') }}" class="nav-link">Dashboard</a>
+        <a href="{{ url_for('admin.announcements') }}" class="nav-link">
+            <i class="fas fa-bullhorn mr-1"></i> Announcements
+        </a>
+        <a href="{{ url_for('admin.members') }}" class="nav-link">Members</a>
+        <a href="{{ url_for('admin.trainers') }}" class="nav-link">Trainers</a>
+        <a href="{{ url_for('admin.membership_plans') }}" class="nav-link">Plans</a>
+        <a href="{{ url_for('admin.payments') }}" class="nav-link">Payments</a>
+        <a href="{{ url_for('admin.equipment_list') }}" class="nav-link">Equipment</a>
+        <a href="{{ url_for('admin.reports') }}" class="nav-link">Reports</a>
+    {% elif session.role == 'member' %}
+        <a href="{{ url_for('member.dashboard') }}" class="nav-link">Dashboard</a>
+        <a href="{{ url_for('member.announcements') }}" class="nav-link">
+            <i class="fas fa-bullhorn mr-1"></i> Announcements
+        </a>
+        <a href="{{ url_for('member.profile') }}" class="nav-link">Profile</a>
+        <a href="{{ url_for('member.workouts') }}" class="nav-link">Workouts</a>
+        <a href="{{ url_for('member.attendance') }}" class="nav-link">Attendance</a>
+        <a href="{{ url_for('member.payments') }}" class="nav-link">Payments</a>
+    {% elif session.role == 'trainer' %}
+        <a href="{{ url_for('trainer_routes.dashboard') }}" class="nav-link">Dashboard</a>
+        <a href="{{ url_for('trainer_routes.announcements') }}" class="nav-link">
+            <i class="fas fa-bullhorn mr-1"></i> Announcements
+        </a>
+        <a href="{{ url_for('trainer_routes.clients') }}" class="nav-link">My Clients</a>
+        <a href="{{ url_for('trainer_routes.schedule') }}" class="nav-link">Schedule</a>
+    {% endif %}
+</div>
                 </div>
 
                 <!-- User Menu -->

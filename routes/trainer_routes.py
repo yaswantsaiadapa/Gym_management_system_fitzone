@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask import Blueprint, current_app, render_template, request, redirect, url_for, flash, session
 from models.equipment import Equipment
 from models.trainer import Trainer
 from models.member import Member
@@ -8,7 +8,7 @@ from models.progress import Progress
 from models.attendance import Attendance,_slot_to_datetimes
 from models.announcement import Announcement
 
-from utils.decorators import  trainer_required
+from utils.decorators import  login_required, trainer_required
 from datetime import date, datetime
 from models.workout_plan import MemberWorkoutPlan, WorkoutPlanDetail
 from datetime import date, datetime
@@ -102,6 +102,18 @@ def client_details(member_id):
                          progress_records=progress_records,
                          current_workout_plan=current_workout_plan,
                          current_diet_plan=current_diet_plan)
+
+@trainer_routes_bp.route('/diet-plans/<int:plan_id>/meals/add', methods=['POST'])
+def add_meal(plan_id):
+    meal_name = request.form.get("meal_name")
+    meal_type = request.form.get("meal_type")
+    ingredients = request.form.get("ingredients")
+    calories = request.form.get("calories")
+    
+    Diet.add_meal(plan_id, meal_name, meal_type, ingredients, calories)
+    flash("✅ Meal added successfully!", "success")
+    return redirect(url_for("trainer_routes.edit_diet_plan", plan_id=plan_id))
+
 
 @trainer_routes_bp.route('/clients/<int:member_id>/workout-plan/create', methods=['GET', 'POST'])
 @trainer_required
@@ -335,7 +347,6 @@ def record_progress(member_id):
 @trainer_routes_bp.route('/clients/<int:member_id>/attendance/mark', methods=['POST'])
 @trainer_required
 def mark_attendance(member_id):
-    """Trainer marks attendance for a client (upsert by trainer/member/date/slot)."""
     trainer_id = session.get('trainer_id')
 
     # Verify client belongs to this trainer
@@ -345,38 +356,22 @@ def mark_attendance(member_id):
         return redirect(url_for('trainer_routes.clients'))
 
     try:
-        # --- Normalize date robustly ---
-        raw_date = request.form.get('date')
-        attendance_date = None
+        raw_date = request.form.get('date', '').strip()
+        time_slot = request.form.get('time_slot', '').strip()
+        requested_status = request.form.get('status', 'present').lower()
+
+        # parse attendance_date
+        attendance_date = date.today()
         if raw_date:
-            raw = raw_date.strip()
             try:
-                attendance_date = datetime.fromisoformat(raw).date()
-            except Exception:
-                for fmt in ("%Y-%m-%d", "%B %d, %Y", "%b %d, %Y", "%d-%m-%Y"):
-                    try:
-                        attendance_date = datetime.strptime(raw, fmt).date()
-                        break
-                    except Exception:
-                        continue
-            if not attendance_date:
-                attendance_date = date.today()
-        else:
-            attendance_date = date.today()
+                attendance_date = datetime.strptime(raw_date, '%Y-%m-%d').date()
+            except ValueError:
+                try:
+                    attendance_date = datetime.strptime(raw_date, '%B %d, %Y').date()
+                except ValueError:
+                    pass
 
-        # --- Handle slot and datetimes ---
-        time_slot = request.form.get('time_slot') or "General"
-        check_in_iso, check_out_iso = _slot_to_datetimes(time_slot, attendance_date)
-
-        status = request.form.get('status', 'present').lower()
-
-        # ✅ Rule 1: Trainer can only mark within the slot period
-        now = datetime.now()
-        if attendance_date == date.today() and check_in_iso and now < check_in_iso:
-            flash("⏳ You can only mark attendance once the slot has started.")
-            return redirect(url_for('trainer_routes.client_details', member_id=member_id))
-
-        # ✅ Rule 2: Upsert instead of duplicate
+        # 1) Must find an existing scheduled attendance row for this trainer/member/date/slot
         existing = Attendance.get_for_trainer_member_slot(
             trainer_id=trainer_id,
             member_id=member_id,
@@ -384,40 +379,46 @@ def mark_attendance(member_id):
             time_slot=time_slot
         )
 
-        if existing:
-            existing.status = status
-            existing.check_in_time = check_in_iso
-            existing.check_out_time = check_out_iso
-            existing.save()
-            flash(f'Attendance updated to {status} for {attendance_date}.')
-        else:
-            new_att = Attendance(
-                member_id=member_id,
-                trainer_id=trainer_id,
-                date=attendance_date,
-                time_slot=time_slot,
-                check_in_time=check_in_iso,
-                check_out_time=check_out_iso,
-                status=status
-            )
-            new_att.save()
-            flash(f'Attendance marked as {status} for {attendance_date}.')
+        if not existing:
+            flash('No scheduled session found for this member at that date/slot. Trainers can only mark scheduled sessions.', 'warning')
+            return redirect(url_for('trainer_routes.client_details', member_id=member_id))
+
+        # 2) Get slot datetimes
+        start_iso, end_iso = _slot_to_datetimes(existing.time_slot, on_date=existing.date)
+        now = datetime.now()
+        start_dt = datetime.fromisoformat(start_iso) if start_iso else None
+        end_dt = datetime.fromisoformat(end_iso) if end_iso else None
+
+        # Check trainer is marking during scheduled slot
+        if not (start_dt and end_dt and start_dt <= now <= end_dt):
+            flash('You can only mark attendance during the scheduled time slot.', 'warning')
+            return redirect(url_for('trainer_routes.client_details', member_id=member_id))
+
+        # Only allow present/late during slot
+        if requested_status not in ('present', 'late'):
+            flash('During a slot you may mark the client as Present or Late only.', 'warning')
+            return redirect(url_for('trainer_routes.client_details', member_id=member_id))
+
+        # Update attendance
+        if not existing.check_in_time:
+            existing.check_in_time = now
+        existing.status = requested_status
+        existing.save()
+        flash(f'Attendance updated to {requested_status} for {attendance_date.strftime("%B %d, %Y")}.')
 
     except Exception as e:
-        flash(f'Error while marking attendance: {str(e)}')
+        current_app.logger.exception(f'Error marking attendance: {e}')
+        flash('Error while marking attendance', 'danger')
 
     return redirect(url_for('trainer_routes.client_details', member_id=member_id))
-
-
-
 
 
 @trainer_routes_bp.route('/schedule')
 @trainer_required
 def schedule():
-    """Trainer schedule view"""
+    Attendance.auto_mark_absent()
+    """Trainer schedule view - MINIMAL FIX"""
     trainer_id = session.get('trainer_id')
-    
     # Get selected date from query parameter or use today
     selected_date_str = request.args.get('date', date.today().isoformat())
     try:
@@ -425,7 +426,7 @@ def schedule():
     except ValueError:
         selected_date = date.today()
     
-    # Get schedule for selected date
+    # Get schedule for selected date using the fixed method
     schedule = Attendance.get_trainer_schedule(trainer_id, selected_date)
     
     return render_template('trainer/schedule.html',
@@ -492,7 +493,8 @@ def add_workout_plan():
 
             if not all([member_id, trainer_id, name]):
                 flash('Member, Trainer and Plan Name are required!')
-                return redirect(url_for('admin.add_workout_plan'))
+                # FIX: Use trainer_routes, not admin
+                return redirect(url_for('trainer_routes.add_workout_plan'))
 
             plan = MemberWorkoutPlan(
                 member_id=member_id,
@@ -510,12 +512,15 @@ def add_workout_plan():
         except Exception as e:
             flash(f'An error occurred: {str(e)}')
 
-        return redirect(url_for('admin.workout_plans'))
+        # FIX: redirect to trainer_routes.workout_plans
+        return redirect(url_for('trainer_routes.workout_plans'))
 
     members = Member.get_all_active()
     trainers = Trainer.get_all_active()
-    return render_template('admin/add_workout_plan.html',
+    # FIX: Render trainer template
+    return render_template('trainer/create_workout_plan.html',
                            members=members, trainers=trainers)
+
 
 @trainer_routes_bp.route('/workout-plans/<int:plan_id>/add-detail', methods=['GET', 'POST'])
 @trainer_required
@@ -523,7 +528,8 @@ def add_workout_plan_detail(plan_id):
     if request.method == 'POST':
         try:
             workout_id = request.form.get('workout_id')
-            day_of_week = request.form.get('day_of_week')
+            day_of_week_raw = request.form.get('day_of_week')
+            day_of_week = int(day_of_week_raw) if day_of_week_raw else None
             sets = request.form.get('sets')
             reps = request.form.get('reps')
             weight = request.form.get('weight')
@@ -532,7 +538,12 @@ def add_workout_plan_detail(plan_id):
 
             if not workout_id:
                 flash('Workout is required!')
-                return redirect(url_for('admin.add_workout_plan_detail', plan_id=plan_id))
+                # FIX: use trainer_routes, not admin
+                return redirect(url_for('trainer_routes.add_workout_plan_detail', plan_id=plan_id))
+
+            if day_of_week not in range(1, 8):
+                    flash("Day of week must be between 1 and 7!", "danger")
+                    return redirect(url_for("trainer_routes.add_workout_plan_detail", plan_id=plan_id))
 
             detail = WorkoutPlanDetail(
                 plan_id=plan_id,
@@ -552,8 +563,18 @@ def add_workout_plan_detail(plan_id):
         except Exception as e:
             flash(f'An error occurred: {str(e)}')
 
-        return redirect(url_for('admin.workout_plans'))
+        # FIX: go back to edit_workout_plan (trainer version)
+        return redirect(url_for('trainer_routes.edit_workout_plan', plan_id=plan_id))
 
     workouts = Workout.get_all_active()
-    return render_template('admin/add_workout_plan_detail.html',
+    # FIX: Use a new template under trainer/
+    return render_template('trainer/add_workout_plan_detail.html',
                            workouts=workouts, plan_id=plan_id)
+
+
+@trainer_routes_bp.route('/announcements')
+@login_required
+def announcements():
+    announcements = Announcement.get_for_role('trainer')
+    return render_template('trainer/announcements.html', announcements=announcements)
+

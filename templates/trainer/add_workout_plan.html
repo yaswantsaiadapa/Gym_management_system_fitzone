@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Create Workout Plan - Admin{% endblock %}
+{% block title %}Create Workout Plan - Trainer{% endblock %}
 
 {% block content %}
 <div class="max-w-2xl mx-auto">
@@ -8,12 +8,14 @@
         <h1 class="text-3xl font-bold text-gray-900">
             <i class="fas fa-clipboard-list mr-3 text-primary"></i>Create Workout Plan
         </h1>
+        <p class="text-gray-600">Assign a new plan to a member and set schedule dates.</p>
     </div>
 
     <div class="card">
         <div class="card-body">
-            <form method="POST" action="{{ url_for('admin.add_workout_plan') }}">
+            <form method="POST" action="{{ url_for('trainer_routes.add_workout_plan') }}">
                 <div class="space-y-4">
+                    <!-- Member Selection -->
                     <div class="form-group">
                         <label class="form-label" for="member_id">Select Member *</label>
                         <select id="member_id" name="member_id" class="form-control" required>
@@ -24,6 +26,7 @@
                         </select>
                     </div>
 
+                    <!-- Trainer Selection -->
                     <div class="form-group">
                         <label class="form-label" for="trainer_id">Assign Trainer *</label>
                         <select id="trainer_id" name="trainer_id" class="form-control" required>
@@ -34,21 +37,25 @@
                         </select>
                     </div>
 
+                    <!-- Plan Details -->
                     <div class="form-group">
                         <label class="form-label" for="name">Plan Name *</label>
-                        <input type="text" id="name" name="name" placeholder="e.g., Beginner Strength Training" class="form-control" required>
+                        <input type="text" id="name" name="name" placeholder="e.g., Beginner Strength Training"
+                               class="form-control" required>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label" for="description">Description</label>
-                        <textarea id="description" name="description" rows="3" class="form-control" 
+                        <textarea id="description" name="description" rows="3" class="form-control"
                                   placeholder="Goals and overview of this workout plan..."></textarea>
                     </div>
 
+                    <!-- Dates -->
                     <div class="grid grid-cols-2 gap-4">
                         <div class="form-group">
                             <label class="form-label" for="start_date">Start Date</label>
-                            <input type="date" id="start_date" name="start_date" value="{{ date.today().strftime('%Y-%m-%d') }}" class="form-control">
+                            <input type="date" id="start_date" name="start_date"
+                                   value="{{ date.today().strftime('%Y-%m-%d') }}" class="form-control">
                         </div>
 
                         <div class="form-group">
@@ -58,11 +65,12 @@
                     </div>
                 </div>
 
+                <!-- Actions -->
                 <div class="flex space-x-4 mt-6">
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save mr-2"></i>Create Plan
                     </button>
-                    <a href="{{ url_for('admin.workout_plans') }}" class="btn btn-secondary">
+                    <a href="{{ url_for('trainer_routes.workout_plans') }}" class="btn btn-secondary">
                         <i class="fas fa-times mr-2"></i>Cancel
                     </a>
                 </div>

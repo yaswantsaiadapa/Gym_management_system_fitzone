@@ -57,7 +57,9 @@ class Member:
         fitness_goals=None,
         membership_start_date=None,
         membership_end_date=None,
+        # keep `status` for DB persistence but allow membership_status alias
         status='active',
+        membership_status=None,           # <-- NEW: alias accepted here
         trainer_id=None,
         created_at=None,
         updated_at=None,
@@ -88,7 +90,11 @@ class Member:
         # map legacy aliases if present
         self.membership_start_date = _to_date(membership_start_date or membership_date)
         self.membership_end_date = _to_date(membership_end_date or expiry_date)
-        self.status = status
+
+        # Persisted column: we store the value into `status` column in DB.
+        # If `membership_status` is provided prefer it; otherwise use `status` param.
+        self.status = membership_status if membership_status is not None else status
+
         self.trainer_id = trainer_id
         self.created_at = created_at
         self.updated_at = updated_at
@@ -129,6 +135,16 @@ class Member:
     @expiry_date.setter
     def expiry_date(self, v):
         self.membership_end_date = _to_date(v)
+
+    # ----------------- membership_status alias (maps to DB column `status`) -----------------
+    @property
+    def membership_status(self):
+        """Alias property used by admin/payment workflow. Backed by DB column `status`."""
+        return self.status
+
+    @membership_status.setter
+    def membership_status(self, value):
+        self.status = value
 
     # -------------------- Fetchers --------------------
 
@@ -543,4 +559,3 @@ class Member:
             )
             for r in rows
         ]
-
