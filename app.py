@@ -1,6 +1,7 @@
 from flask import Flask, render_template, session, request, redirect, url_for, flash
 from flask_mail import Mail
-from werkzeug.security import generate_password_hash, check_password_hash
+# removed werkzeug.security import; using flask_bcrypt instead
+from flask_bcrypt import Bcrypt
 import os
 from datetime import datetime, date
 import json
@@ -44,15 +45,25 @@ def create_app():
     app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
     app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', '587'))
     app.config['MAIL_USE_TLS'] = True
-    app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', 'your-email@gmail.com')
-    app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', 'your-app-password')
+    app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', 'fitzonegym1111@gmail.com')
+    app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', 'piwwnfohnhvzvmif')
     app.config['MAIL_DEFAULT_SENDER'] = os.environ.get(
         'MAIL_DEFAULT_SENDER',
         'FitZone Gym <noreply@fitzonegym.com>'
     )
     
-    # Initialize database
-    init_db(app.config['DATABASE_PATH'])
+    # Initialize Mail
+    mail = Mail(app)
+    app.mail = mail
+
+    # Initialize Bcrypt and attach to app for convenience
+    bcrypt = Bcrypt(app)
+    app.bcrypt = bcrypt
+    
+    # Initialize database inside app context (required because seeding uses current_app / bcrypt)
+    with app.app_context():
+        init_db(app.config['DATABASE_PATH'])
+
     app.config.setdefault('SESSION_COOKIE_SECURE', False)   # must be False for http://127.0.0.1
     app.config.setdefault('SESSION_COOKIE_SAMESITE', 'Lax')
     app.config.setdefault('SESSION_COOKIE_HTTPONLY', True)
@@ -79,10 +90,6 @@ def create_app():
             app.logger.debug("Error logging session: %s", e)
         return response
     
-    # Initialize Mail
-    mail = Mail(app)
-    app.mail = mail
-    
     # Register ONLY 4 blueprints
     app.register_blueprint(auth_bp,url_prefix='/auth')
     app.register_blueprint(admin_bp, url_prefix='/admin')
@@ -108,6 +115,7 @@ def create_app():
             'date': date
         }
     
+
 
 
     @app.route('/')

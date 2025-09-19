@@ -1,6 +1,7 @@
 import sqlite3
 from datetime import date, datetime, timedelta
-from werkzeug.security import generate_password_hash
+from flask import current_app
+from flask_bcrypt import Bcrypt
 import json
 
 def get_db_connection(db_path='gym_management.db'):
@@ -36,6 +37,10 @@ def execute_query(query, params=(), db_path='gym_management.db', fetch=False):
         except:
             print(f"DB Error: {e} | Query: {query} | Params: {params}")
         raise
+
+def _get_bcrypt():
+    """Return a Bcrypt instance bound to the current app (call inside app context)."""
+    return Bcrypt(current_app)
 
 def init_db(db_path='gym_management.db'):
     """Initialize database with all required tables"""
@@ -343,11 +348,15 @@ CREATE TABLE IF NOT EXISTS payments (
 
 def insert_default_data(cursor):
     """Insert default/seed data"""
+    # Create Bcrypt instance (must be called inside app context)
+    bcrypt = _get_bcrypt()
 
     # Create default admin user
     cursor.execute('SELECT COUNT(*) FROM users WHERE role = "admin"')
     if cursor.fetchone()[0] == 0:
-        admin_password = generate_password_hash('admin123')
+        admin_password = bcrypt.generate_password_hash('admin123')
+        if isinstance(admin_password, bytes):
+            admin_password = admin_password.decode('utf-8')
         cursor.execute('''
             INSERT INTO users (username, email, password_hash, role, full_name, phone)
             VALUES (?, ?, ?, ?, ?, ?)
@@ -377,7 +386,9 @@ def insert_default_data(cursor):
         ]
 
         for trainer in trainer_users:
-            password_hash = generate_password_hash(trainer[2])
+            password_hash = bcrypt.generate_password_hash(trainer[2])
+            if isinstance(password_hash, bytes):
+                password_hash = password_hash.decode('utf-8')
             cursor.execute('''
                 INSERT INTO users (username, email, password_hash, role, full_name, phone)
                 VALUES (?, ?, ?, ?, ?, ?)
@@ -410,7 +421,9 @@ def insert_default_data(cursor):
         ]
 
         for member in member_users:
-            password_hash = generate_password_hash(member[2])
+            password_hash = bcrypt.generate_password_hash(member[2])
+            if isinstance(password_hash, bytes):
+                password_hash = password_hash.decode('utf-8')
             cursor.execute('''
                 INSERT INTO users (username, email, password_hash, role, full_name, phone)
                 VALUES (?, ?, ?, ?, ?, ?)
@@ -491,3 +504,48 @@ def insert_default_data(cursor):
             1,
             admin_id
         ))
+
+            # ✅ Payments — now inserting data according to updated schema
+    cursor.execute('SELECT COUNT(*) FROM payments')
+    if cursor.fetchone()[0] == 0:
+        cursor.execute('SELECT id, membership_plan_id FROM members')
+        members = cursor.fetchall()
+        for i, m in enumerate(members, start=1):
+            member_id = m[0]               # id column
+            membership_plan_id = m[1]      # membership_plan_id column
+
+            # Fetch plan price
+            plan_price = cursor.execute(
+                'SELECT price FROM membership_plans WHERE id = ?',
+                (membership_plan_id,)
+            ).fetchone()[0]
+
+            # Generate a simple invoice number (INV0001, INV0002, ...)
+            invoice_number = f"INV{str(i).zfill(4)}"
+
+            cursor.execute('''
+                INSERT INTO payments (
+                    member_id,
+                    membership_plan_id,
+                    amount,
+                    payment_method,
+                    payment_status,
+                    transaction_id,
+                    payment_date,
+                    due_date,
+                    notes,
+                    invoice_number,
+                    reminder_sent,
+                    reminder_sent_at,
+                    cancelled_processed
+                ) VALUES (?, ?, ?, ?, ?, ?, DATE('now'), DATE('now','+30 day'), ?, ?, 0, NULL, 0)
+            ''', (
+                member_id,
+                membership_plan_id,
+                plan_price,
+                'cash',                     # default payment method
+                'completed',                # valid status from CHECK constraint
+                f"TXN{str(i).zfill(6)}",   # fake transaction id for demo
+                'Membership fee payment',   # notes
+                invoice_number
+            ))

@@ -11,7 +11,8 @@ from models.attendance import Attendance
 from models.equipment import Equipment
 from utils.decorators import login_required, admin_required
 from utils.email_utils import send_welcome_email, send_membership_renewal_reminder
-from werkzeug.security import generate_password_hash
+# removed werkzeug import; using bcrypt instead
+from flask_bcrypt import Bcrypt
 from datetime import date, timedelta, datetime
 import secrets
 import string
@@ -106,7 +107,7 @@ def update_equipment_status(equipment_id):
             flash('Invalid action.', 'danger')
 
     except Exception as e:
-        flash(f"Error updating status: {str(e)}", "danger")
+        flash(f"Error updating status: {str(e)}", 'danger')
 
     return redirect(url_for('admin.equipment_list'))
 
@@ -147,7 +148,7 @@ def dashboard():
         recent_payments = Payment.get_recent(5)
 
         # Memberships expiring soon
-        expiring_memberships = Member.get_expiring_soon(30)
+        expiring_memberships = Member.get_expiring_soon(15)
 
         # 🔹 Get recent announcements (latest 5)
         announcements = Announcement.get_all()[:5]
@@ -237,10 +238,18 @@ def add_member():
         temp_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(8))
 
         # Create user
+        # Use bcrypt only to hash temp_password
+        bcrypt = getattr(current_app, 'bcrypt', None)
+        if not bcrypt:
+            bcrypt = Bcrypt(current_app)
+        temp_hashed = bcrypt.generate_password_hash(temp_password)
+        if isinstance(temp_hashed, bytes):
+            temp_hashed = temp_hashed.decode('utf-8')
+
         user = User(
             username=username,
             email=email,
-            password_hash=generate_password_hash(temp_password),
+            password_hash=temp_hashed,
             role='member',
             full_name=full_name,
             phone=phone
@@ -378,10 +387,18 @@ def add_trainer():
 
         temp_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(8))
 
+        # Use bcrypt only to hash temp_password
+        bcrypt = getattr(current_app, 'bcrypt', None)
+        if not bcrypt:
+            bcrypt = Bcrypt(current_app)
+        password_hashed = bcrypt.generate_password_hash(temp_password)
+        if isinstance(password_hashed, bytes):
+            password_hashed = password_hashed.decode('utf-8')
+
         user = User(
             username=username,
             email=email,
-            password_hash=generate_password_hash(temp_password),
+            password_hash=password_hashed,
             role='trainer',
             full_name=full_name,
             phone=phone
@@ -462,7 +479,32 @@ def add_membership_plan():
 
     return render_template('admin/add_membership_plan.html')
 
+@admin_bp.route('/membership-plans/<int:plan_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def edit_membership_plan(plan_id):
+    plan = MembershipPlan.get_by_id(plan_id)
+    if not plan:
+        flash("Membership plan not found!", "danger")
+        return redirect(url_for("admin.membership_plans"))
 
+    if request.method == "POST":
+        try:
+            plan.name = request.form.get("name")
+            plan.description = request.form.get("description")
+            plan.duration_months = request.form.get("duration_months")
+            plan.price = request.form.get("price")
+            features_raw = request.form.get("features", "")
+            plan.features = [f.strip() for f in features_raw.split(",") if f.strip()]
+            plan.is_active = bool(request.form.get("is_active"))
+
+            plan.save()
+            flash(f"✅ Plan '{plan.name}' updated successfully!", "success")
+            return redirect(url_for("admin.membership_plans"))
+
+        except Exception as e:
+            flash(f"Error updating plan: {str(e)}", "danger")
+
+    return render_template("admin/edit_membership_plan.html", plan=plan)
 
 # -------------------- Payments --------------------
 @admin_bp.route('/payments')
@@ -581,7 +623,6 @@ def edit_announcement(announcement_id):
 
             announcement.save()
             flash('Announcement updated successfully!', 'success')
-            return redirect(url_for('admin.announcements'))
         except Exception as e:
             flash(f'Error updating announcement: {str(e)}', 'error')
 

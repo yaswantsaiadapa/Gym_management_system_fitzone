@@ -4,9 +4,14 @@ from models.member import Member
 from models.trainer import Trainer
 from utils.decorators import logout_required
 from utils.email_utils import send_password_change_notification
-from werkzeug.security import generate_password_hash, check_password_hash
+from flask_bcrypt import Bcrypt
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
+
+
+def _get_bcrypt():
+    """Return a Bcrypt instance bound to current_app (callable inside request/app context)."""
+    return Bcrypt(current_app)
 
 
 @auth_bp.route('/')
@@ -48,7 +53,7 @@ def login_post(role):
         flash('⚠️ Please enter both username and password!', 'warning')
         return redirect(url_for('auth.login_form', role=role))
 
-    # Authenticate user
+    # Authenticate user (User.authenticate uses bcrypt in models/user)
     user = User.authenticate(username, password)
 
     if user and user.role == role:
@@ -83,7 +88,6 @@ def login_post(role):
     # If authentication fails
     flash('❌ Invalid credentials! Please check your username and password.', 'danger')
     return redirect(url_for('auth.login_form', role=role))
-
 
 
 @auth_bp.route('/logout')
@@ -136,12 +140,20 @@ def change_password_post():
         flash('User not found!')
         return redirect(url_for('auth.logout'))
 
-    # Verify current password
-    if not check_password_hash(user.password_hash, current_password):
+    bcrypt = _get_bcrypt()
+
+    # Verify current password using bcrypt only
+    try:
+        if not bcrypt.check_password_hash(user.password_hash, current_password):
+            flash('Current password is incorrect!')
+            return redirect(url_for('auth.change_password_form'))
+    except Exception:
+        # Any unexpected error during bcrypt check -> treat as failure
+        current_app.logger.exception("Error checking password hash for user id %s", session.get('user_id'))
         flash('Current password is incorrect!')
         return redirect(url_for('auth.change_password_form'))
 
-    # Update password
+    # Update password (User.update_password uses bcrypt)
     try:
         user.update_password(new_password)
 
@@ -190,6 +202,7 @@ def forgot_password_post():
 
     return redirect(url_for('auth.login'))
 
+
 @auth_bp.route('/reset_password/<token>', methods=['GET', 'POST'])
 @logout_required
 def reset_password(token):
@@ -217,7 +230,11 @@ def reset_password(token):
             flash("Password must be at least 6 characters long.", "warning")
             return redirect(url_for('auth.reset_password', token=token))
 
-        hashed = generate_password_hash(new_password)
+        bcrypt = _get_bcrypt()
+        hashed = bcrypt.generate_password_hash(new_password)
+        if isinstance(hashed, bytes):
+            hashed = hashed.decode('utf-8')
+
         execute_query(
             "UPDATE users SET password_hash = ?, reset_token = NULL WHERE id = ?",
             (hashed, result[0]['id']),
@@ -228,4 +245,3 @@ def reset_password(token):
         return redirect(url_for('auth.login'))
 
     return render_template('auth/reset_password.html', token=token)
-

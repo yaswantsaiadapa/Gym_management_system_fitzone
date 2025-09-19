@@ -51,7 +51,10 @@
             
             <div class="flex space-x-2">
                 <button class="btn btn-primary text-xs flex-1">
-                    <i class="fas fa-edit mr-1"></i>Edit
+                    <a href="{{ url_for('admin.edit_membership_plan', plan_id=plan.id) }}" class="btn btn-primary text-xs flex-1">
+    <i class="fas fa-edit mr-1"></i>Edit
+</a>
+
                 </button>
                 <button class="btn btn-secondary text-xs flex-1">
                     <i class="fas fa-{{ 'eye-slash' if plan.is_active else 'eye' }} mr-1"></i>
