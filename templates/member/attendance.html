@@ -62,6 +62,7 @@
                         <th>Trainer</th>
                         <th>Status</th>
                         <th>Notes</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -69,40 +70,71 @@
                     <tr>
                         <td>
                             <div class="font-medium">{{ record.date|datetimeformat('%B %d, %Y') }}</div>
-
                             <div class="text-sm text-gray-500">{{ record.date|datetimeformat('%A') }}</div>
-
                         </td>
-           <td>
-    {% if record.time_slot %}
-        <span class="text-sm font-medium">{{ record.time_slot }}</span>
-    {% elif record.check_in_time and record.check_out_time %}
-        <span class="text-sm">
-            {{ record.check_in_time.strftime('%I:%M %p') if record.check_in_time else '' }} - 
-            {{ record.check_out_time.strftime('%I:%M %p') if record.check_out_time else '' }}
-        </span>
-    {% elif record.check_in_time %}
-        <span class="text-sm">
-            {{ record.check_in_time.strftime('%I:%M %p') }}
-        </span>
-    {% else %}
-        <span class="text-gray-400">Time Not Set</span>
-    {% endif %}
-</td>
+
+                        <td>
+                            {% if record.time_slot %}
+                                <span class="text-sm font-medium">{{ record.time_slot }}</span>
+                            {% elif record.check_in_time and record.check_out_time %}
+                                <span class="text-sm">
+                                    {{ record.check_in_time.strftime('%I:%M %p') if record.check_in_time else '' }} - 
+                                    {{ record.check_out_time.strftime('%I:%M %p') if record.check_out_time else '' }}
+                                </span>
+                            {% elif record.check_in_time %}
+                                <span class="text-sm">
+                                    {{ record.check_in_time.strftime('%I:%M %p') }}
+                                </span>
+                            {% else %}
+                                <span class="text-gray-400">Time Not Set</span>
+                            {% endif %}
+                        </td>
 
                         <td>
                             <span class="text-sm">{{ record.trainer_name or 'N/A' }}</span>
                         </td>
+
                         <td>
                             <span class="badge badge-{{ 'success' if record.status == 'present' else 'warning' if record.status == 'scheduled' else 'danger' }}">
                                 {{ record.status|title }}
                             </span>
                         </td>
+
                         <td>
                             {% if record.notes %}
-                            <span class="text-sm text-gray-600">{{ record.notes }}</span>
+                                <span class="text-sm text-gray-600">{{ record.notes }}</span>
                             {% else %}
-                            <span class="text-gray-400">-</span>
+                                <span class="text-gray-400">-</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {# Show reschedule form only for upcoming scheduled sessions #}
+                            {% if record.status == 'scheduled' and record.date and record.date >= today %}
+                                <form action="{{ url_for('member.reschedule_attendance', attendance_id=record.id) }}" method="post" class="inline-flex items-center space-x-2">
+                                    {# If you use Flask-WTF or CSRF, include token here: {{ csrf_token() }} #}
+                                    <select name="time_slot" required class="form-select text-sm">
+                                        <option value="">Choose new slot</option>
+
+                                        {% if time_slots %}
+                                            {% for slot in time_slots %}
+                                                <option value="{{ slot }}" {% if slot == record.time_slot %}selected{% endif %}>{{ slot }}</option>
+                                            {% endfor %}
+                                        {% else %}
+                                            <option value="6:00 AM - 8:00 AM" {% if record.time_slot == "6:00 AM - 8:00 AM" %}selected{% endif %}>6:00 AM - 8:00 AM</option>
+                                            <option value="8:00 AM - 10:00 AM" {% if record.time_slot == "8:00 AM - 10:00 AM" %}selected{% endif %}>8:00 AM - 10:00 AM</option>
+                                            <option value="10:00 AM - 12:00 PM" {% if record.time_slot == "10:00 AM - 12:00 PM" %}selected{% endif %}>10:00 AM - 12:00 PM</option>
+                                            <option value="12:00 PM - 2:00 PM" {% if record.time_slot == "12:00 PM - 2:00 PM" %}selected{% endif %}>12:00 PM - 2:00 PM</option>
+                                            <option value="2:00 PM - 4:00 PM" {% if record.time_slot == "2:00 PM - 4:00 PM" %}selected{% endif %}>2:00 PM - 4:00 PM</option>
+                                            <option value="4:00 PM - 6:00 PM" {% if record.time_slot == "4:00 PM - 6:00 PM" %}selected{% endif %}>4:00 PM - 6:00 PM</option>
+                                            <option value="6:00 PM - 8:00 PM" {% if record.time_slot == "6:00 PM - 8:00 PM" %}selected{% endif %}>6:00 PM - 8:00 PM</option>
+                                            <option value="8:00 PM - 10:00 PM" {% if record.time_slot == "8:00 PM - 10:00 PM" %}selected{% endif %}>8:00 PM - 10:00 PM</option>
+                                        {% endif %}
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-secondary" onclick="return confirm('Reschedule this booking to the selected slot?');">Reschedule</button>
+                                </form>
+                            {% else %}
+                                <span class="text-gray-400 text-sm">—</span>
                             {% endif %}
                         </td>
                     </tr>

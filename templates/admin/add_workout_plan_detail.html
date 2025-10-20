@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Add Workout Detail - Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">
+            <i class="fas fa-plus-circle mr-3 text-primary"></i>Add Workout to Plan
+        </h1>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('admin.add_workout_plan_detail', plan_id=plan_id) }}">
+                <div class="space-y-4">
+                    <div class="form-group">
+                        <label class="form-label" for="workout_id">Select Workout *</label>
+                        <select id="workout_id" name="workout_id" class="form-control" required>
+                            <option value="">Choose Workout</option>
+                            {% for workout in workouts %}
+                            <option value="{{ workout.id }}">{{ workout.name }} ({{ workout.category }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="day_of_week">Day of Week</label>
+                        <select id="day_of_week" name="day_of_week" class="form-control">
+                            <option value="">Any Day</option>
+                            <option value="monday">Monday</option>
+                            <option value="tuesday">Tuesday</option>
+                            <option value="wednesday">Wednesday</option>
+                            <option value="thursday">Thursday</option>
+                            <option value="friday">Friday</option>
+                            <option value="saturday">Saturday</option>
+                            <option value="sunday">Sunday</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="form-group">
+                            <label class="form-label" for="sets">Sets</label>
+                            <input type="text" id="sets" name="sets" placeholder="e.g., 3" class="form-control">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="reps">Reps</label>
+                            <input type="text" id="reps" name="reps" placeholder="e.g., 12-15" class="form-control">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="weight">Weight</label>
+                            <input type="text" id="weight" name="weight" placeholder="e.g., 20kg" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="rest_seconds">Rest Time (seconds)</label>
+                        <input type="text" id="rest_seconds" name="rest_seconds" placeholder="e.g., 60" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="notes">Notes</label>
+                        <textarea id="notes" name="notes" rows="3" class="form-control" 
+                                  placeholder="Special instructions or modifications..."></textarea>
+                    </div>
+                </div>
+
+                <div class="flex space-x-4 mt-6">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-2"></i>Add to Plan
+                    </button>
+                    <a href="{{ url_for('admin.workout_plans') }}" class="btn btn-secondary">
+                        <i class="fas fa-times mr-2"></i>Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

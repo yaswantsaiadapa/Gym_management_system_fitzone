@@ -60,6 +60,8 @@ def init_db(db_path='gym_management.db'):
             is_active BOOLEAN DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            -- reset_token TEXT,
+            -- reset_token_expires TEXT
         )
     ''')
     
@@ -505,47 +507,67 @@ def insert_default_data(cursor):
             admin_id
         ))
 
-            # ✅ Payments — now inserting data according to updated schema
+    # ✅ Payments — insert sample payments AND activate corresponding members
     cursor.execute('SELECT COUNT(*) FROM payments')
     if cursor.fetchone()[0] == 0:
-        cursor.execute('SELECT id, membership_plan_id FROM members')
+        # Fetch members with their plan_id and user_id so we can activate user rows as well
+        cursor.execute('SELECT id, membership_plan_id, user_id FROM members')
         members = cursor.fetchall()
+
+        # helper to add months to a date (handles month rollover)
+        import calendar
+        def _add_months(sourcedate, months):
+            month = sourcedate.month - 1 + int(months)
+            year = sourcedate.year + month // 12
+            month = month % 12 + 1
+            day = min(sourcedate.day, calendar.monthrange(year, month)[1])
+            return date(year, month, day)   # use top-level `date` imported at file top
+
         for i, m in enumerate(members, start=1):
-            member_id = m[0]               # id column
-            membership_plan_id = m[1]      # membership_plan_id column
+            member_id = m[0]               # member.id
+            membership_plan_id = m[1]      # member.membership_plan_id
+            user_id = m[2]                 # member.user_id (may be None)
 
-            # Fetch plan price
-            plan_price = cursor.execute(
-                'SELECT price FROM membership_plans WHERE id = ?',
-                (membership_plan_id,)
-            ).fetchone()[0]
+            # Fetch plan price and duration safely
+            cur_plan = cursor.execute('SELECT price, duration_months FROM membership_plans WHERE id = ?', (membership_plan_id,)).fetchone()
+            plan_price = cur_plan[0] if cur_plan and cur_plan[0] is not None else 0.0
+            try:
+                duration_months = int(cur_plan[1]) if cur_plan and cur_plan[1] is not None else 1
+            except Exception:
+                duration_months = 1
 
-            # Generate a simple invoice number (INV0001, INV0002, ...)
+            # simple invoice / transaction ids for sample data
             invoice_number = f"INV{str(i).zfill(4)}"
+            transaction_id = f"TXN{str(i).zfill(6)}"
 
+            # Insert a completed payment row. Use DATE('now') and DATE('now','+30 day') for payment_date/due_date
             cursor.execute('''
                 INSERT INTO payments (
-                    member_id,
-                    membership_plan_id,
-                    amount,
-                    payment_method,
-                    payment_status,
-                    transaction_id,
-                    payment_date,
-                    due_date,
-                    notes,
-                    invoice_number,
-                    reminder_sent,
-                    reminder_sent_at,
-                    cancelled_processed
+                    member_id, membership_plan_id, amount, payment_method, payment_status,
+                    transaction_id, payment_date, due_date, notes, invoice_number,
+                    reminder_sent, reminder_sent_at, cancelled_processed
                 ) VALUES (?, ?, ?, ?, ?, ?, DATE('now'), DATE('now','+30 day'), ?, ?, 0, NULL, 0)
             ''', (
                 member_id,
                 membership_plan_id,
                 plan_price,
                 'cash',                     # default payment method
-                'completed',                # valid status from CHECK constraint
-                f"TXN{str(i).zfill(6)}",   # fake transaction id for demo
+                'completed',                # mark sample payment completed
+                transaction_id,
                 'Membership fee payment',   # notes
                 invoice_number
             ))
+
+            # Compute membership dates and activate the member (start today, extend by plan duration)
+            start_dt = date.today()
+            end_dt = _add_months(start_dt, duration_months)
+
+            cursor.execute("""
+                UPDATE members
+                SET membership_start_date = ?, membership_end_date = ?, status = ?
+                WHERE id = ?
+            """, (start_dt.isoformat(), end_dt.isoformat(), 'active', member_id))
+
+            # Activate the linked user account if present
+            if user_id:
+                cursor.execute("UPDATE users SET is_active = 1 WHERE id = ?", (user_id,))

@@ -67,6 +67,10 @@
                                 </button>
                             </div>
                         </td>
+                        <td><form method="get" action="{{ url_for('admin.confirm_delete_trainer', trainer_id=trainer.id) }}" style="display:inline">
+  <button class="btn btn-sm btn-danger">Remove</button>
+</form>
+</td>
                     </tr>
                     {% endfor %}
                 </tbody>

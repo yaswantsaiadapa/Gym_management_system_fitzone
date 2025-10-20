@@ -1,6 +1,72 @@
 from .database import execute_query
 from flask import current_app
 
+def delete(self):
+    """
+    Soft-delete trainer:
+    - Deactivate underlying user account (users.is_active = 0)
+    - Mark trainer.status = 'removed' (or 'inactive')
+    """
+    from models.database import execute_query
+    db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')
+
+    try:
+        execute_query(
+            "UPDATE users SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            (self.user_id,),
+            db_path
+        )
+
+        execute_query(
+            "UPDATE trainers SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            ("removed", self.id),
+            db_path
+        )
+
+        # Optional set removed_at if column exists
+        try:
+            execute_query(
+                "UPDATE trainers SET removed_at = CURRENT_TIMESTAMP WHERE id = ?",
+                (self.id,),
+                db_path
+            )
+        except Exception:
+            pass
+
+        return True
+    except Exception:
+        current_app.logger.exception("Failed to soft-delete trainer %s", getattr(self, 'id', None))
+        return False
+
+
+def hard_delete(self):
+    """
+    Permanently delete trainer and related records.
+    WARNING: destructive. Back up DB before use.
+    """
+    from models.database import execute_query
+    db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')
+
+    try:
+        # Delete trainer-related tables (update names according to your schema)
+        for q in [
+            ("DELETE FROM workouts WHERE trainer_id = ?", (self.id,)),
+            ("DELETE FROM trainer_schedules WHERE trainer_id = ?", (self.id,)),
+            ("DELETE FROM trainer_assignments WHERE trainer_id = ?", (self.id,)),
+        ]:
+            try:
+                execute_query(q[0], q[1], db_path)
+            except Exception:
+                current_app.logger.exception("Failed to execute cleanup query for trainer %s: %s", self.id, q[0])
+
+        # Delete trainer row and user row
+        execute_query("DELETE FROM trainers WHERE id = ?", (self.id,), db_path)
+        execute_query("DELETE FROM users WHERE id = ?", (self.user_id,), db_path)
+
+        return True
+    except Exception:
+        current_app.logger.exception("Failed to hard-delete trainer %s", getattr(self, 'id', None))
+        return False
 class Trainer:
     def __init__(self, id=None, user_id=None, phone=None, specialization=None,
              experience_years=None, certification=None, salary=None,

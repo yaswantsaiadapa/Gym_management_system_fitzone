@@ -277,19 +277,28 @@ class Payment:
         payment.save()
 
         # Activate member and their user account
+        # After setting payment payment_status/payment_date and payment.save()
         try:
-            # Set member.status to active (membership_status column expected on members)
-            execute_query("UPDATE members SET membership_status = ? WHERE id = ?", ('active', payment.member_id), db_path)
-            # Find user_id for this member
-            rows = execute_query("SELECT user_id FROM members WHERE id = ?", (payment.member_id,), db_path, fetch=True)
-            if rows:
-                user_id = rows[0][0]
-                execute_query("UPDATE users SET is_active = 1 WHERE id = ?", (user_id,), db_path)
+            from models.member import Member
+            member = Member.get_by_id(payment.member_id)
+            if member:
+                # compute duration from plan if possible
+                duration = 1
+                if getattr(payment, 'membership_plan_id', None):
+                    from models.membership_plan import MembershipPlan
+                    plan = MembershipPlan.get_by_id(payment.membership_plan_id)
+                    if plan and getattr(plan, 'duration_months', None):
+                        duration = plan.duration_months
+                member.activate_membership(duration_months=int(duration), start_date=payment.payment_date or None)
+
+                # enable user account
+                rows = execute_query("SELECT user_id FROM members WHERE id = ?", (payment.member_id,), db_path, fetch=True)
+                if rows:
+                    user_id = rows[0][0]
+                    execute_query("UPDATE users SET is_active = 1 WHERE id = ?", (user_id,), db_path)
         except Exception as e:
-            try:
-                current_app.logger.exception(f"Failed to activate member after payment {payment_id}: {e}")
-            except:
-                print(f"Failed to activate member after payment {payment_id}: {e}")
+            current_app.logger.exception("Failed to activate member after payment %s: %s", payment_id, e)
+
 
         # Send confirmation email if possible
         try:
@@ -391,7 +400,9 @@ class Payment:
             if due_date_obj < today and (payment.cancelled_processed == 0):
                 try:
                     # Cancel membership and disable user
-                    execute_query("UPDATE members SET membership_status = ? WHERE id = ?", ('cancelled', payment.member_id), db_path)
+                    # New — mark member as inactive (allowed value)
+                    execute_query("UPDATE members SET status = ? WHERE id = ?", ('inactive', payment.member_id), db_path)
+
                     # get user_id
                     user_rows = execute_query("SELECT user_id FROM members WHERE id = ?", (payment.member_id,), db_path, fetch=True)
                     if user_rows:

@@ -62,8 +62,15 @@ def dashboard():
                              assigned_clients=assigned_clients,
                              announcements=announcements)
     except Exception as e:
-        flash('Error loading dashboard data.')
+        # Log full stack trace to the Flask logger so you can see exactly what failed
+        current_app.logger.exception("Error in trainer.dashboard")
+
+        # Optional: show the exception message in the flash while debugging.
+        # Remove or simplify this in production.
+        flash(f'Error loading dashboard data: {str(e)}', 'danger')
+
         return render_template('trainer/dashboard.html', trainer=None)
+
     
 
 @trainer_routes_bp.route('/clients')

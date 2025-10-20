@@ -1,6 +1,7 @@
 from .database import execute_query, get_db_connection
 from flask import current_app
 
+
 class Admin:
     def __init__(self, id=None, username=None, password=None, name=None, email=None):
         self.id = id

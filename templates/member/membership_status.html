@@ -38,8 +38,8 @@
         <div class="stat-card">
             <div class="flex items-center justify-between">
                 <div>
-                    <div class="stat-label">Plan</div>
-                    <div class="stat-value text-sm">{{ member.plan_name or 'No Plan' }}</div>
+                    <div class="stat-label">Plan ID</div>
+                    <div class="stat-value text-sm">{{ member.membership_plan_id or 'No Plan' }}</div>
                 </div>
                 <i class="fas fa-crown text-accent text-2xl"></i>
             </div>
@@ -60,8 +60,8 @@
         <div class="stat-card">
             <div class="flex items-center justify-between">
                 <div>
-                    <div class="stat-label">Trainer</div>
-                    <div class="stat-value text-sm">{{ member.trainer_name or 'Unassigned' }}</div>
+                    <div class="stat-label">Trainer ID</div>
+                    <div class="stat-value text-sm">{{ member.trainer_id or 'Unassigned' }}</div>
                 </div>
                 <i class="fas fa-user-tie text-secondary text-2xl"></i>
             </div>
@@ -77,8 +77,8 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-4">
                     <div>
-                        <label class="text-sm text-gray-500">Membership Plan</label>
-                        <div class="font-medium text-lg">{{ member.plan_name or 'No Plan Assigned' }}</div>
+                        <label class="text-sm text-gray-500">Membership Plan ID</label>
+                        <div class="font-medium text-lg">{{ member.membership_plan_id or 'No Plan Assigned' }}</div>
                     </div>
                     
                     <div>
@@ -88,26 +88,26 @@
 
                     <div>
                         <label class="text-sm text-gray-500">Member Since</label>
-                        <div class="font-medium">{{ member.created_at.strftime('%B %d, %Y') if member.created_at else 'N/A' }}</div>
+                        <div class="font-medium">{{ member.created_at|datetimeformat('%B %d, %Y') or 'N/A' }}</div>
                     </div>
                 </div>
 
                 <div class="space-y-4">
                     <div>
                         <label class="text-sm text-gray-500">Start Date</label>
-                        <div class="font-medium">{{ member.membership_start_date.strftime('%B %d, %Y') if member.membership_start_date else 'Not Set' }}</div>
+                        <div class="font-medium">{{ member.membership_start_date|datetimeformat('%B %d, %Y') or 'Not Set' }}</div>
                     </div>
                     
                     <div>
                         <label class="text-sm text-gray-500">Expiry Date</label>
                         <div class="font-medium {{ 'text-danger' if days_left < 0 else 'text-warning' if days_left <= 7 else '' }}">
-                            {{ member.membership_end_date.strftime('%B %d, %Y') if member.membership_end_date else 'Not Set' }}
+                            {{ member.membership_end_date|datetimeformat('%B %d, %Y') or 'Not Set' }}
                         </div>
                     </div>
 
                     <div>
-                        <label class="text-sm text-gray-500">Assigned Trainer</label>
-                        <div class="font-medium">{{ member.trainer_name or 'No Trainer Assigned' }}</div>
+                        <label class="text-sm text-gray-500">Assigned Trainer ID</label>
+                        <div class="font-medium">{{ member.trainer_id or 'No Trainer Assigned' }}</div>
                     </div>
                 </div>
             </div>
@@ -164,13 +164,13 @@
     <!-- Quick Actions -->
     <div class="mt-8">
         <div class="flex space-x-4 justify-center">
-            <a href="{{ url_for('member_routes.dashboard') }}" class="btn btn-primary">
+            <a href="{{ url_for('member.dashboard') }}" class="btn btn-primary">
                 <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
             </a>
-            <a href="{{ url_for('member_routes.profile') }}" class="btn btn-secondary">
+            <a href="{{ url_for('member.profile') }}" class="btn btn-secondary">
                 <i class="fas fa-user-edit mr-2"></i>Edit Profile
             </a>
-            <a href="{{ url_for('member_routes.payments') }}" class="btn bg-accent text-white hover:bg-orange-600">
+            <a href="{{ url_for('member.payments') }}" class="btn bg-accent text-white hover:bg-orange-600">
                 <i class="fas fa-credit-card mr-2"></i>View Payments
             </a>
         </div>

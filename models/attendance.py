@@ -277,18 +277,31 @@ class Attendance:
         return [cls._from_attendance_row(r, extras_order=['member_name', 'member_phone']) for r in results]
 
     @classmethod
-    def check_slot_availability(cls, trainer_id, time_slot, attendance_date=None):
+    def check_slot_availability(cls, trainer_id, time_slot, attendance_date=None, exclude_attendance_id=None):
+        """
+        Return True if the trainer has NO booking at the given time_slot and date.
+        If exclude_attendance_id is provided, ignore that attendance row (useful for rescheduling).
+        """
         if attendance_date is None:
             attendance_date = date.today()
         db_path = cls._db_path()
         date_param = attendance_date.isoformat() if isinstance(attendance_date, date) else attendance_date
-        
-        query = '''
-            SELECT COUNT(*) FROM attendance
-            WHERE trainer_id = ? AND time_slot = ? AND date = ?
-        '''
-        result = execute_query(query, (trainer_id, time_slot, date_param), db_path, fetch=True)
+
+        if exclude_attendance_id:
+            query = '''
+                SELECT COUNT(*) FROM attendance
+                WHERE trainer_id = ? AND time_slot = ? AND date = ? AND id != ?
+            '''
+            result = execute_query(query, (trainer_id, time_slot, date_param, exclude_attendance_id), db_path, fetch=True)
+        else:
+            query = '''
+                SELECT COUNT(*) FROM attendance
+                WHERE trainer_id = ? AND time_slot = ? AND date = ?
+            '''
+            result = execute_query(query, (trainer_id, time_slot, date_param), db_path, fetch=True)
+
         return (result[0][0] == 0) if result else True
+
 
     def save(self):
         db_path = self._db_path()
@@ -474,7 +487,7 @@ class Attendance:
 
     def __str__(self):
         member = self.member_name or f"Member {self.member_id}"
-        trainer = self.trainer_name or f"Trainer {self.trainer_}"
+        trainer = self.trainer_name or f"Trainer {self.trainer_id}"
         d = self.date.isoformat() if isinstance(self.date, date) else str(self.date)
         return f"{d} | {self.time_slot or 'N/A'} | {member} with {trainer} | Status: {self.status}"
 

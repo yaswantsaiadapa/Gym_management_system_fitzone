@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Confirm Remove Trainer{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto p-6">
+  <h1 class="text-2xl font-bold mb-4">Confirm Remove Trainer</h1>
+
+  <div class="bg-white shadow p-4 rounded mb-4">
+    <p>Are you sure you want to remove the following trainer?</p>
+    <ul class="mt-3">
+      <li><strong>Name:</strong> {{ trainer.full_name }}</li>
+      <li><strong>Trainer ID:</strong> {{ trainer.id }}</li>
+      <li><strong>Email:</strong> {{ trainer.email }}</li>
+      <li><strong>Specialization:</strong> {{ trainer.specialization }}</li>
+    </ul>
+  </div>
+
+  <form method="post" action="{{ url_for('admin.delete_trainer', trainer_id=trainer.id) }}">
+    <div class="flex gap-3">
+      <button type="submit" class="btn btn-danger">Deactivate (soft)</button>
+
+      <button type="submit" name="force" value="1" class="btn btn-outline-danger"
+              onclick="return confirm('Permanent delete is irreversible. Are you sure?')">
+        Permanently Delete
+      </button>
+
+      <a href="{{ url_for('admin.trainers') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

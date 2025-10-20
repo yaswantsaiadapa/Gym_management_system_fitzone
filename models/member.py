@@ -1,6 +1,103 @@
 from .database import execute_query
 from flask import current_app
 from datetime import date, datetime
+import calendar
+
+# models/member.py (patch — add inside Member class)
+
+from flask import current_app
+
+def delete(self):
+    """
+    Soft-delete the member.
+    - Sets users.is_active = 0
+    - Updates members.membership_status to 'removed' (or 'deactivated')
+    - Records removed_at and removed_by if these columns exist (best-effort)
+    """
+    from models.database import execute_query
+    db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')
+
+    try:
+        # Deactivate the user account
+        execute_query(
+            "UPDATE users SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            (self.user_id,),
+            db_path
+        )
+
+        # Update member status (use existing column names present in your schema)
+        execute_query(
+            "UPDATE members SET membership_status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            ("removed", self.id),
+            db_path
+        )
+
+        # Optional: if you have removed_at / removed_by fields, try to set them (no-op if columns absent)
+        try:
+            execute_query(
+                "UPDATE members SET removed_at = CURRENT_TIMESTAMP WHERE id = ?",
+                (self.id,),
+                db_path
+            )
+        except Exception:
+            # ignore if column does not exist
+            pass
+
+        return True
+    except Exception:
+        current_app.logger.exception("Failed to soft-delete member %s", getattr(self, 'id', None))
+        return False
+
+
+def hard_delete(self):
+    """
+    Permanently delete member and most related records.
+    WARNING: destructive. Back up DB before using.
+    - Deletes payments, attendance, workout plans, member record, then user record.
+    - Adjust table names below to match your schema.
+    """
+    from models.database import execute_query
+    db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')
+
+    try:
+        # Delete payments
+        try:
+            execute_query("DELETE FROM payments WHERE member_id = ?", (self.id,), db_path)
+        except Exception:
+            current_app.logger.exception("Failed to delete payments for member %s", self.id)
+
+        # Delete attendance / workout plans / workout_plan_details / member_workouts
+        for q in [
+            ("DELETE FROM attendance WHERE member_id = ?", (self.id,)),
+            ("DELETE FROM workout_plans WHERE member_id = ?", (self.id,)),
+            ("DELETE FROM member_workout_plans WHERE member_id = ?", (self.id,)),
+            ("DELETE FROM workout_plan_details WHERE member_id = ?", (self.id,)),
+            ("DELETE FROM member_measurements WHERE member_id = ?", (self.id,)),
+        ]:
+            try:
+                execute_query(q[0], q[1], db_path)
+            except Exception:
+                current_app.logger.exception("Failed to execute cleanup query for member %s: %s", self.id, q[0])
+
+        # Delete member row
+        execute_query("DELETE FROM members WHERE id = ?", (self.id,), db_path)
+
+        # Delete user record
+        execute_query("DELETE FROM users WHERE id = ?", (self.user_id,), db_path)
+
+        return True
+    except Exception:
+        current_app.logger.exception("Failed to hard-delete member %s", getattr(self, 'id', None))
+        return False
+
+def _add_months(sourcedate: date, months: int) -> date:
+    """Return date + months (handles month rollovers)."""
+    month = sourcedate.month - 1 + int(months)
+    year = sourcedate.year + month // 12
+    month = month % 12 + 1
+    day = min(sourcedate.day, calendar.monthrange(year, month)[1])
+    return date(year, month, day)
+
 
 def _to_date(d):
     """Parse DB value to date (YYYY-MM-DD) or return as-is/None."""
@@ -107,6 +204,42 @@ class Member:
 
         # Legacy compatibility field (not persisted)
         self.payment_status = payment_status
+
+    def activate_membership(self, duration_months: int, start_date: date = None):
+        """
+        Activate or extend membership by duration_months (int).
+        - If member currently active and membership_end_date >= start_date, extend from that expiry.
+        - Otherwise start from start_date or today.
+        - Sets self.status = 'active' and persists.
+        """
+        try:
+            if start_date is None:
+                start_date = date.today()
+            if isinstance(start_date, str):
+                try:
+                    start_date = datetime.fromisoformat(start_date).date()
+                except Exception:
+                    start_date = date.today()
+
+            current_expiry = getattr(self, 'membership_end_date', None)
+            if current_expiry and isinstance(current_expiry, date) and current_expiry >= start_date:
+                base_date = current_expiry
+            else:
+                base_date = start_date
+
+            new_expiry = _add_months(base_date, int(duration_months))
+
+            # Update fields
+            if not getattr(self, 'membership_start_date', None):
+                self.membership_start_date = start_date
+            self.membership_end_date = new_expiry
+            self.status = 'active'
+            self.save()
+            current_app.logger.info("Membership activated/extended for member %s until %s", getattr(self, 'id', None), new_expiry)
+            return True
+        except Exception as ex:
+            current_app.logger.exception("Failed to activate/extend membership for member %s: %s", getattr(self, 'id', None), ex)
+            return False
 
     # --- Compatibility alias properties ---
     @property

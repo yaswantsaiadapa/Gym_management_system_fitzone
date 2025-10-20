@@ -21,6 +21,27 @@ class User:
         return Bcrypt(current_app)
 
     @classmethod
+    def get_by_username(cls, username):
+        """Fetch user by username only. Returns a User instance or None."""
+        db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')
+        query = '''SELECT id, username, email, password_hash, role, full_name, phone, is_active
+                FROM users WHERE username = ?'''
+        result = execute_query(query, (username,), db_path, fetch=True)
+        if result:
+            row = result[0]
+            return cls(
+                id=row[0],
+                username=row[1],
+                email=row[2],
+                password_hash=row[3],
+                role=row[4],
+                full_name=row[5],
+                phone=row[6],
+                is_active=bool(row[7])
+            )
+        return None
+
+    @classmethod
     def authenticate(cls, username, password):
         """Authenticate user with username/email and password using bcrypt."""
         db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')

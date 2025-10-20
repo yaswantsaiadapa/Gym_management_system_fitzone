@@ -5,6 +5,10 @@ from models.trainer import Trainer
 from utils.decorators import logout_required
 from utils.email_utils import send_password_change_notification
 from flask_bcrypt import Bcrypt
+import secrets
+import datetime
+from utils.email_utils import send_password_reset_email  # create this function
+
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -142,34 +146,39 @@ def change_password_post():
 
     bcrypt = _get_bcrypt()
 
-    # Verify current password using bcrypt only
+    # Verify current password using bcrypt
     try:
         if not bcrypt.check_password_hash(user.password_hash, current_password):
             flash('Current password is incorrect!')
             return redirect(url_for('auth.change_password_form'))
     except Exception:
-        # Any unexpected error during bcrypt check -> treat as failure
-        current_app.logger.exception("Error checking password hash for user id %s", session.get('user_id'))
+        current_app.logger.exception(
+            "Error checking password hash for user id %s", session.get('user_id')
+        )
         flash('Current password is incorrect!')
         return redirect(url_for('auth.change_password_form'))
 
-    # Update password (User.update_password uses bcrypt)
+    # Update password (User.update_password uses bcrypt internally)
     try:
         user.update_password(new_password)
 
-        # Send email notification
+        # Send email notification (best-effort)
         try:
             send_password_change_notification(user.email, user.full_name)
         except Exception as e:
-            current_app.logger.exception(f"Failed to send password change email: {e}")
+            current_app.logger.exception("Failed to send password change email: %s", e)
 
+        # Log out user for security (redirect to logout which clears session)
         flash('Password changed successfully! You have been logged out for security.')
         return redirect(url_for('auth.logout'))
 
     except Exception:
-        current_app.logger.exception("Error changing password for user id %s", session.get('user_id'))
+        current_app.logger.exception(
+            "Error changing password for user id %s", session.get('user_id')
+        )
         flash('An error occurred while changing password. Please try again.')
         return redirect(url_for('auth.change_password_form'))
+
 
 
 @auth_bp.route('/forgot_password')
@@ -184,23 +193,37 @@ def forgot_password_form():
 def forgot_password_post():
     """Process forgot password form"""
     email = request.form.get('email')
-
     if not email:
         flash('Please enter your email address!')
         return redirect(url_for('auth.forgot_password_form'))
 
-    # Check if user exists
     from models.database import execute_query
     db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')
-    query = 'SELECT * FROM users WHERE email = ? AND is_active = 1'
-    result = execute_query(query, (email,), db_path, fetch=True)
 
-    # Always show a generic message to avoid leaking account existence
+    # Check if user exists
+    result = execute_query('SELECT id FROM users WHERE email = ? AND is_active = 1', (email,), db_path, fetch=True)
+
+    # Always show generic message
     flash('If an account with this email exists, you will receive password reset instructions.')
 
-    # In production: generate reset token and send email here
+    if result:
+        user_id = result[0]['id']
+        token = secrets.token_urlsafe(32)
+        expire_time = datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+
+        # Save token & expiration in DB
+        execute_query(
+            "UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE id = ?",
+            (token, expire_time.isoformat(), user_id),
+            db_path
+        )
+
+        # Send reset email
+        reset_link = url_for('auth.reset_password', token=token, _external=True)
+        send_password_reset_email(email, reset_link)
 
     return redirect(url_for('auth.login'))
+
 
 
 @auth_bp.route('/reset_password/<token>', methods=['GET', 'POST'])

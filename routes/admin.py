@@ -1,5 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify, current_app
 import traceback
+from models.database import execute_query
+
 from dateutil.relativedelta import relativedelta
 from models.user import User
 from models.member import Member
@@ -19,7 +21,17 @@ import string
 import json
 from models.workout import Workout
 from models.workout_plan import MemberWorkoutPlan, WorkoutPlanDetail
+def table_exists(table_name, db_path):
+    res = execute_query("SELECT name FROM sqlite_master WHERE type='table' AND name = ?", (table_name,), db_path, fetch=True)
+    return bool(res)
 
+def column_exists(table_name, column_name, db_path):
+    try:
+        rows = execute_query(f"PRAGMA table_info({table_name})", (), db_path, fetch=True)
+        cols = [r['name'] if isinstance(r, dict) else r[1] for r in rows]
+        return column_name in cols
+    except Exception:
+        return False
 
 admin_bp = Blueprint('admin', __name__,url_prefix='/admin')
 
@@ -434,6 +446,201 @@ def add_trainer():
         flash(f'An error occurred while adding the trainer: {str(e)}')
 
     return redirect(url_for('admin.trainers'))
+
+@admin_bp.route("/members/<int:member_id>/delete", methods=["GET"])
+@admin_required
+def confirm_delete_member(member_id):
+    member = Member.get_by_id(member_id)
+    if not member:
+        flash("Member not found.", "danger")
+        return redirect(url_for("admin.members"))
+    return render_template("admin/confirm_delete_member.html", member=member)
+
+@admin_bp.route("/members/<int:member_id>/delete", methods=["POST"])
+@admin_required
+def delete_member(member_id):
+    """
+    Safe deletion handler:
+     - If force=1 -> try to permanently remove rows from tables that contain member_id
+     - If not force -> perform soft-delete (disable user, mark member removed)
+    This implementation checks table existence and column presence before running DELETE,
+    to avoid sqlite OperationalError for missing tables or different schema.
+    """
+    force = request.form.get("force", "0") == "1"
+    member = Member.get_by_id(member_id)
+    if not member:
+        flash("Member not found.", "danger")
+        return redirect(url_for("admin.members"))
+
+    db_path = current_app.config.get("DATABASE_PATH", "gym_management.db")
+
+    try:
+        if not force:
+            # Soft-delete (non-destructive)
+            if hasattr(member, "delete"):
+                ok = member.delete()
+            else:
+                execute_query("UPDATE users SET is_active = 0 WHERE id = ?", (member.user_id,), db_path)
+                execute_query("UPDATE members SET membership_status = ? WHERE id = ?", ("removed", member_id), db_path)
+                ok = True
+
+            if ok:
+                flash(f"Member {getattr(member, 'full_name', member_id)} deactivated.", "success")
+            else:
+                flash("Failed to deactivate member. See logs.", "danger")
+            return redirect(url_for("admin.members"))
+
+        # If force -> destructive delete, but only on tables that exist and have member_id column.
+        # List of candidate tables to try (ordered roughly by likely relationships).
+        candidate_tables = [
+            "payments",
+            "attendance",
+            "member_progress",
+            "member_workout_plans",
+            "member_workout_plans",    # repeated safe
+            "member_workout_plans",    # harmless duplicates ok
+            "diet_plans",
+            "diet_plan_meals",
+            # skip workout_plan tables that don't reference member directly
+            # "workout_plan_details",
+            # "workouts",
+        ]
+
+        # Helper: check table existence
+        def table_exists(table_name):
+            q = "SELECT name FROM sqlite_master WHERE type='table' AND name = ?"
+            res = execute_query(q, (table_name,), db_path, fetch=True)
+            return bool(res)
+
+        # Helper: check if column exists in table
+        def column_exists(table_name, column_name):
+            try:
+                res = execute_query(f"PRAGMA table_info({table_name})", (), db_path, fetch=True)
+                cols = [r['name'] if isinstance(r, dict) else r[1] for r in res]
+                return column_name in cols
+            except Exception:
+                return False
+
+        # Run deletes only on tables that exist and have 'member_id' column
+        deleted_summary = []
+        for tbl in candidate_tables:
+            if not table_exists(tbl):
+                current_app.logger.debug("Skipping delete: table not found: %s", tbl)
+                continue
+            # prefer 'member_id' but some tables might use 'member' or 'members_id' — check common variants
+            col = None
+            for candidate_col in ("member_id", "memberid", "members_id", "member"):
+                if column_exists(tbl, candidate_col):
+                    col = candidate_col
+                    break
+            if not col:
+                current_app.logger.debug("Table %s exists but no member_id-like column; skipping", tbl)
+                continue
+
+            # perform delete
+            try:
+                execute_query(f"DELETE FROM {tbl} WHERE {col} = ?", (member_id,), db_path)
+                deleted_summary.append(tbl)
+            except Exception:
+                current_app.logger.exception("Failed to delete rows from %s for member %s", tbl, member_id)
+
+        # Finally remove member row and user row if present
+        if table_exists("members"):
+            try:
+                execute_query("DELETE FROM members WHERE id = ?", (member_id,), db_path)
+                deleted_summary.append("members")
+            except Exception:
+                current_app.logger.exception("Failed to delete members row %s", member_id)
+
+        if getattr(member, "user_id", None):
+            # deactivate or delete user row
+            try:
+                execute_query("DELETE FROM users WHERE id = ?", (member.user_id,), db_path)
+                deleted_summary.append("users")
+            except Exception:
+                current_app.logger.exception("Failed to delete user row for member %s", member_id)
+
+        flash(f"Member {getattr(member, 'full_name', member_id)} permanently deleted (tables affected: {', '.join(deleted_summary)})", "success")
+    except Exception:
+        current_app.logger.exception("Error deleting member %s", member_id)
+        flash("An error occurred while deleting the member. See logs.", "danger")
+
+    return redirect(url_for("admin.members"))
+
+
+# -------- Trainer delete / confirm --------
+@admin_bp.route("/trainers/<int:trainer_id>/delete", methods=["GET"])
+@admin_required
+def confirm_delete_trainer(trainer_id):
+    trainer = Trainer.get_by_id(trainer_id)
+    if not trainer:
+        flash("Trainer not found.", "danger")
+        return redirect(url_for("admin.trainers"))
+    return render_template("admin/confirm_delete_trainer.html", trainer=trainer)
+
+@admin_bp.route("/trainers/<int:trainer_id>/delete", methods=["POST"])
+@admin_required
+def delete_trainer(trainer_id):
+    force = request.form.get("force", "0") == "1"
+    trainer = Trainer.get_by_id(trainer_id)
+    if not trainer:
+        flash("Trainer not found.", "danger")
+        return redirect(url_for("admin.trainers"))
+
+    db_path = current_app.config.get("DATABASE_PATH", "gym_management.db")
+
+    if not force:
+        if hasattr(trainer, "delete"):
+            ok = trainer.delete()
+        else:
+            if table_exists("users", db_path) and getattr(trainer, "user_id", None):
+                execute_query("UPDATE users SET is_active = 0 WHERE id = ?", (trainer.user_id,), db_path)
+            if table_exists("trainers", db_path):
+                execute_query("UPDATE trainers SET status = ? WHERE id = ?", ("removed", trainer_id), db_path)
+            ok = True
+
+        flash(f"Trainer {getattr(trainer,'full_name',trainer_id)} deactivated." if ok else "Failed to deactivate trainer.", "success" if ok else "danger")
+        return redirect(url_for("admin.trainers"))
+
+    # force -> permanent delete (schema-aware)
+    deleted = []
+    try:
+        # member_workout_plans (remove assignments)
+        if table_exists("member_workout_plans", db_path) and column_exists("member_workout_plans", "trainer_id", db_path):
+            execute_query("DELETE FROM member_workout_plans WHERE trainer_id = ?", (trainer_id,), db_path)
+            deleted.append("member_workout_plans")
+
+        # diet_plans assigned to this trainer (if trainer owns them)
+        if table_exists("diet_plans", db_path) and column_exists("diet_plans", "trainer_id", db_path):
+            # if diet_plan_meals exists, cleanup meals first
+            plans = execute_query("SELECT id FROM diet_plans WHERE trainer_id = ?", (trainer_id,), db_path, fetch=True)
+            plan_ids = [r['id'] if isinstance(r, dict) else r[0] for r in plans] if plans else []
+            if plan_ids and table_exists("diet_plan_meals", db_path) and column_exists("diet_plan_meals", "diet_plan_id", db_path):
+                for pid in plan_ids:
+                    execute_query("DELETE FROM diet_plan_meals WHERE diet_plan_id = ?", (pid,), db_path)
+                deleted.append("diet_plan_meals")
+            execute_query("DELETE FROM diet_plans WHERE trainer_id = ?", (trainer_id,), db_path)
+            deleted.append("diet_plans")
+
+        # attendance rows where trainer was present/assigned
+        if table_exists("attendance", db_path) and column_exists("attendance", "trainer_id", db_path):
+            execute_query("DELETE FROM attendance WHERE trainer_id = ?", (trainer_id,), db_path)
+            deleted.append("attendance")
+
+        # finally remove trainer row and user row
+        if table_exists("trainers", db_path):
+            execute_query("DELETE FROM trainers WHERE id = ?", (trainer_id,), db_path)
+            deleted.append("trainers")
+        if getattr(trainer, "user_id", None) and table_exists("users", db_path):
+            execute_query("DELETE FROM users WHERE id = ?", (trainer.user_id,), db_path)
+            deleted.append("users")
+
+        flash(f"Trainer permanently deleted (tables affected: {', '.join(deleted)})", "success")
+    except Exception:
+        current_app.logger.exception("Error permanently deleting trainer %s", trainer_id)
+        flash("An error occurred while permanently deleting the trainer. See logs.", "danger")
+
+    return redirect(url_for("admin.trainers"))
 
 # -------------------- Membership Plans --------------------
 @admin_bp.route('/membership-plans')

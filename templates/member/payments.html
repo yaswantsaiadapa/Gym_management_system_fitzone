@@ -34,7 +34,7 @@
                         <td>
                             {% if payment.payment_date %}
                                 <div class="font-medium">
-                                    {{ payment.payment_date.strftime('%B %d, %Y') }}
+                                    {{ payment.payment_date|datetimeformat('%B %d, %Y')}}
                                 </div>
                             {% else %}
                                 <span class="text-gray-400">Pending</span>
@@ -69,7 +69,7 @@
                         <td>
                             {% if payment.due_date_obj %}
                                 <span class="text-sm {% if payment.is_overdue %}text-red-600 font-bold{% endif %}">
-                                    {{ payment.due_date_obj.strftime('%B %d, %Y') }}
+                                    {{ payment.due_date_obj|datetimeformat('%B %d, %Y')}}
                                 </span>
                             {% else %}
                                 <span class="text-gray-400">N/A</span>
