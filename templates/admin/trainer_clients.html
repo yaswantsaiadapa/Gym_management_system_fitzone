@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Clients of {{ trainer.full_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto mt-10">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold">
+            <i class="fas fa-users mr-2 text-green-600"></i>Clients of {{ trainer.full_name }}
+        </h1>
+        <a href="{{ url_for('admin.trainers') }}" class="btn btn-secondary">Back to Trainers</a>
+    </div>
+
+    <div class="card">
+        <div class="overflow-x-auto">
+            {% if clients %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Member Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Membership Plan</th>
+                        <th>Membership Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for client in clients %}
+                    <tr>
+                        <td>{{ client.full_name }}</td>
+                        <td>{{ client.email }}</td>
+                        <td>{{ client.phone }}</td>
+                        <td>{{ client.membership_plan_name }}</td>
+                        <td>
+                            <span class="badge-{{ 'success' if client.membership_status == 'active' else 'danger' }}">
+                                {{ client.membership_status|title }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="p-10 text-center text-gray-500">
+                <i class="fas fa-users text-5xl mb-4"></i>
+                <h3 class="text-xl font-semibold mb-2">No clients assigned</h3>
+                <p>Once members are assigned to this trainer, they will appear here.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

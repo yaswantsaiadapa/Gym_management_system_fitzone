@@ -3,9 +3,118 @@
 {% block title %}Trainers - Admin{% endblock %}
 
 {% block content %}
+<style>
+    /* FitZone Consistent Styling */
+    .card {
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease-in-out;
+    }
+
+    .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .table thead {
+        background: #f9fafb;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.05em;
+        color: #4b5563;
+    }
+
+    .table th, .table td {
+        padding: 1rem 1.2rem;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .table tr:hover {
+        background: #f3f8ff;
+        transition: 0.3s;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.6rem 1.2rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .btn-primary {
+        background: #2563EB;
+        color: #fff;
+        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn-primary:hover {
+        background: #1E40AF;
+        box-shadow: 0 6px 15px rgba(37, 99, 235, 0.4);
+    }
+
+    .btn-danger {
+        background: #ef4444;
+        color: #fff;
+        border: none;
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .btn-danger:hover {
+        background: #dc2626;
+    }
+
+    .badge-success {
+        background: #dcfce7;
+        color: #166534;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-weight: 500;
+        font-size: 0.75rem;
+    }
+
+    .badge-danger {
+        background: #fee2e2;
+        color: #991b1b;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-weight: 500;
+        font-size: 0.75rem;
+    }
+
+    .text-primary {
+        color: #2563EB;
+    }
+
+    .text-secondary {
+        color: #10b981;
+    }
+
+    .text-primary:hover {
+        color: #1E40AF;
+    }
+
+    .text-secondary:hover {
+        color: #047857;
+    }
+</style>
+
 <div class="flex justify-between items-center mb-8">
-    <h1 class="text-3xl font-bold text-gray-900">
-        <i class="fas fa-user-tie mr-3 text-primary"></i>Trainers
+    <h1 class="text-3xl font-bold text-gray-900 flex items-center">
+        <i class="fas fa-user-tie mr-3 text-blue-600"></i>Trainers
     </h1>
     <a href="{{ url_for('admin.add_trainer_form') }}" class="btn btn-primary">
         <i class="fas fa-plus mr-2"></i>Add New Trainer
@@ -25,7 +134,7 @@
                         <th>Experience</th>
                         <th>Status</th>
                         <th>Salary</th>
-                        <th>Actions</th>
+                        <th class="text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -39,48 +148,49 @@
                         </td>
                         <td>
                             <div>
-                                <div class="text-sm">{{ trainer.email }}</div>
+                                <div class="text-sm text-gray-800">{{ trainer.email }}</div>
                                 <div class="text-sm text-gray-500">{{ trainer.phone }}</div>
                             </div>
                         </td>
+                        <td><span class="text-sm">{{ trainer.specialization }}</span></td>
+                        <td><span class="text-sm">{{ trainer.experience_years }} years</span></td>
                         <td>
-                            <span class="text-sm">{{ trainer.specialization }}</span>
-                        </td>
-                        <td>
-                            <span class="text-sm">{{ trainer.experience_years }} years</span>
-                        </td>
-                        <td>
-                            <span class="badge badge-{{ 'success' if trainer.status == 'active' else 'danger' }}">
+                            <span class="badge-{{ 'success' if trainer.status == 'active' else 'danger' }}">
                                 {{ trainer.status|title }}
                             </span>
                         </td>
                         <td>
                             <span class="text-sm">{{ '₹{:,.0f}'.format(trainer.salary) if trainer.salary else 'N/A' }}</span>
                         </td>
-                        <td>
-                            <div class="flex space-x-2">
-                                <button class="text-primary hover:text-blue-700" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="text-secondary hover:text-green-700" title="View Clients">
-                                    <i class="fas fa-users"></i>
-                                </button>
+                        <td class="text-center">
+                            <div class="flex justify-center space-x-3">
+                                <button class="text-primary hover:text-blue-700" title="Edit" 
+        onclick="window.location.href='{{ url_for('admin.edit_trainer', trainer_id=trainer.id) }}'">
+    <i class="fas fa-edit"></i>
+</button>
+
+<button class="text-secondary hover:text-green-700" title="View Clients" 
+        onclick="window.location.href='{{ url_for('admin.view_trainer_clients', trainer_id=trainer.id) }}'">
+    <i class="fas fa-users"></i>
+</button>
+
+                                <form method="get" action="{{ url_for('admin.confirm_delete_trainer', trainer_id=trainer.id) }}" style="display:inline">
+                                    <button type="submit" class="btn-danger" title="Remove">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
                             </div>
                         </td>
-                        <td><form method="get" action="{{ url_for('admin.confirm_delete_trainer', trainer_id=trainer.id) }}" style="display:inline">
-  <button class="btn btn-sm btn-danger">Remove</button>
-</form>
-</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
         {% else %}
-        <div class="p-8 text-center">
-            <i class="fas fa-user-tie text-gray-400 text-4xl mb-4"></i>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">No trainers found</h3>
-            <p class="text-gray-500 mb-4">Get started by adding your first trainer</p>
+        <div class="p-10 text-center">
+            <i class="fas fa-user-tie text-gray-400 text-5xl mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">No Trainers Found</h3>
+            <p class="text-gray-500 mb-6">Get started by adding your first trainer.</p>
             <a href="{{ url_for('admin.add_trainer_form') }}" class="btn btn-primary">
                 <i class="fas fa-plus mr-2"></i>Add Trainer
             </a>

@@ -643,6 +643,24 @@ def delete_trainer(trainer_id):
     return redirect(url_for("admin.trainers"))
 
 # -------------------- Membership Plans --------------------
+@admin_bp.route('/membership-plans/<int:plan_id>/toggle-status', methods=['POST'])
+@admin_required
+def toggle_membership_plan_status(plan_id):
+    plan = MembershipPlan.get_by_id(plan_id)
+    if not plan:
+        flash("Membership plan not found.", "danger")
+        return redirect(url_for('admin.membership_plans'))
+
+    try:
+        plan.is_active = not plan.is_active
+        plan.save()
+        status = "activated" if plan.is_active else "deactivated"
+        flash(f'Membership plan "{plan.name}" {status} successfully!', "success")
+    except Exception as e:
+        flash(f"Error updating plan status: {str(e)}", "danger")
+
+    return redirect(url_for('admin.membership_plans'))
+
 @admin_bp.route('/membership-plans')
 @admin_required
 def membership_plans():
@@ -1006,6 +1024,55 @@ def send_renewal_reminders():
         flash(f'Error sending renewal reminders: {str(e)}')
 
     return redirect(url_for('admin.dashboard'))
+@admin_bp.route("/trainers/<int:trainer_id>/edit", methods=["GET", "POST"])
+@admin_required
+def edit_trainer(trainer_id):
+    trainer = Trainer.get_by_id(trainer_id)
+    if not trainer:
+        flash("Trainer not found!", "danger")
+        return redirect(url_for("admin.trainers"))
+
+    user = User.get_by_id(trainer.user_id)
+
+    if request.method == "POST":
+        try:
+            # Update user info
+            user.full_name = request.form.get("full_name")
+            user.email = request.form.get("email")
+            user.phone = request.form.get("phone")
+            user.update()
+
+            # Update trainer info
+            trainer.specialization = request.form.get("specialization")
+            trainer.experience_years = int(request.form.get("experience_years")) if request.form.get("experience_years") else None
+            trainer.certification = request.form.get("certification")
+            trainer.salary = float(request.form.get("salary")) if request.form.get("salary") else None
+            trainer.working_hours = request.form.get("working_hours")
+            trainer.bio = request.form.get("bio")
+            trainer.status = request.form.get("status") or trainer.status
+            trainer.update()
+
+            flash("Trainer updated successfully!", "success")
+            return redirect(url_for("admin.trainers"))
+
+        except Exception as e:
+            flash(f"Error updating trainer: {str(e)}", "danger")
+
+    return render_template("admin/edit_trainer.html", trainer=trainer, user=user)
+
+@admin_bp.route("/trainers/<int:trainer_id>/clients")
+@admin_required
+def view_trainer_clients(trainer_id):
+    trainer = Trainer.get_by_id(trainer_id)
+    if not trainer:
+        flash("Trainer not found!", "danger")
+        return redirect(url_for("admin.trainers"))
+
+    # Fetch all members assigned to this trainer
+    clients = Member.get_all_by_trainer(trainer_id)
+
+    return render_template("admin/trainer_clients.html", trainer=trainer, clients=clients)
+
 @admin_bp.route('/members/<int:member_id>/renew', methods=['GET', 'POST'])
 @admin_required
 def renew_membership(member_id):

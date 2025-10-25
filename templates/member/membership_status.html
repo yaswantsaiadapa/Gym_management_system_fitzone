@@ -3,126 +3,127 @@
 {% block title %}Membership Status - Member{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <div class="mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">
-            <i class="fas fa-id-card mr-3 text-primary"></i>Membership Status
+<div class="max-w-5xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8 text-center">
+        <h1 class="text-4xl font-bold text-gray-900 mb-2">
+            <i class="fas fa-id-card text-primary mr-3"></i>Membership Status
         </h1>
-        <p class="text-gray-600">View your current membership details and renewal information</p>
+        <p class="text-gray-600 text-sm">View your membership details, validity, and renewal options</p>
     </div>
 
-    <!-- Notification Alert -->
+    <!-- Notification -->
     {% if notification %}
-    <div class="alert alert-{{ 'danger' if days_left < 0 else 'warning' if days_left <= 7 else 'info' }} mb-6">
+    <div class="rounded-xl mb-8 p-4 shadow-md bg-white border-l-4 
+        {% if days_left < 0 %}border-red-500 text-red-700
+        {% elif days_left <= 7 %}border-yellow-400 text-yellow-700
+        {% else %}border-blue-500 text-blue-700{% endif %}">
         <div class="flex items-center">
-            <i class="fas fa-{{ 'exclamation-triangle' if days_left <= 7 else 'info-circle' }} mr-2"></i>
-            {{ notification }}
+            <i class="fas fa-{{ 'exclamation-triangle' if days_left <= 7 else 'info-circle' }} mr-3 text-lg"></i>
+            <span class="font-medium">{{ notification }}</span>
         </div>
     </div>
     {% endif %}
 
-    <!-- Membership Overview -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="stat-card">
-            <div class="flex items-center justify-between">
+    <!-- Overview Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <div class="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition-shadow duration-200">
+            <div class="flex justify-between items-center">
                 <div>
-                    <div class="stat-label">Status</div>
-                    <div class="stat-value text-sm {{ 'text-success' if member.status == 'active' else 'text-danger' }}">
+                    <p class="text-gray-500 text-sm mb-1">Status</p>
+                    <p class="font-semibold text-lg {{ 'text-green-600' if member.status == 'active' else 'text-red-600' }}">
                         {{ member.status|title }}
-                    </div>
+                    </p>
                 </div>
-                <i class="fas fa-{{ 'check-circle' if member.status == 'active' else 'times-circle' }} text-2xl {{ 'text-success' if member.status == 'active' else 'text-danger' }}"></i>
+                <i class="fas fa-{{ 'check-circle' if member.status == 'active' else 'times-circle' }} text-2xl 
+                    {{ 'text-green-600' if member.status == 'active' else 'text-red-600' }}"></i>
             </div>
         </div>
 
-        <div class="stat-card">
-            <div class="flex items-center justify-between">
+        <div class="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition-shadow duration-200">
+            <div class="flex justify-between items-center">
                 <div>
-                    <div class="stat-label">Plan ID</div>
-                    <div class="stat-value text-sm">{{ member.membership_plan_id or 'No Plan' }}</div>
+                    <p class="text-gray-500 text-sm mb-1">Plan ID</p>
+                    <p class="font-semibold text-lg">{{ member.membership_plan_id or 'No Plan' }}</p>
                 </div>
                 <i class="fas fa-crown text-accent text-2xl"></i>
             </div>
         </div>
 
-        <div class="stat-card">
-            <div class="flex items-center justify-between">
+        <div class="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition-shadow duration-200">
+            <div class="flex justify-between items-center">
                 <div>
-                    <div class="stat-label">Days Remaining</div>
-                    <div class="stat-value text-lg {{ 'text-success' if days_left > 30 else 'text-warning' if days_left > 7 else 'text-danger' }}">
+                    <p class="text-gray-500 text-sm mb-1">Days Remaining</p>
+                    <p class="font-semibold text-lg {{ 'text-green-600' if days_left > 30 else 'text-yellow-600' if days_left > 7 else 'text-red-600' }}">
                         {{ days_left if days_left > 0 else 'Expired' }}
-                    </div>
+                    </p>
                 </div>
                 <i class="fas fa-calendar-day text-primary text-2xl"></i>
             </div>
         </div>
 
-        <div class="stat-card">
-            <div class="flex items-center justify-between">
+        <div class="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition-shadow duration-200">
+            <div class="flex justify-between items-center">
                 <div>
-                    <div class="stat-label">Trainer ID</div>
-                    <div class="stat-value text-sm">{{ member.trainer_id or 'Unassigned' }}</div>
+                    <p class="text-gray-500 text-sm mb-1">Trainer ID</p>
+                    <p class="font-semibold text-lg">{{ member.trainer_id or 'Unassigned' }}</p>
                 </div>
                 <i class="fas fa-user-tie text-secondary text-2xl"></i>
             </div>
         </div>
     </div>
 
-    <!-- Detailed Membership Information -->
-    <div class="card mb-8">
-        <div class="card-header">
-            <h2 class="text-xl font-semibold text-gray-900">Membership Details</h2>
+    <!-- Detailed Membership Info -->
+    <div class="bg-white rounded-xl shadow-md mb-10">
+        <div class="p-6 border-b border-gray-100">
+            <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+                <i class="fas fa-info-circle text-primary mr-2"></i>Membership Details
+            </h2>
         </div>
-        <div class="card-body">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-sm text-gray-500">Membership Plan ID</label>
-                        <div class="font-medium text-lg">{{ member.membership_plan_id or 'No Plan Assigned' }}</div>
-                    </div>
-                    
-                    <div>
-                        <label class="text-sm text-gray-500">Member ID</label>
-                        <div class="font-medium">{{ member.id }}</div>
-                    </div>
-
-                    <div>
-                        <label class="text-sm text-gray-500">Member Since</label>
-                        <div class="font-medium">{{ member.created_at|datetimeformat('%B %d, %Y') or 'N/A' }}</div>
-                    </div>
+        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-4">
+                <div>
+                    <label class="text-sm text-gray-500">Membership Plan ID</label>
+                    <p class="font-medium text-gray-900">{{ member.membership_plan_id or 'No Plan Assigned' }}</p>
                 </div>
+                <div>
+                    <label class="text-sm text-gray-500">Member ID</label>
+                    <p class="font-medium text-gray-900">{{ member.id }}</p>
+                </div>
+                <div>
+                    <label class="text-sm text-gray-500">Member Since</label>
+                    <p class="font-medium text-gray-900">{{ member.created_at|datetimeformat('%B %d, %Y') or 'N/A' }}</p>
+                </div>
+            </div>
 
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-sm text-gray-500">Start Date</label>
-                        <div class="font-medium">{{ member.membership_start_date|datetimeformat('%B %d, %Y') or 'Not Set' }}</div>
-                    </div>
-                    
-                    <div>
-                        <label class="text-sm text-gray-500">Expiry Date</label>
-                        <div class="font-medium {{ 'text-danger' if days_left < 0 else 'text-warning' if days_left <= 7 else '' }}">
-                            {{ member.membership_end_date|datetimeformat('%B %d, %Y') or 'Not Set' }}
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="text-sm text-gray-500">Assigned Trainer ID</label>
-                        <div class="font-medium">{{ member.trainer_id or 'No Trainer Assigned' }}</div>
-                    </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-sm text-gray-500">Start Date</label>
+                    <p class="font-medium text-gray-900">{{ member.membership_start_date|datetimeformat('%B %d, %Y') or 'Not Set' }}</p>
+                </div>
+                <div>
+                    <label class="text-sm text-gray-500">Expiry Date</label>
+                    <p class="font-medium {{ 'text-red-600' if days_left < 0 else 'text-yellow-600' if days_left <= 7 else 'text-gray-900' }}">
+                        {{ member.membership_end_date|datetimeformat('%B %d, %Y') or 'Not Set' }}
+                    </p>
+                </div>
+                <div>
+                    <label class="text-sm text-gray-500">Assigned Trainer ID</label>
+                    <p class="font-medium text-gray-900">{{ member.trainer_id or 'No Trainer Assigned' }}</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Renewal Information -->
+    <!-- Renewal Info -->
     {% if days_left <= 30 and days_left >= 0 %}
-    <div class="card border-l-4 border-l-warning">
-        <div class="card-header bg-yellow-50">
+    <div class="bg-white rounded-xl shadow-md mb-10 border-l-4 border-yellow-400">
+        <div class="p-6 border-b border-yellow-100 bg-yellow-50 rounded-t-xl">
             <h2 class="text-xl font-semibold text-gray-900">
-                <i class="fas fa-refresh text-warning mr-2"></i>Renewal Information
+                <i class="fas fa-sync-alt text-yellow-500 mr-2"></i>Renewal Information
             </h2>
         </div>
-        <div class="card-body">
+        <div class="p-6">
             <p class="text-gray-700 mb-4">
                 Your membership will expire soon. Please visit the admin desk or contact the gym to renew your membership.
             </p>
@@ -138,13 +139,13 @@
         </div>
     </div>
     {% elif days_left < 0 %}
-    <div class="card border-l-4 border-l-danger">
-        <div class="card-header bg-red-50">
+    <div class="bg-white rounded-xl shadow-md mb-10 border-l-4 border-red-500">
+        <div class="p-6 border-b border-red-100 bg-red-50 rounded-t-xl">
             <h2 class="text-xl font-semibold text-gray-900">
-                <i class="fas fa-exclamation-triangle text-danger mr-2"></i>Membership Expired
+                <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>Membership Expired
             </h2>
         </div>
-        <div class="card-body">
+        <div class="p-6">
             <p class="text-gray-700 mb-4">
                 Your membership has expired. Please renew immediately to continue accessing gym facilities.
             </p>
@@ -162,8 +163,8 @@
     {% endif %}
 
     <!-- Quick Actions -->
-    <div class="mt-8">
-        <div class="flex space-x-4 justify-center">
+    <div class="text-center mt-10">
+        <div class="flex flex-wrap justify-center gap-4">
             <a href="{{ url_for('member.dashboard') }}" class="btn btn-primary">
                 <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
             </a>

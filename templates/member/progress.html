@@ -11,18 +11,13 @@
 </div>
 
 {% if progress_records %}
-<!-- Progress Chart Placeholder -->
+<!-- Progress Chart -->
 <div class="card mb-8">
     <div class="card-header">
-        <h2 class="text-xl font-semibold text-gray-900">Progress Overview</h2>
+        <h2 class="text-xl font-semibold text-gray-900">Progress Chart</h2>
     </div>
     <div class="card-body">
-        <div class="h-64 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
-            <div class="text-center text-gray-500">
-                <i class="fas fa-chart-line text-4xl mb-2"></i>
-                <p>Progress charts will be displayed here</p>
-            </div>
-        </div>
+        <canvas id="progressChart" class="w-full h-64"></canvas>
     </div>
 </div>
 
@@ -92,6 +87,55 @@
         </div>
     </div>
 </div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('progressChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_labels | safe }},
+            datasets: [
+                {
+                    label: 'Weight (kg)',
+                    data: {{ chart_weight | safe }},
+                    borderColor: 'rgba(37, 99, 235, 1)',
+                    backgroundColor: 'rgba(37, 99, 235, 0.2)',
+                    fill: true,
+                    tension: 0.3
+                },
+                {
+                    label: 'BMI',
+                    data: {{ chart_bmi | safe }},
+                    borderColor: 'rgba(16, 185, 129, 1)',
+                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                    fill: true,
+                    tension: 0.3
+                },
+                {
+                    label: 'Body Fat %',
+                    data: {{ chart_bodyfat | safe }},
+                    borderColor: 'rgba(220, 38, 38, 1)',
+                    backgroundColor: 'rgba(220, 38, 38, 0.2)',
+                    fill: true,
+                    tension: 0.3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'top' }
+            },
+            scales: {
+                y: { beginAtZero: false, title: { display: true, text: 'Value' } },
+                x: { title: { display: true, text: 'Date' } }
+            }
+        }
+    });
+</script>
+
 {% else %}
 <div class="card">
     <div class="card-body text-center py-12">
@@ -101,4 +145,5 @@
     </div>
 </div>
 {% endif %}
+
 {% endblock %}

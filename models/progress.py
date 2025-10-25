@@ -2,6 +2,8 @@ from flask import current_app
 from models.database import execute_query
 
 
+from datetime import datetime, date
+
 class Progress:
     def __init__(self, id=None, member_id=None, recorded_date=None, weight=None,
                  body_fat_percentage=None, muscle_mass=None, bmi=None,
@@ -9,7 +11,7 @@ class Progress:
                  notes=None, photo_path=None, recorded_by=None):
         self.id = id
         self.member_id = member_id
-        self.recorded_date = recorded_date
+        self.recorded_date = self._to_date(recorded_date)
         self.weight = weight
         self.body_fat_percentage = body_fat_percentage
         self.muscle_mass = muscle_mass
@@ -23,6 +25,17 @@ class Progress:
         self.photo_path = photo_path
         self.recorded_by = recorded_by
         self.recorded_by_name = None
+        self.member_name = None
+
+    @staticmethod
+    def _to_date(value):
+        """Convert string from DB to date object if needed"""
+        if isinstance(value, str):
+            try:
+                return datetime.strptime(value, "%Y-%m-%d").date()
+            except ValueError:
+                return None
+        return value
 
     @classmethod
     def get_by_id(cls, progress_id):

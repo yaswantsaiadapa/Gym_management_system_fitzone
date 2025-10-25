@@ -2,51 +2,152 @@
 {% block title %}Edit Membership Plan{% endblock %}
 
 {% block content %}
+<style>
+    /* --- FitZone Modern Form Styling --- */
+    .form-card {
+        background: #fff;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e5e7eb;
+        transition: all 0.3s ease;
+    }
+
+    .form-card:hover {
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #1e3a8a;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.65rem 0.9rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        outline: none;
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .form-control:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.25s ease-in-out;
+        padding: 0.7rem 1.4rem;
+        text-decoration: none;
+        text-align: center;
+    }
+
+    .btn-primary {
+        background: #2563EB;
+        color: white;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn-primary:hover {
+        background: #1E40AF;
+        box-shadow: 0 6px 18px rgba(37, 99, 235, 0.4);
+        transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+        background: #f3f4f6;
+        color: #1f2937;
+        border: 1px solid #d1d5db;
+    }
+
+    .btn-secondary:hover {
+        background: #e5e7eb;
+        transform: translateY(-1px);
+    }
+
+    .checkbox-label {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        font-weight: 500;
+        color: #374151;
+    }
+
+    input[type="checkbox"] {
+        accent-color: #2563eb;
+        width: 18px;
+        height: 18px;
+    }
+
+    .header-icon {
+        color: #2563EB;
+        margin-right: 10px;
+    }
+</style>
+
 <div class="max-w-2xl mx-auto">
-    <h1 class="text-2xl font-bold mb-6">Edit Membership Plan</h1>
+    <div class="flex items-center mb-6">
+        <i class="fas fa-edit text-3xl header-icon"></i>
+        <h1 class="text-3xl font-bold text-gray-900">Edit Membership Plan</h1>
+    </div>
 
-    <form method="POST">
-        <div class="form-group mb-4">
-            <label class="form-label">Plan Name *</label>
-            <input type="text" name="name" value="{{ plan.name }}" class="form-control" required>
-        </div>
-
-        <div class="form-group mb-4">
-            <label class="form-label">Description</label>
-            <textarea name="description" class="form-control">{{ plan.description }}</textarea>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4 mb-4">
-            <div class="form-group">
-                <label class="form-label">Duration (Months) *</label>
-                <input type="number" name="duration_months" value="{{ plan.duration_months }}" class="form-control" required>
+    <div class="form-card">
+        <form method="POST">
+            <div class="form-group mb-5">
+                <label class="form-label">Plan Name *</label>
+                <input type="text" name="name" value="{{ plan.name }}" class="form-control" required>
             </div>
-            <div class="form-group">
-                <label class="form-label">Price *</label>
-                <input type="number" step="0.01" name="price" value="{{ plan.price }}" class="form-control" required>
+
+            <div class="form-group mb-5">
+                <label class="form-label">Description</label>
+                <textarea name="description" class="form-control">{{ plan.description }}</textarea>
             </div>
-        </div>
 
-        <div class="form-group mb-4">
-            <label class="form-label">Features (comma-separated)</label>
-            <input type="text" name="features" value="{{ plan.features | join(', ') }}" class="form-control">
-        </div>
+            <div class="grid grid-cols-2 gap-5 mb-5">
+                <div class="form-group">
+                    <label class="form-label">Duration (Months) *</label>
+                    <input type="number" name="duration_months" value="{{ plan.duration_months }}" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Price *</label>
+                    <input type="number" step="0.01" name="price" value="{{ plan.price }}" class="form-control" required>
+                </div>
+            </div>
 
-        <div class="form-group mb-4">
-            <label class="inline-flex items-center">
-                <input type="checkbox" name="is_active" value="1" {% if plan.is_active %}checked{% endif %}>
-                <span class="ml-2">Active</span>
-            </label>
-        </div>
+            <div class="form-group mb-5">
+                <label class="form-label">Features (comma-separated)</label>
+                <input type="text" name="features" value="{{ plan.features | join(', ') }}" class="form-control">
+            </div>
 
-        <div class="flex space-x-4">
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-save mr-2"></i>Save Changes
-            </button>
-            <a href="{{ url_for('admin.membership_plans') }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left mr-2"></i>Cancel
-            </a>
-        </div>
-    </form>
+            <div class="form-group mb-6">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="is_active" value="1" {% if plan.is_active %}checked{% endif %}>
+                    <span class="ml-2">Active</span>
+                </label>
+            </div>
+
+            <div class="flex space-x-4">
+                <button type="submit" class="btn btn-primary flex-1">
+                    <i class="fas fa-save mr-2"></i>Save Changes
+                </button>
+                <a href="{{ url_for('admin.membership_plans') }}" class="btn btn-secondary flex-1">
+                    <i class="fas fa-arrow-left mr-2"></i>Cancel
+                </a>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}

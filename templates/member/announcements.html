@@ -2,16 +2,53 @@
 {% block title %}Announcements - Member{% endblock %}
 
 {% block content %}
+<style>
+    /* ===== FitZone Card Styling ===== */
+    .card {
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        transition: all 0.2s ease-in-out;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
+
+    .badge-info {
+        background-color: #bfdbfe;
+        color: #1e40af;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.2rem 0.5rem;
+        border-radius: 6px;
+        margin-left: 0.5rem;
+    }
+
+    h1, h3 {
+        color: #111827;
+    }
+
+    p {
+        color: #374151;
+    }
+</style>
+
 <div class="mb-6">
-    <h1 class="text-2xl font-bold"><i class="fas fa-bullhorn text-primary mr-2"></i>Announcements</h1>
+    <h1 class="text-2xl font-bold">
+        <i class="fas fa-bullhorn text-primary mr-2"></i>Announcements
+    </h1>
 </div>
+
 <div class="space-y-4">
     {% for announcement in announcements %}
     <div class="card p-4">
         <h3 class="font-semibold text-lg">{{ announcement.title }}</h3>
         <p class="text-gray-600 mt-2">{{ announcement.content }}</p>
-        <div class="text-sm text-gray-500 mt-2">
-            {{ announcement.created_at|datetimeformat }}
+        <div class="flex justify-between items-center text-sm text-gray-500 mt-3">
+            <span>{{ announcement.created_at|datetimeformat }}</span>
             <span class="badge badge-info">{{ announcement.announcement_type|title }}</span>
         </div>
     </div>

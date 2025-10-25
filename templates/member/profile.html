@@ -1,25 +1,30 @@
 {% extends "base.html" %}
-
 {% block title %}My Profile - Member{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <div class="mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">
-            <i class="fas fa-user mr-3 text-primary"></i>My Profile
+<div class="max-w-6xl mx-auto">
+
+    <!-- Page Header -->
+    <div class="mb-10 text-center">
+        <h1 class="text-4xl font-bold text-primary flex items-center justify-center mb-2">
+            <i class="fas fa-user-circle mr-2"></i>My Profile
         </h1>
+        <p class="text-gray-600">Manage and update your personal and fitness information</p>
     </div>
 
+    <!-- Profile Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Profile Picture & Basic Info -->
-        <div class="card">
-            <div class="card-body text-center">
-                <div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-user text-gray-500 text-3xl"></i>
+
+        <!-- Profile Overview -->
+        <div class="card rounded-2xl shadow-md hover:shadow-xl transition-transform transform hover:-translate-y-1 bg-white border border-gray-100">
+            <div class="card-body text-center p-6">
+                <div class="relative w-24 h-24 mx-auto mb-4">
+                    <div class="absolute inset-0 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full"></div>
+                    <i class="fas fa-user text-blue-600 text-3xl absolute inset-0 flex items-center justify-center"></i>
                 </div>
                 <h2 class="text-xl font-semibold text-gray-900 mb-1">{{ user.full_name }}</h2>
-                <p class="text-gray-600 text-sm mb-2">{{ user.email }}</p>
-                <span class="badge badge-{{ 'success' if member.status == 'active' else 'danger' }}">
+                <p class="text-gray-600 text-sm mb-3">{{ user.email }}</p>
+                <span class="badge {{ 'badge-success' if member.status == 'active' else 'badge-danger' }}">
                     {{ member.status|title }} Member
                 </span>
             </div>
@@ -27,68 +32,77 @@
 
         <!-- Editable Profile Form -->
         <div class="lg:col-span-2">
-            <div class="card">
-                <div class="card-header">
+            <div class="card rounded-2xl shadow-md hover:shadow-lg transition-shadow border border-gray-100 bg-white">
+                <div class="card-header border-b px-6 py-4 flex items-center">
+                    <i class="fas fa-edit text-primary mr-2"></i>
                     <h3 class="text-xl font-semibold text-gray-900">Profile Information</h3>
                 </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ url_for('member.update_profile') }}">
+
+                <div class="card-body p-6">
+                    <form method="POST" action="{{ url_for('member.update_profile') }}" class="space-y-6">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="form-group">
-                                <label class="form-label" for="full_name">Full Name</label>
-                                <input type="text" id="full_name" name="full_name" value="{{ user.full_name }}" class="form-control" required>
+                            <div>
+                                <label class="form-label font-medium text-gray-700">Full Name</label>
+                                <input type="text" name="full_name" value="{{ user.full_name }}"
+                                       class="form-control rounded-lg border-gray-300 focus:ring-primary focus:border-primary shadow-sm" required>
                             </div>
 
-                            <div class="form-group">
-                                <label class="form-label" for="email">Email</label>
-                                <input type="email" id="email" name="email" value="{{ user.email }}" class="form-control" required>
+                            <div>
+                                <label class="form-label font-medium text-gray-700">Email</label>
+                                <input type="email" name="email" value="{{ user.email }}"
+                                       class="form-control rounded-lg border-gray-300 focus:ring-primary focus:border-primary shadow-sm" required>
                             </div>
 
-                            <div class="form-group">
-                                <label class="form-label" for="phone">Phone</label>
-                                <input type="tel" id="phone" name="phone" value="{{ user.phone }}" class="form-control" required>
+                            <div>
+                                <label class="form-label font-medium text-gray-700">Phone</label>
+                                <input type="tel" name="phone" value="{{ user.phone }}"
+                                       class="form-control rounded-lg border-gray-300 focus:ring-primary focus:border-primary shadow-sm" required>
                             </div>
 
-                            <div class="form-group">
-                                <label class="form-label" for="emergency_contact">Emergency Contact</label>
-                                <input type="text" id="emergency_contact" name="emergency_contact" 
-                                       value="{{ member.emergency_contact or '' }}" class="form-control">
+                            <div>
+                                <label class="form-label font-medium text-gray-700">Emergency Contact</label>
+                                <input type="text" name="emergency_contact"
+                                       value="{{ member.emergency_contact or '' }}"
+                                       class="form-control rounded-lg border-gray-300 focus:ring-primary focus:border-primary shadow-sm">
                             </div>
 
-                            <div class="form-group">
-                                <label class="form-label" for="emergency_phone">Emergency Phone</label>
-                                <input type="tel" id="emergency_phone" name="emergency_phone" 
-                                       value="{{ member.emergency_phone or '' }}" class="form-control">
+                            <div>
+                                <label class="form-label font-medium text-gray-700">Emergency Phone</label>
+                                <input type="tel" name="emergency_phone"
+                                       value="{{ member.emergency_phone or '' }}"
+                                       class="form-control rounded-lg border-gray-300 focus:ring-primary focus:border-primary shadow-sm">
                             </div>
 
-                            <div class="form-group">
-                                <label class="form-label" for="weight">Weight (kg)</label>
-                                <input type="number" id="weight" name="weight" value="{{ member.weight or '' }}" 
-                                       step="0.1" class="form-control">
+                            <div>
+                                <label class="form-label font-medium text-gray-700">Weight (kg)</label>
+                                <input type="number" step="0.1" name="weight" value="{{ member.weight or '' }}"
+                                       class="form-control rounded-lg border-gray-300 focus:ring-primary focus:border-primary shadow-sm">
                             </div>
 
-                            <div class="form-group">
-                                <label class="form-label" for="height">Height (cm)</label>
-                                <input type="number" id="height" name="height" value="{{ member.height or '' }}" 
-                                       step="0.1" class="form-control">
+                            <div>
+                                <label class="form-label font-medium text-gray-700">Height (cm)</label>
+                                <input type="number" step="0.1" name="height" value="{{ member.height or '' }}"
+                                       class="form-control rounded-lg border-gray-300 focus:ring-primary focus:border-primary shadow-sm">
                             </div>
                         </div>
 
-                        <div class="form-group">
-                            <label class="form-label" for="medical_conditions">Medical Conditions</label>
-                            <textarea id="medical_conditions" name="medical_conditions" rows="3" class="form-control">{{ member.medical_conditions or '' }}</textarea>
+                        <div>
+                            <label class="form-label font-medium text-gray-700">Medical Conditions</label>
+                            <textarea name="medical_conditions" rows="3"
+                                      class="form-control rounded-lg border-gray-300 focus:ring-primary focus:border-primary shadow-sm">{{ member.medical_conditions or '' }}</textarea>
                         </div>
 
-                        <div class="form-group">
-                            <label class="form-label" for="fitness_goals">Fitness Goals</label>
-                            <textarea id="fitness_goals" name="fitness_goals" rows="3" class="form-control">{{ member.fitness_goals or '' }}</textarea>
+                        <div>
+                            <label class="form-label font-medium text-gray-700">Fitness Goals</label>
+                            <textarea name="fitness_goals" rows="3"
+                                      class="form-control rounded-lg border-gray-300 focus:ring-primary focus:border-primary shadow-sm">{{ member.fitness_goals or '' }}</textarea>
                         </div>
 
-                        <div class="flex space-x-4">
-                            <button type="submit" class="btn btn-primary">
+                        <div class="flex space-x-4 pt-2">
+                            <button type="submit" class="btn btn-primary hover:bg-blue-700 transition-colors">
                                 <i class="fas fa-save mr-2"></i>Update Profile
                             </button>
-                            <a href="{{ url_for('member.dashboard') }}" class="btn btn-secondary">
+                            <a href="{{ url_for('member.dashboard') }}" class="btn btn-secondary hover:bg-gray-200 transition-colors">
                                 <i class="fas fa-times mr-2"></i>Cancel
                             </a>
                         </div>
@@ -99,23 +113,34 @@
     </div>
 
     <!-- Membership Details -->
-    <div class="card mt-8">
-        <div class="card-header">
+    <div class="card mt-10 rounded-2xl shadow-md hover:shadow-lg transition-shadow border border-gray-100 bg-white">
+        <div class="card-header flex items-center border-b px-6 py-4">
+            <i class="fas fa-id-card text-primary mr-2"></i>
             <h3 class="text-xl font-semibold text-gray-900">Membership Details</h3>
         </div>
-        <div class="card-body">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="card-body p-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-gray-800">
                 <div>
-                    <label class="text-sm text-gray-500">Plan</label>
+                    <label class="text-sm text-gray-500 flex items-center gap-1">
+                        <i class="fas fa-dumbbell text-primary"></i> Plan
+                    </label>
                     <div class="font-medium">{{ member.plan_name or 'No Plan Assigned' }}</div>
                 </div>
                 <div>
-                    <label class="text-sm text-gray-500">Start Date</label>
-                    <div class="font-medium">{{ member.membership_start_date.strftime('%B %d, %Y') if member.membership_start_date else 'N/A' }}</div>
+                    <label class="text-sm text-gray-500 flex items-center gap-1">
+                        <i class="fas fa-calendar-day text-primary"></i> Start Date
+                    </label>
+                    <div class="font-medium">
+                        {{ member.membership_start_date.strftime('%B %d, %Y') if member.membership_start_date else 'N/A' }}
+                    </div>
                 </div>
                 <div>
-                    <label class="text-sm text-gray-500">End Date</label>
-                    <div class="font-medium">{{ member.membership_end_date.strftime('%B %d, %Y') if member.membership_end_date else 'N/A' }}</div>
+                    <label class="text-sm text-gray-500 flex items-center gap-1">
+                        <i class="fas fa-calendar-check text-primary"></i> End Date
+                    </label>
+                    <div class="font-medium">
+                        {{ member.membership_end_date.strftime('%B %d, %Y') if member.membership_end_date else 'N/A' }}
+                    </div>
                 </div>
             </div>
         </div>

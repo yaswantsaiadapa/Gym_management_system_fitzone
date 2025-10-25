@@ -3,6 +3,108 @@
 {% block title %}My Payments - Member{% endblock %}
 
 {% block content %}
+<style>
+/* ===== FitZone Payments Styling ===== */
+.card {
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease-in-out;
+    padding: 1rem;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.table th, .table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: middle;
+}
+
+.table th {
+    background-color: #f9fafb;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.table tbody tr:hover {
+    background-color: #f3f4f6;
+}
+
+.badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.badge-success { background-color: #dcfce7; color: #15803d; }
+.badge-warning { background-color: #fef3c7; color: #b45309; }
+.badge-danger  { background-color: #fee2e2; color: #b91c1c; }
+.badge-info    { background-color: #dbeafe; color: #1e40af; }
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    border-radius: 10px;
+    transition: all 0.2s ease-in-out;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+}
+
+.btn i {
+    margin-right: 0.3rem;
+}
+
+.btn-primary {
+    background-color: #2563EB;
+    color: white;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #1d4ed8;
+}
+
+.btn-secondary {
+    background-color: #f3f4f6;
+    color: #374151;
+    border: none;
+}
+
+.btn-secondary:hover {
+    background-color: #e5e7eb;
+}
+
+.text-primary { color: #2563EB; }
+.text-danger { color: #b91c1c; }
+
+.bg-overdue {
+    border-left: 4px solid #b91c1c;
+}
+
+@media (max-width: 640px) {
+    .flex.flex-col.md\:flex-row {
+        flex-direction: column !important;
+        gap: 0.5rem;
+    }
+}
+</style>
+
 <div class="mb-8">
     <h1 class="text-3xl font-bold text-gray-900">
         <i class="fas fa-credit-card mr-3 text-primary"></i>My Payments
@@ -16,7 +118,7 @@
         <div class="overflow-x-auto">
             <table class="table">
                 <thead>
-                    <tr>
+                    <tr class="bg-gray-50">
                         <th>Payment Date</th>
                         <th>Plan</th>
                         <th>Amount</th>
@@ -29,54 +131,41 @@
                 </thead>
                 <tbody>
                     {% for payment in payment_records %}
-                    <tr class="{% if payment.is_overdue %}bg-red-50{% endif %}">
-                        <!-- Payment Date -->
+                    <tr class="{% if payment.is_overdue %}bg-overdue{% endif %} hover:bg-gray-50 transition-colors">
                         <td>
                             {% if payment.payment_date %}
-                                <div class="font-medium">
-                                    {{ payment.payment_date|datetimeformat('%B %d, %Y')}}
+                                <div class="font-medium text-sm">
+                                    {{ payment.payment_date|datetimeformat('%B %d, %Y') }}
                                 </div>
                             {% else %}
-                                <span class="text-gray-400">Pending</span>
+                                <span class="text-gray-400 text-sm">Pending</span>
                             {% endif %}
                         </td>
-
-                        <!-- Plan Name -->
                         <td><span class="text-sm">{{ payment.plan_name or "N/A" }}</span></td>
-
-                        <!-- Amount -->
                         <td>
-                            <span class="font-medium text-lg {% if payment.is_overdue %}text-red-600{% endif %}">
+                            <span class="font-medium text-sm {% if payment.is_overdue %}text-red-600{% endif %}">
                                 ₹{{ payment.amount }}
                             </span>
                         </td>
-
-                        <!-- Method -->
                         <td><span class="text-sm capitalize">{{ payment.payment_method or "N/A" }}</span></td>
-
-                        <!-- Status -->
                         <td>
                             <span class="badge 
                                 {% if payment.payment_status == 'completed' %}badge-success
                                 {% elif payment.payment_status == 'pending' %}badge-warning
                                 {% elif payment.payment_status == 'refunded' %}badge-info
-                                {% else %}badge-danger{% endif %}">
+                                {% else %}badge-danger{% endif %} text-sm">
                                 {{ payment.payment_status|title }}
                             </span>
                         </td>
-
-                        <!-- Due Date -->
                         <td>
                             {% if payment.due_date_obj %}
-                                <span class="text-sm {% if payment.is_overdue %}text-red-600 font-bold{% endif %}">
-                                    {{ payment.due_date_obj|datetimeformat('%B %d, %Y')}}
+                                <span class="text-sm {% if payment.is_overdue %}text-red-600 font-semibold{% endif %}">
+                                    {{ payment.due_date_obj|datetimeformat('%B %d, %Y') }}
                                 </span>
                             {% else %}
-                                <span class="text-gray-400">N/A</span>
+                                <span class="text-gray-400 text-sm">N/A</span>
                             {% endif %}
                         </td>
-
-                        <!-- Notes -->
                         <td>
                             {% if payment.notes %}
                                 <span class="text-xs text-gray-600">{{ payment.notes }}</span>
@@ -84,19 +173,20 @@
                                 <span class="text-xs text-gray-400">-</span>
                             {% endif %}
                         </td>
-
-                        <!-- Actions -->
                         <td>
-                            {% if payment.payment_status == 'pending' %}
-                                <button class="btn btn-primary text-sm {% if member.membership_status != 'active' %}opacity-50 cursor-not-allowed{% endif %}">
-                                    <i class="fas fa-credit-card mr-1"></i>
-                                    {% if payment.is_overdue %}Pay Now (Overdue){% else %}Pay Now{% endif %}
-                                </button>
-                            {% else %}
-                                <button class="btn btn-secondary text-sm">
-                                    <i class="fas fa-receipt mr-1"></i>Receipt
-                                </button>
-                            {% endif %}
+                            <div class="flex flex-col md:flex-row gap-2">
+                                {% if payment.payment_status == 'pending' %}
+                                    <button class="btn btn-primary text-xs flex items-center justify-center 
+                                        {% if member.membership_status != 'active' %}opacity-50 cursor-not-allowed{% endif %}">
+                                        <i class="fas fa-credit-card mr-1"></i>
+                                        {% if payment.is_overdue %}Pay Now (Overdue){% else %}Pay Now{% endif %}
+                                    </button>
+                                {% else %}
+                                    <button class="btn btn-secondary text-xs flex items-center justify-center">
+                                        <i class="fas fa-receipt mr-1"></i>View Receipt
+                                    </button>
+                                {% endif %}
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}

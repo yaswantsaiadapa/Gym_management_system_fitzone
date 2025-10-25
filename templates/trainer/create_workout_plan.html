@@ -3,80 +3,91 @@
 {% block title %}Create Workout Plan - Trainer{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <div class="mb-6">
+<div class="max-w-5xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900">
             <i class="fas fa-dumbbell mr-3 text-primary"></i>Create Workout Plan
         </h1>
-        <p class="text-gray-600">For: {{ member.full_name }}</p>
+        <p class="text-gray-600">Design a personalized training plan for <span class="font-medium text-gray-900">{{ member.full_name }}</span></p>
     </div>
 
-    <div class="card">
-        <div class="card-body">
-            <form method="POST" action="{{ url_for('trainer_routes.create_workout_plan', member_id=member.id) }}">
-                <div class="space-y-4">
-                    <div class="form-group">
-                        <label class="form-label" for="name">Plan Name *</label>
-                        <input type="text" id="name" name="name" placeholder="e.g., Beginner Strength Training" class="form-control" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="description">Description</label>
-                        <textarea id="description" name="description" rows="3" class="form-control" 
-                                  placeholder="Goals and overview of this workout plan..."></textarea>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="form-group">
-                            <label class="form-label" for="start_date">Start Date *</label>
-                            <input type="date" id="start_date" name="start_date" value="{{ date.today().strftime('%Y-%m-%d') }}" class="form-control" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label" for="end_date">End Date</label>
-                            <input type="date" id="end_date" name="end_date" class="form-control">
-                        </div>
-                    </div>
+    <!-- Create Plan Form -->
+    <div class="bg-white shadow-lg rounded-2xl border border-gray-100 p-8">
+        <form method="POST" action="{{ url_for('trainer_routes.create_workout_plan', member_id=member.id) }}">
+            <div class="grid grid-cols-1 gap-6">
+                <!-- Plan Name -->
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2" for="name">Plan Name <span class="text-red-500">*</span></label>
+                    <input type="text" id="name" name="name" 
+                           placeholder="e.g., Beginner Strength Training" 
+                           class="form-control w-full" required>
                 </div>
 
-                <div class="flex space-x-4 mt-6">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save mr-2"></i>Create Plan
-                    </button>
-                    <a href="{{ url_for('trainer_routes.client_details', member_id=member.id) }}" class="btn btn-secondary">
-                        <i class="fas fa-times mr-2"></i>Cancel
-                    </a>
+                <!-- Description -->
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2" for="description">Description</label>
+                    <textarea id="description" name="description" rows="3" 
+                              class="form-control w-full" 
+                              placeholder="Goals and overview of this workout plan..."></textarea>
                 </div>
-            </form>
-        </div>
+
+                <!-- Dates -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2" for="start_date">Start Date <span class="text-red-500">*</span></label>
+                        <input type="date" id="start_date" name="start_date" 
+                               value="{{ date.today().strftime('%Y-%m-%d') }}" 
+                               class="form-control w-full" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2" for="end_date">End Date</label>
+                        <input type="date" id="end_date" name="end_date" class="form-control w-full">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="mt-8 flex flex-wrap gap-4">
+                <button type="submit" class="btn btn-primary px-6 py-2.5">
+                    <i class="fas fa-save mr-2"></i>Create Plan
+                </button>
+                <a href="{{ url_for('trainer_routes.client_details', member_id=member.id) }}" 
+                   class="btn btn-secondary px-6 py-2.5">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </a>
+            </div>
+        </form>
     </div>
 
     <!-- Available Workouts Reference -->
     {% if available_workouts %}
-    <div class="card mt-8">
-        <div class="card-header">
+    <div class="bg-white shadow-lg rounded-2xl border border-gray-100 mt-10 p-8">
+        <div class="flex justify-between items-center mb-6">
             <h3 class="text-xl font-semibold text-gray-900">Available Workouts Reference</h3>
+            <i class="fas fa-list text-primary text-lg"></i>
         </div>
-        <div class="card-body">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {% for category in ['strength', 'cardio', 'flexibility'] %}
-                <div>
-                    <h4 class="font-medium text-gray-900 mb-3 capitalize">{{ category }} Workouts</h4>
-                    <div class="space-y-2">
-                        {% for workout in available_workouts %}
-                        {% if workout.category == category %}
-                        <div class="p-2 bg-gray-50 rounded text-sm">
-                            <div class="font-medium">{{ workout.name }}</div>
-                            {% if workout.equipment_needed %}
-                            <div class="text-xs text-gray-500">{{ workout.equipment_needed }}</div>
-                            {% endif %}
-                        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {% for category in ['strength', 'cardio', 'flexibility'] %}
+            <div class="bg-gray-50 rounded-xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition">
+                <h4 class="text-lg font-semibold text-gray-900 capitalize mb-3">
+                    <i class="fas fa-circle text-primary text-xs mr-2"></i>{{ category }} Workouts
+                </h4>
+                <div class="space-y-2">
+                    {% for workout in available_workouts %}
+                    {% if workout.category == category %}
+                    <div class="p-3 bg-white rounded-lg border border-gray-100 shadow-sm hover:shadow transition text-sm">
+                        <div class="font-medium text-gray-900">{{ workout.name }}</div>
+                        {% if workout.equipment_needed %}
+                        <div class="text-xs text-gray-500">{{ workout.equipment_needed }}</div>
                         {% endif %}
-                        {% endfor %}
                     </div>
+                    {% endif %}
+                    {% endfor %}
                 </div>
-                {% endfor %}
             </div>
+            {% endfor %}
         </div>
     </div>
     {% endif %}

@@ -3,77 +3,225 @@
 {% block title %}Membership Plans - Admin{% endblock %}
 
 {% block content %}
+<style>
+    /* --- FitZone Theme --- */
+    .card {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease-in-out;
+        width: 320px;
+        flex-shrink: 0;
+    }
+
+    .card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .badge-success {
+        background: #dcfce7;
+        color: #166534;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-weight: 500;
+        font-size: 0.75rem;
+    }
+
+    .badge-danger {
+        background: #fee2e2;
+        color: #991b1b;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-weight: 500;
+        font-size: 0.75rem;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.2s ease-in-out;
+        padding: 0.6rem 1rem;
+        text-decoration: none;
+        text-align: center;
+    }
+
+    .btn-primary {
+        background: #2563EB;
+        color: white;
+        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn-primary:hover {
+        background: #1E40AF;
+        box-shadow: 0 6px 15px rgba(37, 99, 235, 0.4);
+    }
+
+    .btn-secondary {
+        background: #10b981;
+        color: white;
+        box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-secondary:hover {
+        background: #059669;
+        box-shadow: 0 6px 15px rgba(16, 185, 129, 0.4);
+    }
+
+    /* --- Horizontal Scroll Container (hidden scrollbar) --- */
+    .plans-wrapper {
+        position: relative;
+    }
+
+    .plans-container {
+        display: flex;
+        gap: 1.5rem;
+        overflow-x: auto;
+        scroll-behavior: smooth;
+        padding: 0.5rem;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .plans-container::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* --- Arrows --- */
+    .scroll-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background-color: rgba(37, 99, 235, 0.9);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 45px;
+        height: 45px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        z-index: 10;
+        transition: all 0.3s ease;
+        opacity: 0;
+    }
+
+    .scroll-btn:hover {
+        background-color: #1E40AF;
+        transform: translateY(-50%) scale(1.05);
+    }
+
+    .plans-wrapper:hover .scroll-btn {
+        opacity: 1;
+    }
+
+    .scroll-left {
+        left: -25px;
+    }
+
+    .scroll-right {
+        right: -25px;
+    }
+</style>
+
 <div class="flex justify-between items-center mb-8">
-    <h1 class="text-3xl font-bold text-gray-900">
-        <i class="fas fa-crown mr-3 text-primary"></i>Membership Plans
+    <h1 class="text-3xl font-bold text-gray-900 flex items-center">
+        <i class="fas fa-crown mr-3 text-blue-600"></i>Membership Plans
     </h1>
     <a href="{{ url_for('admin.add_membership_plan') }}" class="btn btn-primary">
         <i class="fas fa-plus mr-2"></i>Add New Plan
     </a>
 </div>
 
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    {% for plan in plans %}
-    <div class="card {% if not plan.is_active %}opacity-60{% endif %}">
-        <div class="card-header">
-            <div class="flex justify-between items-center">
-                <h3 class="text-lg font-semibold text-gray-900">{{ plan.name }}</h3>
-                <span class="badge badge-{{ 'success' if plan.is_active else 'danger' }}">
-                    {{ 'Active' if plan.is_active else 'Inactive' }}
-                </span>
+{% if plans %}
+<div class="plans-wrapper">
+    <!-- Left Arrow -->
+    <button class="scroll-btn scroll-left" onclick="scrollPlans(-1)">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+
+    <!-- Plans Row -->
+    <div class="plans-container" id="plansRow">
+        {% for plan in plans %}
+        <div class="card {% if not plan.is_active %}opacity-70{% endif %}">
+            <div class="p-5 border-b border-gray-100">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-semibold text-gray-900">{{ plan.name }}</h3>
+                    <span class="badge-{{ 'success' if plan.is_active else 'danger' }}">
+                        {{ 'Active' if plan.is_active else 'Inactive' }}
+                    </span>
+                </div>
+                <div class="text-2xl font-bold text-blue-600 mt-2">₹{{ plan.price }}</div>
+                <div class="text-sm text-gray-500">{{ plan.duration_months }} months</div>
             </div>
-            <div class="text-2xl font-bold text-primary mt-2">₹{{ plan.price }}</div>
-            <div class="text-sm text-gray-500">{{ plan.duration_months }} months</div>
-        </div>
-        
-        <div class="card-body">
-            {% if plan.description %}
-            <p class="text-gray-600 mb-4">{{ plan.description }}</p>
-            {% endif %}
-            
-            {% if plan.features %}
-                <div class="mb-4">
+
+            <div class="p-5">
+                {% if plan.description %}
+                <p class="text-gray-600 mb-3">{{ plan.description }}</p>
+                {% endif %}
+
+                {% if plan.features %}
+                <div class="mb-3">
                     <h4 class="text-sm font-medium text-gray-700 mb-2">Features:</h4>
                     <ul class="space-y-1">
                         {% for feature in plan.features %}
                         <li class="flex items-center text-sm text-gray-600">
-                            <i class="fas fa-check text-success mr-2"></i>
-                            {{ feature }}
+                            <i class="fas fa-check text-green-600 mr-2"></i>{{ feature }}
                         </li>
                         {% endfor %}
                     </ul>
                 </div>
-            {% endif %}
-            
-            <div class="text-xs text-gray-500 mb-4">
-                Created: {{ plan.created_at.strftime('%b %d, %Y') }}
-            </div>
-            
-            <div class="flex space-x-2">
-                <button class="btn btn-primary text-xs flex-1">
-                    <a href="{{ url_for('admin.edit_membership_plan', plan_id=plan.id) }}" class="btn btn-primary text-xs flex-1">
-    <i class="fas fa-edit mr-1"></i>Edit
-</a>
+                {% endif %}
 
-                </button>
-                <button class="btn btn-secondary text-xs flex-1">
-                    <i class="fas fa-{{ 'eye-slash' if plan.is_active else 'eye' }} mr-1"></i>
-                    {{ 'Deactivate' if plan.is_active else 'Activate' }}
-                </button>
+                <div class="text-xs text-gray-500 mb-4">
+                    Created: {{ plan.created_at.strftime('%b %d, %Y') }}
+                </div>
+
+                <div class="flex space-x-2">
+                    <a href="{{ url_for('admin.edit_membership_plan', plan_id=plan.id) }}" 
+                       class="btn btn-primary text-xs flex-1">
+                        <i class="fas fa-edit mr-1"></i>Edit
+                    </a>
+                   <form method="POST" action="{{ url_for('admin.toggle_membership_plan_status', plan_id=plan.id) }}" class="flex-1">
+    <button type="submit" class="btn btn-secondary text-xs w-full">
+        <i class="fas fa-{{ 'eye-slash' if plan.is_active else 'eye' }} mr-1"></i>
+        {{ 'Deactivate' if plan.is_active else 'Activate' }}
+    </button>
+</form>
+
+                </div>
             </div>
         </div>
+        {% endfor %}
     </div>
-    {% endfor %}
-</div>
 
-{% if not plans %}
+    <!-- Right Arrow -->
+    <button class="scroll-btn scroll-right" onclick="scrollPlans(1)">
+        <i class="fas fa-chevron-right"></i>
+    </button>
+</div>
+{% else %}
 <div class="text-center py-12">
-    <i class="fas fa-crown text-gray-400 text-4xl mb-4"></i>
-    <h3 class="text-lg font-medium text-gray-900 mb-2">No membership plans found</h3>
-    <p class="text-gray-500 mb-4">Create your first membership plan to get started</p>
+    <i class="fas fa-crown text-gray-400 text-5xl mb-4"></i>
+    <h3 class="text-xl font-semibold text-gray-900 mb-2">No Membership Plans Found</h3>
+    <p class="text-gray-500 mb-6">Create your first membership plan to get started.</p>
     <a href="{{ url_for('admin.add_membership_plan') }}" class="btn btn-primary">
         <i class="fas fa-plus mr-2"></i>Add Plan
     </a>
 </div>
 {% endif %}
+
+<script>
+    function scrollPlans(direction) {
+        const container = document.getElementById('plansRow');
+        const scrollAmount = 350;
+        container.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+    }
+</script>
 {% endblock %}

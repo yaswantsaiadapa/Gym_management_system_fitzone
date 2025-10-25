@@ -280,6 +280,17 @@ class Member:
         self.status = value
 
     # -------------------- Fetchers --------------------
+    @classmethod
+    def get_all_by_trainer(cls, trainer_id):
+        db_path = current_app.config.get("DATABASE_PATH")
+        sql = """
+            SELECT m.*, u.full_name, u.email, u.phone, p.name as membership_plan_name
+            FROM members m
+            JOIN users u ON u.id = m.user_id
+            LEFT JOIN membership_plans p ON p.id = m.membership_plan_id
+            WHERE m.trainer_id = ?
+        """
+        return execute_query(sql, (trainer_id,), db_path, fetch=True)
 
     @classmethod
     def _db_path(cls):

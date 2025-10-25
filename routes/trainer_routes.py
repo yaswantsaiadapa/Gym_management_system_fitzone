@@ -39,7 +39,7 @@ def update_equipment_status(equipment_id):
     equipment = Equipment.get_by_id(equipment_id)
     if not equipment:
         flash('Equipment not found.', 'danger')
-        return redirect(url_for('trainer.equipment_list'))
+        return redirect(url_for('trainer_routes.equipment_list'))
 
     try:
         action = request.form.get('action')
@@ -61,7 +61,7 @@ def update_equipment_status(equipment_id):
     except Exception as e:
         flash(f"Error updating status: {str(e)}", 'danger')
 
-    return redirect(url_for('trainer.equipment_list'))
+    return redirect(url_for('trainer_routes.equipment_list'))
 
 @trainer_routes_bp.route('/dashboard')
 @trainer_required

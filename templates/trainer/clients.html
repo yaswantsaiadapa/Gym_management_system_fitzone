@@ -3,44 +3,51 @@
 {% block title %}My Clients - Trainer{% endblock %}
 
 {% block content %}
-<div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900">
-        <i class="fas fa-users mr-3 text-primary"></i>My Clients
-    </h1>
-    <p class="text-gray-600">Manage your assigned clients and their fitness journeys</p>
-</div>
+<div class="max-w-7xl mx-auto">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 flex items-center">
+            <i class="fas fa-users mr-3 text-primary"></i>My Clients
+        </h1>
+        <p class="text-gray-600">Manage your assigned clients and track their fitness journeys</p>
+    </div>
 
-<div class="card">
-    <div class="card-body p-0">
+    <!-- Client Table Card -->
+    <div class="bg-white shadow-md rounded-2xl overflow-hidden">
         {% if clients %}
         <div class="overflow-x-auto">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Client</th>
-                        <th>Contact</th>
-                        <th>Membership</th>
-                        <th>Status</th>
-                        <th>Progress</th>
-                        <th>Actions</th>
+            <table class="min-w-full border-collapse">
+                <thead class="bg-blue-50 border-b border-gray-200">
+                    <tr class="text-left text-gray-700 font-semibold text-sm">
+                        <th class="px-6 py-3">Client</th>
+                        <th class="px-6 py-3">Contact</th>
+                        <th class="px-6 py-3">Membership</th>
+                        <th class="px-6 py-3">Status</th>
+                        <th class="px-6 py-3">Progress</th>
+                        <th class="px-6 py-3 text-center">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-gray-100">
                     {% for client in clients %}
-                    <tr>
-                        <td>
+                    <tr class="hover:bg-blue-50 transition">
+                        <!-- Client Info -->
+                        <td class="px-6 py-4">
                             <div>
                                 <div class="font-medium text-gray-900">{{ client.full_name }}</div>
                                 <div class="text-sm text-gray-500">ID: {{ client.id }}</div>
                             </div>
                         </td>
-                        <td>
+
+                        <!-- Contact -->
+                        <td class="px-6 py-4">
                             <div>
                                 <div class="text-sm">{{ client.email }}</div>
                                 <div class="text-sm text-gray-500">{{ client.phone }}</div>
                             </div>
                         </td>
-                        <td>
+
+                        <!-- Membership -->
+                        <td class="px-6 py-4">
                             <div class="text-sm">
                                 <div>{{ client.plan_name or 'No Plan' }}</div>
                                 {% if client.membership_end_date %}
@@ -48,35 +55,47 @@
                                 {% endif %}
                             </div>
                         </td>
-                        <td>
-                            <span class="badge badge-{{ 'success' if client.status == 'active' else 'warning' if client.status == 'inactive' else 'danger' }}">
+
+                        <!-- Status -->
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 rounded-full text-xs font-medium
+                                {% if client.status == 'active' %}
+                                    bg-green-100 text-green-700
+                                {% elif client.status == 'inactive' %}
+                                    bg-yellow-100 text-yellow-700
+                                {% else %}
+                                    bg-red-100 text-red-700
+                                {% endif %}
+                            ">
                                 {{ client.status|title }}
                             </span>
                         </td>
-                        <td>
-                            <div class="text-sm">
-                                {% if client.weight %}{{ client.weight }}kg{% endif %}
-                                {% if client.weight and client.height %} | {% endif %}
-                                {% if client.height %}{{ client.height }}cm{% endif %}
-                            </div>
+
+                        <!-- Progress -->
+                        <td class="px-6 py-4 text-sm text-gray-700">
+                            {% if client.weight %}{{ client.weight }}kg{% endif %}
+                            {% if client.weight and client.height %} | {% endif %}
+                            {% if client.height %}{{ client.height }}cm{% endif %}
                         </td>
-                        <td>
-                            <div class="flex space-x-1">
+
+                        <!-- Actions -->
+                        <td class="px-6 py-4">
+                            <div class="flex flex-wrap justify-center gap-2">
                                 <a href="{{ url_for('trainer_routes.client_details', member_id=client.id) }}" 
-                                   class="text-primary hover:text-blue-700" title="View Details">
-                                    <i class="fas fa-eye"></i>
+                                   class="inline-flex items-center px-3 py-1.5 text-sm bg-blue-100 text-blue-700 font-medium rounded-lg hover:bg-blue-200 transition shadow-sm">
+                                    <i class="fas fa-eye mr-2"></i>View
                                 </a>
                                 <a href="{{ url_for('trainer_routes.create_workout_plan', member_id=client.id) }}" 
-                                   class="text-secondary hover:text-green-700" title="Create Workout Plan">
-                                    <i class="fas fa-dumbbell"></i>
+                                   class="inline-flex items-center px-3 py-1.5 text-sm bg-green-100 text-green-700 font-medium rounded-lg hover:bg-green-200 transition shadow-sm">
+                                    <i class="fas fa-dumbbell mr-2"></i>Workout
                                 </a>
                                 <a href="{{ url_for('trainer_routes.create_diet_plan', member_id=client.id) }}" 
-                                   class="text-accent hover:text-orange-700" title="Create Diet Plan">
-                                    <i class="fas fa-apple-alt"></i>
+                                   class="inline-flex items-center px-3 py-1.5 text-sm bg-orange-100 text-orange-700 font-medium rounded-lg hover:bg-orange-200 transition shadow-sm">
+                                    <i class="fas fa-apple-alt mr-2"></i>Diet
                                 </a>
                                 <a href="{{ url_for('trainer_routes.record_progress', member_id=client.id) }}" 
-                                   class="text-purple-600 hover:text-purple-700" title="Record Progress">
-                                    <i class="fas fa-chart-line"></i>
+                                   class="inline-flex items-center px-3 py-1.5 text-sm bg-purple-100 text-purple-700 font-medium rounded-lg hover:bg-purple-200 transition shadow-sm">
+                                    <i class="fas fa-chart-line mr-2"></i>Progress
                                 </a>
                             </div>
                         </td>
@@ -86,10 +105,11 @@
             </table>
         </div>
         {% else %}
-        <div class="p-8 text-center">
-            <i class="fas fa-users text-gray-400 text-4xl mb-4"></i>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">No clients assigned</h3>
-            <p class="text-gray-500 mb-4">Clients will appear here when assigned by admin</p>
+        <!-- No Clients Placeholder -->
+        <div class="p-10 text-center">
+            <i class="fas fa-users text-gray-400 text-5xl mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">No Clients Assigned</h3>
+            <p class="text-gray-500 mb-4">Clients will appear here when assigned by the admin.</p>
             <a href="{{ url_for('trainer_routes.dashboard') }}" class="btn btn-primary">
                 <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
             </a>

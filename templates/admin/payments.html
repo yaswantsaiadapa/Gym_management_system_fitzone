@@ -1,28 +1,180 @@
 {% extends "base.html" %}
-
 {% block title %}Payments - Admin{% endblock %}
 
 {% block content %}
+<style>
+    /* --- FitZone Consistent Styling --- */
+    .section-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .section-header i {
+        color: #2563EB;
+        font-size: 1.8rem;
+        margin-right: 10px;
+    }
+
+    .page-subtitle {
+        color: #6b7280;
+        font-size: 0.95rem;
+        margin-bottom: 2rem;
+    }
+
+    .card {
+        background: #ffffff;
+        border-radius: 18px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+
+    .card:hover {
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+    }
+
+    .card-header {
+        background: #f9fafb;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e5e7eb;
+        font-weight: 600;
+        color: #1f2937;
+    }
+
+    .card-body {
+        padding: 1rem 1.5rem;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    thead {
+        background: #f1f5f9;
+    }
+
+    th {
+        padding: 0.9rem;
+        text-align: left;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #374151;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    td {
+        padding: 0.9rem;
+        font-size: 0.9rem;
+        color: #4b5563;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    tr:hover td {
+        background-color: #f9fafb;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.3rem 0.6rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: capitalize;
+    }
+
+    .badge-success {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .badge-warning {
+        background: #fef9c3;
+        color: #92400e;
+    }
+
+    .badge-danger {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        font-weight: 600;
+        padding: 0.45rem 0.9rem;
+        transition: all 0.2s ease;
+        font-size: 0.85rem;
+    }
+
+    .btn-success {
+        background-color: #16a34a;
+        color: #fff;
+    }
+
+    .btn-success:hover {
+        background-color: #15803d;
+    }
+
+    .btn-danger {
+        background-color: #dc2626;
+        color: #fff;
+    }
+
+    .btn-danger:hover {
+        background-color: #b91c1c;
+    }
+
+    .border-l-warning {
+        border-left: 5px solid #facc15;
+    }
+
+    .text-warning {
+        color: #ca8a04;
+    }
+
+    .hover\:bg-gray-50:hover {
+        background-color: #f9fafb;
+    }
+
+    .empty-state i {
+        color: #9ca3af;
+    }
+
+    .empty-state h3 {
+        color: #1f2937;
+    }
+
+    .empty-state p {
+        color: #6b7280;
+    }
+</style>
+
 <div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900 mb-2">
-        <i class="fas fa-credit-card mr-3 text-primary"></i>Payments
-    </h1>
-    <p class="text-gray-600">Manage member payments and outstanding dues</p>
+    <div class="section-header">
+        <i class="fas fa-credit-card"></i>
+        <h1 class="text-3xl font-bold text-gray-900">Payments</h1>
+    </div>
+    <p class="page-subtitle">Manage member payments and outstanding dues</p>
 </div>
 
 <!-- Pending Payments Alert -->
 {% if pending_payments %}
-<div class="card border-l-4 border-l-warning mb-6">
-    <div class="card-header bg-yellow-50">
+<div class="card border-l-warning mb-8">
+    <div class="card-header flex items-center bg-yellow-50">
+        <i class="fas fa-exclamation-triangle text-warning mr-2"></i>
         <h2 class="text-lg font-semibold text-gray-900">
-            <i class="fas fa-exclamation-triangle text-warning mr-2"></i>
             Pending Payments ({{ pending_payments|length }})
         </h2>
     </div>
     <div class="card-body p-0">
         <div class="divide-y divide-gray-200">
             {% for payment in pending_payments %}
-            <div class="p-4 hover:bg-gray-50">
+            <div class="p-4 hover:bg-gray-50 transition">
                 <div class="flex justify-between items-center">
                     <div>
                         <div class="font-medium text-gray-900">{{ payment.member_name }}</div>
@@ -30,16 +182,16 @@
                         <div class="text-xs text-gray-400">Due: {{ payment.due_date|datetimeformat('%b %d, %Y') }}</div>
                     </div>
                     <div class="flex space-x-2">
-                        <form method="POST" action="{{ url_for('admin.update_payment_status', payment_id=payment.id) }}" class="inline">
+                        <form method="POST" action="{{ url_for('admin.update_payment_status', payment_id=payment.id) }}">
                             <input type="hidden" name="status" value="completed">
-                            <button type="submit" class="btn btn-success text-sm">
-                                <i class="fas fa-check mr-1"></i>Mark Paid
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check mr-1"></i>Paid
                             </button>
                         </form>
-                        <form method="POST" action="{{ url_for('admin.update_payment_status', payment_id=payment.id) }}" class="inline">
+                        <form method="POST" action="{{ url_for('admin.update_payment_status', payment_id=payment.id) }}">
                             <input type="hidden" name="status" value="failed">
-                            <button type="submit" class="btn btn-danger text-sm">
-                                <i class="fas fa-times mr-1"></i>Mark Failed
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-times mr-1"></i>Failed
                             </button>
                         </form>
                     </div>
@@ -59,7 +211,7 @@
     <div class="card-body p-0">
         {% if payments %}
         <div class="overflow-x-auto">
-            <table class="table">
+            <table>
                 <thead>
                     <tr>
                         <th>Member</th>
@@ -75,41 +227,29 @@
                 <tbody>
                     {% for payment in payments %}
                     <tr>
-                        <td>
-                            <div class="font-medium text-gray-900">{{ payment.member_name }}</div>
-                        </td>
-                        <td>
-                            <span class="text-sm">{{ payment.plan_name }}</span>
-                        </td>
-                        <td>
-                            <span class="font-medium">₹{{ payment.amount }}</span>
-                        </td>
-                        <td>
-                            <span class="text-sm capitalize">{{ payment.payment_method }}</span>
-                        </td>
+                        <td><div class="font-medium text-gray-900">{{ payment.member_name }}</div></td>
+                        <td><span class="text-sm">{{ payment.plan_name }}</span></td>
+                        <td><span class="font-medium">₹{{ payment.amount }}</span></td>
+                        <td><span class="text-sm capitalize">{{ payment.payment_method }}</span></td>
                         <td>
                             <span class="badge badge-{{ 'success' if payment.payment_status == 'completed' else 'warning' if payment.payment_status == 'pending' else 'danger' }}">
                                 {{ payment.payment_status|title }}
                             </span>
                         </td>
-                        <td>
-                            <span class="text-sm">{{ payment.due_date|datetimeformat('%b %d, %Y') }}</span>
-                        </td>
-                        <td>
-                            <span class="text-sm">{{ payment.payment_date|datetimeformat('%b %d, %Y') if payment.payment_date else '-' }}</span>
-                        </td>
+                        <td><span class="text-sm">{{ payment.due_date|datetimeformat('%b %d, %Y') }}</span></td>
+                        <td><span class="text-sm">{{ payment.payment_date|datetimeformat('%b %d, %Y') if payment.payment_date else '-' }}</span></td>
                         <td>
                             {% if payment.payment_status == 'pending' %}
                             <div class="flex space-x-1">
-                                <form method="POST" action="{{ url_for('admin.update_payment_status', payment_id=payment.id) }}" class="inline">
+                                <form method="POST" action="{{ url_for('admin.update_payment_status', payment_id=payment.id) }}">
                                     <input type="hidden" name="status" value="completed">
-                                    <button type="submit" class="text-success hover:text-green-700" title="Mark Completed">
+                                    <button type="submit" class="text-green-600 hover:text-green-800" title="Mark Completed">
                                         <i class="fas fa-check"></i>
                                     </button>
                                 </form>
-                                <form method="POST" action="{{ url_for('admin.update_payment_status', payment_id=payment.id) }}" class="inline">
+                                <form method="POST" action="{{ url_for('admin.update_payment_status', payment_id=payment.id) }}">
                                     <input type="hidden" name="status" value="failed">
-                                    <button type="submit" class="text-danger hover:text-red-700" title="Mark Failed">
+                                    <button type="submit" class="text-red-600 hover:text-red-800" title="Mark Failed">
                                         <i class="fas fa-times"></i>
                                     </button>
                                 </form>
@@ -122,10 +262,10 @@
             </table>
         </div>
         {% else %}
-        <div class="p-8 text-center">
-            <i class="fas fa-credit-card text-gray-400 text-4xl mb-4"></i>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">No payments found</h3>
-            <p class="text-gray-500">Payments will appear here as members join and make payments</p>
+        <div class="p-8 text-center empty-state">
+            <i class="fas fa-credit-card text-4xl mb-4"></i>
+            <h3 class="text-lg font-medium mb-2">No payments found</h3>
+            <p>Payments will appear here as members join and make payments.</p>
         </div>
         {% endif %}
     </div>

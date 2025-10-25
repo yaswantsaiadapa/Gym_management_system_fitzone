@@ -2,6 +2,8 @@ from flask import current_app
 from models.database import execute_query
 
 
+from datetime import datetime, date
+
 class Diet:
     def __init__(self, id=None, member_id=None, trainer_id=None, name=None,
                  description=None, total_calories=None, start_date=None,
@@ -12,11 +14,21 @@ class Diet:
         self.name = name
         self.description = description
         self.total_calories = total_calories
-        self.start_date = start_date
-        self.end_date = end_date
+        self.start_date = self._to_date(start_date)
+        self.end_date = self._to_date(end_date)
         self.is_active = is_active
-        self.created_at = created_at
+        self.created_at = self._to_date(created_at)
         self.trainer_name = None
+
+    @staticmethod
+    def _to_date(value):
+        """Convert string from DB to date object if needed"""
+        if isinstance(value, str):
+            try:
+                return datetime.strptime(value, "%Y-%m-%d").date()
+            except ValueError:
+                return None
+        return value
 
     @classmethod
     def get_by_id(cls, plan_id):

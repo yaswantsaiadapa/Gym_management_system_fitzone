@@ -3,6 +3,131 @@
 {% block title %}Equipment - Trainer{% endblock %}
 
 {% block content %}
+<style>
+    /* ===== FitZone Consistent Styling ===== */
+    .card {
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease-in-out;
+        padding: 1rem;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        border-radius: 10px;
+        transition: all 0.2s ease-in-out;
+        padding: 0.6rem 1.2rem;
+        font-size: 0.95rem;
+        cursor: pointer;
+    }
+
+    .btn i { margin-right: 0.5rem; }
+
+    .btn-primary {
+        background-color: #2563EB;
+        color: white;
+        border: none;
+    }
+
+    .btn-primary:hover { background-color: #1d4ed8; transform: translateY(-2px); }
+
+    .btn-secondary {
+        background-color: #f3f4f6;
+        color: #374151;
+        border: none;
+    }
+
+    .btn-secondary:hover { background-color: #e5e7eb; }
+
+    h1 { color: #111827; }
+
+    .text-primary { color: #2563EB; }
+
+    table { width: 100%; border-collapse: collapse; }
+
+    th, td {
+        padding: 0.75rem 1rem;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+        vertical-align: middle;
+        font-size: 0.95rem;
+        color: #374151;
+    }
+
+    th {
+        background-color: #f9fafb;
+        font-weight: 600;
+        color: #1f2937;
+    }
+
+    .badge-success {
+        background-color: #dcfce7; color: #15803d;
+        padding: 0.2rem 0.5rem; border-radius: 8px;
+        font-size: 0.75rem; font-weight: 600;
+    }
+    .badge-warning {
+        background-color: #fef3c7; color: #b45309;
+        padding: 0.2rem 0.5rem; border-radius: 8px;
+        font-size: 0.75rem; font-weight: 600;
+    }
+    .badge-danger {
+        background-color: #fee2e2; color: #b91c1c;
+        padding: 0.2rem 0.5rem; border-radius: 8px;
+        font-size: 0.75rem; font-weight: 600;
+    }
+
+    .text-success { color: #15803d; }
+    .text-warning { color: #b45309; }
+    .text-danger { color: #b91c1c; }
+    .text-secondary { color: #6b7280; }
+
+    /* Dropdown for maintenance actions */
+    .relative:hover .dropdown-menu { display: block; }
+
+    .dropdown-menu {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: 2.5rem;
+        width: 12rem;
+        background-color: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+        z-index: 50;
+        padding: 0.5rem 0;
+    }
+
+    .dropdown-menu button {
+        width: 100%;
+        text-align: left;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        border-radius: 0.25rem;
+        transition: background 0.2s, color 0.2s;
+    }
+
+    .dropdown-menu button:hover { background-color: #f3f4f6; }
+
+    @media (max-width: 640px) {
+        .flex.justify-between { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+        .dropdown-menu { top: 3rem; right: 0; width: 100%; }
+    }
+</style>
+
 <div class="flex justify-between items-center mb-8">
     <h1 class="text-3xl font-bold text-gray-900">
         <i class="fas fa-cogs mr-3 text-primary"></i>Gym Equipment
@@ -23,18 +148,14 @@
                         <th>Location</th>
                         <th>Purchase Date</th>
                         <th>Maintenance</th>
-                        <th>Update Status</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in equipment %}
                     <tr>
-                        <td>
-                            <div class="font-medium text-gray-900">{{ item.name }}</div>
-                        </td>
-                        <td>
-                            <span class="text-sm">{{ item.category or 'General' }}</span>
-                        </td>
+                        <td><div class="font-medium text-gray-900">{{ item.name }}</div></td>
+                        <td><span class="text-sm">{{ item.category or 'General' }}</span></td>
                         <td>
                             <div class="text-sm">
                                 {% if item.brand %}{{ item.brand }}{% endif %}
@@ -46,43 +167,39 @@
                                 {{ item.status|title }}
                             </span>
                         </td>
-                        <td>
-                            <span class="text-sm">{{ item.location or '-' }}</span>
-                        </td>
-                        <td>
-                            <span class="text-sm">{{ item.purchase_date|datetimeformat('%b %d, %Y') if item.purchase_date else '-' }}</span>
-                        </td>
+                        <td><span class="text-sm">{{ item.location or '-' }}</span></td>
+                        <td><span class="text-sm">{{ item.purchase_date| datetimeformat('%b %d, %Y') if item.purchase_date else '-' }}</span></td>
                         <td>
                             <div class="text-xs">
                                 {% if item.last_maintenance_date %}
-                                    <div>Last: {{ item.last_maintenance_date|datetimeformat('%b %d, %Y')}}</div>
+                                    <div>Last: {{ item.last_maintenance_date| datetimeformat('%b %d, %Y')}}</div>
                                 {% endif %}
                                 {% if item.next_maintenance_date %}
-                                    <div class="text-warning">Next: {{ item.next_maintenance_date|datetimeformat('%b %d, %Y')}}</div>
+                                    <div class="text-warning">Next: {{ item.next_maintenance_date| datetimeformat('%b %d, %Y')}}</div>
                                 {% endif %}
                             </div>
                         </td>
                         <td>
-                            <div class="relative group">
-                                <button class="text-secondary hover:text-green-700" title="Update Status">
-                                    <i class="fas fa-wrench"></i>
+                            <div class="relative">
+                                <button class="btn btn-secondary text-sm">
+                                    <i class="fas fa-wrench mr-1"></i> Update
+                                    <i class="fas fa-caret-down ml-1"></i>
                                 </button>
-                                <div class="absolute right-0 top-8 hidden group-hover:block bg-white border rounded-lg shadow-lg p-2 z-10 w-48">
-                                    <form method="POST" action="{{ url_for('trainer_routes.update_equipment_status', equipment_id=item.id) }}
- }}" class="space-y-2">
+                                <div class="dropdown-menu">
+                                    <form method="POST" action="{{ url_for('trainer_routes.update_equipment_status', equipment_id=item.id) }}" class="space-y-1">
                                         {% if item.status != 'working' %}
-                                        <button type="submit" name="action" value="working" class="w-full text-left text-success hover:bg-gray-50 p-1 rounded text-sm">
-                                            <i class="fas fa-check mr-1"></i>Mark Working
+                                        <button type="submit" name="action" value="working" class="text-success">
+                                            <i class="fas fa-check"></i> Mark Working
                                         </button>
                                         {% endif %}
                                         {% if item.status != 'maintenance' %}
-                                        <button type="submit" name="action" value="maintenance" class="w-full text-left text-warning hover:bg-gray-50 p-1 rounded text-sm">
-                                            <i class="fas fa-wrench mr-1"></i>Mark Maintenance
+                                        <button type="submit" name="action" value="maintenance" class="text-warning">
+                                            <i class="fas fa-wrench"></i> Mark Maintenance
                                         </button>
                                         {% endif %}
                                         {% if item.status != 'out_of_order' %}
-                                        <button type="submit" name="action" value="out_of_order" class="w-full text-left text-danger hover:bg-gray-50 p-1 rounded text-sm">
-                                            <i class="fas fa-times mr-1"></i>Out of Order
+                                        <button type="submit" name="action" value="out_of_order" class="text-danger">
+                                            <i class="fas fa-times"></i> Out of Order
                                         </button>
                                         {% endif %}
                                     </form>
@@ -98,7 +215,7 @@
         <div class="p-8 text-center">
             <i class="fas fa-cogs text-gray-400 text-4xl mb-4"></i>
             <h3 class="text-lg font-medium text-gray-900 mb-2">No equipment found</h3>
-            <p class="text-gray-500 mb-4">No equipment available to view</p>
+            <p class="text-gray-500 mb-4">No equipment available to view right now</p>
         </div>
         {% endif %}
     </div>

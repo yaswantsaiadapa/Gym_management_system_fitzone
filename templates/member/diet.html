@@ -35,12 +35,12 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div>
                     <label class="text-sm text-gray-500">Start Date</label>
-                    <div class="font-medium">{{ diet.start_date.strftime('%B %d, %Y') }}</div>
+                    <div class="font-medium">{{ diet.start_date| datetimeformat('%B %d, %Y')}}</div>
                 </div>
                 {% if diet.end_date %}
                 <div>
                     <label class="text-sm text-gray-500">End Date</label>
-                    <div class="font-medium">{{ diet.end_date.strftime('%B %d, %Y') }}</div>
+                    <div class="font-medium">{{ diet.end_date| datetimeformat('%B %d, %Y')}}</div>
                 </div>
                 {% endif %}
                 <div>

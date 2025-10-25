@@ -1,8 +1,88 @@
 {% extends "base.html" %}
-
 {% block title %}My Workouts - Member{% endblock %}
 
 {% block content %}
+<style>
+    /* ===== FitZone Card & Badge Styling ===== */
+    .card {
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        transition: all 0.2s ease-in-out;
+        margin-bottom: 1.5rem;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
+
+    .badge-success {
+        background-color: #dcfce7;
+        color: #15803d;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.2rem 0.5rem;
+        border-radius: 6px;
+    }
+
+    .badge-warning {
+        background-color: #fef3c7;
+        color: #b45309;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.2rem 0.5rem;
+        border-radius: 6px;
+    }
+
+    .badge-info {
+        background-color: #bfdbfe;
+        color: #1e40af;
+        font-size: 0.65rem;
+        font-weight: 600;
+        padding: 0.15rem 0.5rem;
+        border-radius: 6px;
+    }
+
+    .card-header {
+        padding: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .exercise-item {
+        background: #f9fafb;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .exercise-item:hover {
+        background: #f3f4f6;
+        transform: translateY(-1px);
+    }
+
+    .flex-wrap {
+        flex-wrap: wrap;
+    }
+
+    @media (max-width: 768px) {
+        .grid-cols-3 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 480px) {
+        .grid-cols-3, .grid-cols-2 {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
 <div class="mb-8">
     <h1 class="text-3xl font-bold text-gray-900">
         <i class="fas fa-dumbbell mr-3 text-primary"></i>My Workout Plans
@@ -31,34 +111,26 @@
             <p class="text-gray-600 mt-2">{{ plan.description }}</p>
             {% endif %}
         </div>
-        
+
         <div class="card-body">
             {% if details %}
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {% for detail in details %}
-                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
+                <div class="exercise-item">
                     <div class="flex justify-between items-start mb-2">
                         <h4 class="font-medium text-gray-900">{{ detail.workout_name }}</h4>
                         {% if detail.day_of_week %}
                         <span class="badge badge-info text-xs">{{ detail.day_of_week|title }}</span>
                         {% endif %}
                     </div>
-                    
+
                     <div class="grid grid-cols-2 gap-2 text-sm text-gray-600">
-                        {% if detail.sets %}
-                        <div>Sets: <span class="font-medium">{{ detail.sets }}</span></div>
-                        {% endif %}
-                        {% if detail.reps %}
-                        <div>Reps: <span class="font-medium">{{ detail.reps }}</span></div>
-                        {% endif %}
-                        {% if detail.weight %}
-                        <div>Weight: <span class="font-medium">{{ detail.weight }}</span></div>
-                        {% endif %}
-                        {% if detail.rest_seconds %}
-                        <div>Rest: <span class="font-medium">{{ detail.rest_seconds }}s</span></div>
-                        {% endif %}
+                        {% if detail.sets %}<div>Sets: <span class="font-medium">{{ detail.sets }}</span></div>{% endif %}
+                        {% if detail.reps %}<div>Reps: <span class="font-medium">{{ detail.reps }}</span></div>{% endif %}
+                        {% if detail.weight %}<div>Weight: <span class="font-medium">{{ detail.weight }}</span></div>{% endif %}
+                        {% if detail.rest_seconds %}<div>Rest: <span class="font-medium">{{ detail.rest_seconds }}s</span></div>{% endif %}
                     </div>
-                    
+
                     {% if detail.notes %}
                     <p class="text-xs text-gray-500 mt-2">{{ detail.notes }}</p>
                     {% endif %}
@@ -96,6 +168,7 @@
     </div>
     <div class="card-body">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
             <!-- Strength Workouts -->
             <div>
                 <h4 class="font-medium text-gray-900 mb-3">
@@ -103,7 +176,7 @@
                 </h4>
                 <div class="space-y-2">
                     {% for workout in strength_workouts %}
-                    <div class="p-3 bg-gray-50 rounded-lg">
+                    <div class="exercise-item">
                         <div class="font-medium text-sm">{{ workout.name }}</div>
                         {% if workout.equipment_needed %}
                         <div class="text-xs text-gray-500">{{ workout.equipment_needed }}</div>
@@ -123,7 +196,7 @@
                 </h4>
                 <div class="space-y-2">
                     {% for workout in cardio_workouts %}
-                    <div class="p-3 bg-gray-50 rounded-lg">
+                    <div class="exercise-item">
                         <div class="font-medium text-sm">{{ workout.name }}</div>
                         {% if workout.equipment_needed %}
                         <div class="text-xs text-gray-500">{{ workout.equipment_needed }}</div>
@@ -143,7 +216,7 @@
                 </h4>
                 <div class="space-y-2">
                     {% for workout in flexibility_workouts %}
-                    <div class="p-3 bg-gray-50 rounded-lg">
+                    <div class="exercise-item">
                         <div class="font-medium text-sm">{{ workout.name }}</div>
                         {% if workout.equipment_needed %}
                         <div class="text-xs text-gray-500">{{ workout.equipment_needed }}</div>
@@ -155,6 +228,7 @@
                     {% endif %}
                 </div>
             </div>
+
         </div>
     </div>
 </div>

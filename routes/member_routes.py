@@ -14,6 +14,7 @@ from models.announcement import Announcement
 from routes.admin import members
 from utils.decorators import login_required, member_required
 from models.workout_plan import MemberWorkoutPlan, WorkoutPlanDetail
+import json
 
 # NOTE: Keep blueprint without url_prefix so app.register_blueprint(..., url_prefix='/member') controls final path.
 member_routes_bp = Blueprint('member', __name__)
@@ -269,18 +270,41 @@ def diet():
 @login_required
 @member_required
 def progress():
-    """Member progress tracking"""
+    """Member progress tracking with charts"""
     try:
         user_id = session['user_id']
         member = Member.get_by_user_id(user_id)
         progress_records = Progress.get_member_progress(member.id)
-        return render_template('member/progress.html',
-                               progress_records=progress_records,
-                               member=member)
+
+        # ---------------- Build Chart.js data ----------------
+        chart_labels = []
+        chart_weight = []
+        chart_bmi = []
+        chart_bodyfat = []
+
+        for record in reversed(progress_records):  # chronological order
+            dt = record.recorded_date  # already converted to date in model
+            if dt:
+                chart_labels.append(dt.strftime("%b %d"))
+                chart_weight.append(record.weight or None)
+                chart_bmi.append(record.bmi or None)
+                chart_bodyfat.append(record.body_fat_percentage or None)
+
+        return render_template(
+            'member/progress.html',
+            member=member,
+            progress_records=progress_records,
+            chart_labels=json.dumps(chart_labels),
+            chart_weight=json.dumps(chart_weight),
+            chart_bmi=json.dumps(chart_bmi),
+            chart_bodyfat=json.dumps(chart_bodyfat)
+        )
+
     except Exception as e:
         current_app.logger.exception("Error loading progress: %s", e)
         flash('Error loading progress')
         return redirect(url_for('member.dashboard'))
+
 
 
 @member_routes_bp.route('/attendance')

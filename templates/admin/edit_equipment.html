@@ -3,6 +3,91 @@
 {% block title %}Edit Equipment - Admin{% endblock %}
 
 {% block content %}
+<style>
+    /* Card Styling */
+    .card {
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease-in-out;
+        padding: 1rem;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Buttons */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        border-radius: 10px;
+        transition: all 0.2s ease-in-out;
+        padding: 0.6rem 1.2rem;
+        font-size: 0.95rem;
+    }
+
+    .btn i {
+        margin-right: 0.5rem;
+    }
+
+    .btn-primary {
+        background-color: #2563EB;
+        color: white;
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background-color: #1d4ed8;
+        transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+        background-color: #6b7280;
+        color: white;
+        border: none;
+    }
+
+    .btn-secondary:hover {
+        background-color: #4b5563;
+        transform: translateY(-1px);
+    }
+
+    /* Form Inputs */
+    .form-control {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border-radius: 8px;
+        border: 1px solid #d1d5db;
+        outline: none;
+        transition: all 0.2s ease-in-out;
+        font-size: 0.95rem;
+        color: #111827;
+    }
+
+    .form-control:focus {
+        border-color: #2563EB;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+
+    label.form-label {
+        font-weight: 600;
+        color: #374151;
+    }
+
+    h1 {
+        color: #111827;
+    }
+
+    .text-primary {
+        color: #2563EB;
+    }
+</style>
+
 <div class="max-w-2xl mx-auto">
     <div class="mb-6">
         <h1 class="text-3xl font-bold text-gray-900">
@@ -78,7 +163,6 @@
                     </div>
                 </div>
 
-                <!-- Submit Buttons -->
                 <div class="flex space-x-4 mt-6">
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save mr-2"></i>Update Equipment

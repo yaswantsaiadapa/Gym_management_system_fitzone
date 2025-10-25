@@ -1,223 +1,206 @@
 {% extends "base.html" %}
-
 {% block title %}Trainer Dashboard - FitZone Gym{% endblock %}
 
 {% block content %}
-<div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900 mb-2">
-        <i class="fas fa-user-tie mr-3 text-primary"></i>Welcome, {{ trainer.full_name if trainer else 'Trainer' }}
-    </h1>
-    <p class="text-gray-600">Manage your clients and track their progress</p>
-</div>
+<div class="min-h-screen bg-gray-50 py-10">
+    <div class="max-w-7xl mx-auto px-4">
+        <!-- Header -->
+        <div class="text-center mb-10">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                <i class="fas fa-user-tie text-blue-600 mr-2"></i>
+                Welcome, {{ trainer.full_name if trainer else 'Trainer' }}
+            </h1>
+            <p class="text-gray-600 text-sm">Manage your clients and track their progress</p>
+        </div>
 
-<!-- Key Stats -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <div class="stat-card">
-        <div class="flex items-center justify-between">
-            <div>
-                <div class="stat-value text-primary">{{ total_clients }}</div>
-                <div class="stat-label">Total Clients</div>
-            </div>
-            <i class="fas fa-users text-primary text-2xl"></i>
-        </div>
-    </div>
-    
-    <div class="stat-card">
-        <div class="flex items-center justify-between">
-            <div>
-                <div class="stat-value text-secondary">{{ today_sessions }}</div>
-                <div class="stat-label">Today's Sessions</div>
-            </div>
-            <i class="fas fa-calendar-day text-secondary text-2xl"></i>
-        </div>
-    </div>
-    
-    <div class="stat-card">
-        <div class="flex items-center justify-between">
-            <div>
-                <div class="stat-value text-accent">{{ active_workout_plans }}</div>
-                <div class="stat-label">Active Plans</div>
-            </div>
-            <i class="fas fa-dumbbell text-accent text-2xl"></i>
-        </div>
-    </div>
-    
-    <div class="stat-card">
-        <div class="flex items-center justify-between">
-            <div>
-                <div class="stat-value text-success">{{ trainer.specialization if trainer else 'N/A' }}</div>
-                <div class="stat-label">Specialization</div>
-            </div>
-            <i class="fas fa-star text-success text-2xl"></i>
-        </div>
-    </div>
-</div>
-
-<!-- Quick Actions -->
-<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-    <a href="{{ url_for('trainer_routes.clients') }}" class="btn btn-primary text-center">
-        <i class="fas fa-users block mb-1"></i>My Clients
-    </a>
-    <a href="{{ url_for('trainer_routes.schedule') }}" class="btn btn-secondary text-center">
-        <i class="fas fa-calendar block mb-1"></i>My Schedule
-    </a>
-    <button onclick="markTodayAttendance()" class="btn bg-accent text-white hover:bg-orange-600 text-center">
-        <i class="fas fa-check-circle block mb-1"></i>Mark Attendance
-    </button>
-    <a href="{{ url_for('auth.change_password_form') }}" class="btn bg-purple-600 text-white hover:bg-purple-700 text-center">
-        <i class="fas fa-key block mb-1"></i>Change Password
-    </a>
-    
-</div>
-
-<!-- Today's Schedule -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-    <div class="card">
-        <div class="card-header flex justify-between items-center">
-            <h2 class="text-xl font-semibold text-gray-900">Today's Schedule</h2>
-            <a href="{{ url_for('trainer_routes.schedule') }}" class="text-primary hover:underline text-sm">View Full Schedule</a>
-        </div>
-        <div class="card-body p-0">
-            {% if todays_schedule %}
-            <div class="divide-y divide-gray-200">
-                {% for session in todays_schedule %}
-                <div class="p-4 hover:bg-gray-50">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <div class="font-medium text-gray-900">{{ session.time_slot }}</div>
-                            <div class="text-sm text-gray-500">{{ session.member_name or 'Available' }}</div>
-                        </div>
-                        <div class="text-right">
-                            <span class="badge badge-{{ 'success' if session.status == 'present' else 'warning' if session.status == 'scheduled' else 'info' }}">
-                                {{ session.status|title }}
-                            </span>
-                            {% if session.member_id and session.status == 'scheduled' %}
-                            <form method="POST" action="{{ url_for('trainer_routes.mark_attendance', member_id=session.member_id) }}" class="mt-1">
-                                <input type="hidden" name="date" value="{{ date.today().strftime('%Y-%m-%d') }}">
-                                <input type="hidden" name="time_slot" value="{{ session.time_slot }}">
-                                <input type="hidden" name="status" value="present">
-                                <button type="submit" class="btn btn-success text-xs">Mark Present</button>
-                            </form>
-                            {% endif %}
-                        </div>
-                    </div>
+        <!-- Key Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <div class="bg-white shadow-md rounded-xl p-5 flex justify-between items-center hover:shadow-lg transition">
+                <div>
+                    <div class="text-2xl font-semibold text-blue-600">{{ total_clients }}</div>
+                    <div class="text-sm text-gray-600">Total Clients</div>
                 </div>
-                {% endfor %}
+                <i class="fas fa-users text-blue-500 text-3xl"></i>
             </div>
-            {% else %}
-            <div class="p-4 text-center text-gray-500">No sessions scheduled for today</div>
-            {% endif %}
+            <div class="bg-white shadow-md rounded-xl p-5 flex justify-between items-center hover:shadow-lg transition">
+                <div>
+                    <div class="text-2xl font-semibold text-indigo-600">{{ today_sessions }}</div>
+                    <div class="text-sm text-gray-600">Today's Sessions</div>
+                </div>
+                <i class="fas fa-calendar-day text-indigo-500 text-3xl"></i>
+            </div>
+            <div class="bg-white shadow-md rounded-xl p-5 flex justify-between items-center hover:shadow-lg transition">
+                <div>
+                    <div class="text-2xl font-semibold text-orange-600">{{ active_workout_plans }}</div>
+                    <div class="text-sm text-gray-600">Active Plans</div>
+                </div>
+                <i class="fas fa-dumbbell text-orange-500 text-3xl"></i>
+            </div>
+            <div class="bg-white shadow-md rounded-xl p-5 flex justify-between items-center hover:shadow-lg transition">
+                <div>
+                    <div class="text-xl font-semibold text-green-600">{{ trainer.specialization if trainer else 'N/A' }}</div>
+                    <div class="text-sm text-gray-600">Specialization</div>
+                </div>
+                <i class="fas fa-star text-green-500 text-3xl"></i>
+            </div>
         </div>
-    </div>
 
-    <!-- Recent Client Progress -->
-    <div class="card">
-        <div class="card-header flex justify-between items-center">
-            <h2 class="text-xl font-semibold text-gray-900">Recent Client Progress</h2>
-            <a href="{{ url_for('trainer_routes.clients') }}" class="text-primary hover:underline text-sm">View All Clients</a>
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+            <a href="{{ url_for('trainer_routes.clients') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg text-center shadow-md transition">
+                <i class="fas fa-users block text-lg mb-1"></i>My Clients
+            </a>
+            <a href="{{ url_for('trainer_routes.schedule') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg text-center shadow-md transition">
+                <i class="fas fa-calendar block text-lg mb-1"></i>My Schedule
+            </a>
+            <button onclick="markTodayAttendance()" class="bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 rounded-lg text-center shadow-md transition">
+                <i class="fas fa-check-circle block text-lg mb-1"></i>Mark Attendance
+            </button>
+            <a href="{{ url_for('auth.change_password_form') }}" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 rounded-lg text-center shadow-md transition">
+                <i class="fas fa-key block text-lg mb-1"></i>Change Password
+            </a>
         </div>
-        <div class="card-body p-0">
-            {% if recent_progress %}
-            <div class="divide-y divide-gray-200">
-                {% for progress in recent_progress %}
-                <div class="p-4 hover:bg-gray-50">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <div class="font-medium text-gray-900">{{ progress.member_name }}</div>
-                            <div class="text-sm text-gray-500">
-                                {% if progress.weight %}Weight: {{ progress.weight }}kg{% endif %}
-                                {% if progress.weight and progress.bmi %} | {% endif %}
-                                {% if progress.bmi %}BMI: {{ progress.bmi }}{% endif %}
+
+        <!-- Two-column Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+            <!-- Today's Schedule -->
+            <div class="bg-white shadow-md rounded-xl overflow-hidden">
+                <div class="flex justify-between items-center bg-blue-50 p-4">
+                    <h2 class="text-lg font-semibold text-gray-900">Today's Schedule</h2>
+                    <a href="{{ url_for('trainer_routes.schedule') }}" class="text-blue-600 hover:underline text-sm">View Full</a>
+                </div>
+                <div class="divide-y divide-gray-100">
+                    {% if todays_schedule %}
+                        {% for session in todays_schedule %}
+                        <div class="p-4 hover:bg-gray-50 flex justify-between items-center">
+                            <div>
+                                <div class="font-medium text-gray-900">{{ session.time_slot }}</div>
+                                <div class="text-sm text-gray-500">{{ session.member_name or 'Available' }}</div>
+                            </div>
+                            <div class="text-right">
+                                <span class="px-2 py-1 rounded-full text-xs font-medium 
+                                    {% if session.status == 'present' %}bg-green-100 text-green-700
+                                    {% elif session.status == 'scheduled' %}bg-yellow-100 text-yellow-700
+                                    {% else %}bg-blue-100 text-blue-700{% endif %}">
+                                    {{ session.status|title }}
+                                </span>
+                                {% if session.member_id and session.status == 'scheduled' %}
+                                <form method="POST" action="{{ url_for('trainer_routes.mark_attendance', member_id=session.member_id) }}" class="mt-2">
+                                    <input type="hidden" name="date" value="{{ date.today().strftime('%Y-%m-%d') }}">
+                                    <input type="hidden" name="time_slot" value="{{ session.time_slot }}">
+                                    <input type="hidden" name="status" value="present">
+                                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1 rounded shadow">
+                                        Mark Present
+                                    </button>
+                                </form>
+                                {% endif %}
                             </div>
                         </div>
-                        <div class="text-sm text-gray-500">
-                            {{ progress.recorded_date | datetimeformat('%b %d') }}
+                        {% endfor %}
+                    {% else %}
+                    <div class="p-6 text-center text-gray-500 italic">No sessions scheduled for today</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recent Client Progress -->
+            <div class="bg-white shadow-md rounded-xl overflow-hidden">
+                <div class="flex justify-between items-center bg-blue-50 p-4">
+                    <h2 class="text-lg font-semibold text-gray-900">Recent Client Progress</h2>
+                    <a href="{{ url_for('trainer_routes.clients') }}" class="text-blue-600 hover:underline text-sm">View All</a>
+                </div>
+                <div class="divide-y divide-gray-100">
+                    {% if recent_progress %}
+                        {% for progress in recent_progress %}
+                        <div class="p-4 hover:bg-gray-50 flex justify-between items-center">
+                            <div>
+                                <div class="font-medium text-gray-900">{{ progress.member_name }}</div>
+                                <div class="text-sm text-gray-500">
+                                    {% if progress.weight %}Weight: {{ progress.weight }}kg{% endif %}
+                                    {% if progress.weight and progress.bmi %} | {% endif %}
+                                    {% if progress.bmi %}BMI: {{ progress.bmi }}{% endif %}
+                                </div>
+                            </div>
+                            <div class="text-xs text-gray-500">
+                                {{ progress.recorded_date | datetimeformat('%b %d') }}
+                            </div>
                         </div>
+                        {% endfor %}
+                    {% else %}
+                    <div class="p-6 text-center text-gray-500 italic">No recent progress updates</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- My Clients -->
+        <div class="bg-white shadow-md rounded-xl overflow-hidden mb-10">
+            <div class="flex justify-between items-center bg-blue-50 p-4">
+                <h2 class="text-lg font-semibold text-gray-900">My Clients</h2>
+                <a href="{{ url_for('trainer_routes.clients') }}" class="text-blue-600 hover:underline text-sm">Manage All</a>
+            </div>
+            {% if assigned_clients %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
+                {% for client in assigned_clients[:6] %}
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="font-semibold text-gray-900">{{ client.full_name }}</div>
+                        <span class="px-2 py-1 rounded-full text-xs font-medium 
+                            {% if client.status == 'active' %}bg-green-100 text-green-700{% else %}bg-yellow-100 text-yellow-700{% endif %}">
+                            {{ client.status|title }}
+                        </span>
+                    </div>
+                    <div class="text-sm text-gray-500 space-y-1">
+                        <div>{{ client.email }}</div>
+                        {% if client.membership_end_date %}
+                        <div>Expires: {{ client.membership_end_date|datetimeformat('%b %d, %Y') }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mt-4 flex space-x-2">
+                        <a href="{{ url_for('trainer_routes.client_details', member_id=client.id) }}" 
+                           class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs py-2 rounded text-center">View</a>
+                        <a href="{{ url_for('trainer_routes.record_progress', member_id=client.id) }}" 
+                           class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs py-2 rounded text-center">Record</a>
                     </div>
                 </div>
                 {% endfor %}
             </div>
             {% else %}
-            <div class="p-4 text-center text-gray-500">No recent progress updates</div>
+            <div class="p-8 text-center text-gray-500 italic">No clients assigned</div>
             {% endif %}
         </div>
-    </div>
-</div>
 
-<!-- Assigned Clients Overview -->
-<div class="card">
-    <div class="card-header flex justify-between items-center">
-        <h2 class="text-xl font-semibold text-gray-900">My Clients</h2>
-        <a href="{{ url_for('trainer_routes.clients') }}" class="text-primary hover:underline text-sm">Manage All</a>
-    </div>
-    <div class="card-body p-0">
-        {% if assigned_clients %}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-            {% for client in assigned_clients[:6] %}
-            <div class="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="font-medium text-gray-900">{{ client.full_name }}</div>
-                    <span class="badge badge-{{ 'success' if client.status == 'active' else 'warning' }}">
-                        {{ client.status|title }}
-                    </span>
-                </div>
-                <div class="text-sm text-gray-500 space-y-1">
-                    <div>{{ client.email }}</div>
-                    {% if client.membership_end_date %}
-                    <div>Expires: {{ client.membership_end_date| datetimeformat('%b %d, %Y')}}</div>
-                    {% endif %}
-                </div>
-                <div class="mt-3 flex space-x-2">
-                    <a href="{{ url_for('trainer_routes.client_details', member_id=client.id) }}" 
-                       class="btn btn-primary text-xs flex-1">View Details</a>
-                    <a href="{{ url_for('trainer_routes.record_progress', member_id=client.id) }}" 
-                       class="btn btn-secondary text-xs flex-1">Record Progress</a>
-                </div>
+        <!-- Announcements -->
+        {% if announcements %}
+        <div class="bg-white shadow-md rounded-xl overflow-hidden">
+            <div class="bg-blue-50 p-4">
+                <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                    <i class="fas fa-bullhorn text-orange-500 mr-2"></i>Latest Announcements
+                </h2>
             </div>
-            {% endfor %}
-        </div>
-        {% else %}
-        <div class="p-8 text-center">
-            <i class="fas fa-users text-gray-400 text-4xl mb-4"></i>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">No clients assigned</h3>
-            <p class="text-gray-500">Clients will appear here when assigned by admin</p>
+            <div class="divide-y divide-gray-100">
+                {% for announcement in announcements[:3] %}
+                <div class="p-4 hover:bg-gray-50">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-semibold text-gray-900">{{ announcement.title }}</h3>
+                            <p class="text-sm text-gray-600 mt-1">{{ announcement.content[:100] }}...</p>
+                            <div class="text-xs text-gray-400 mt-2">{{ announcement.created_at|datetimeformat }}</div>
+                        </div>
+                        <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700 font-medium">
+                            {{ announcement.announcement_type|title }}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
         </div>
         {% endif %}
     </div>
 </div>
 
-<!-- Announcements -->
-{% if announcements %}
-<div class="card mt-8">
-    <div class="card-header">
-        <h2 class="text-xl font-semibold text-gray-900">
-            <i class="fas fa-bullhorn mr-2 text-accent"></i>Latest Announcements
-        </h2>
-    </div>
-    <div class="card-body p-0">
-        <div class="divide-y divide-gray-200">
-            {% for announcement in announcements[:3] %}
-            <div class="p-4 hover:bg-gray-50">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <h3 class="font-medium text-gray-900">{{ announcement.title }}</h3>
-                        <p class="text-sm text-gray-600 mt-1">{{ announcement.content[:100] }}...</p>
-                        <div class="text-xs text-gray-500 mt-2">
-                            {{ announcement.created_at|datetimeformat }}
-                        </div>
-                    </div>
-                    <span class="badge badge-info text-xs">{{ announcement.announcement_type|title }}</span>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-</div>
-{% endif %}
-
 <script>
 function markTodayAttendance() {
-    // Show modal or redirect to attendance marking page
     window.location.href = "{{ url_for('trainer_routes.schedule') }}";
 }
 </script>
