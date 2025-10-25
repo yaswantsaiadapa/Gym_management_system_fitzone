@@ -1,225 +1,359 @@
 {% extends "base.html" %}
-
 {% block title %}Admin Dashboard - FitZone Gym{% endblock %}
 
 {% block content %}
-<div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900 mb-2">
-        <i class="fas fa-tachometer-alt mr-3 text-primary"></i>Admin Dashboard
-    </h1>
-    <p class="text-gray-600">Overview of gym operations and key metrics</p>
+<style>
+  body {
+    background-color: #f8fafc;
+    font-family: 'Poppins', sans-serif;
+  }
+
+  .dashboard-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1e293b;
+  }
+
+  .dashboard-header p {
+    color: #64748b;
+    font-size: 0.95rem;
+  }
+
+  .stat-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease-in-out;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+  }
+
+  .stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+  }
+
+  .stat-label {
+    color: #64748b;
+    font-size: 0.9rem;
+  }
+
+  .text-primary { color: #2563eb; }
+  .text-secondary { color: #9333ea; }
+  .text-accent { color: #f97316; }
+  .text-success { color: #16a34a; }
+  .text-warning { color: #eab308; }
+
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    transition: box-shadow 0.2s ease-in-out;
+  }
+
+  .card:hover {
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.07);
+  }
+
+  .card-header {
+    background-color: #f1f5f9;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .card-header h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+  }
+
+  .card-body {
+    padding: 1rem 1.25rem;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .btn-primary {
+    background-color: #2563eb;
+    color: white;
+  }
+
+  .btn-primary:hover { background-color: #1d4ed8; }
+
+  .btn-secondary {
+    background-color: #e5e7eb;
+    color: #1f2937;
+  }
+
+  .btn-secondary:hover { background-color: #d1d5db; }
+
+  .badge-success {
+    background-color: #dcfce7;
+    color: #16a34a;
+    padding: 0.3rem 0.6rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .badge-warning {
+    background-color: #fef9c3;
+    color: #ca8a04;
+    padding: 0.3rem 0.6rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .quick-actions a, .quick-actions button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    padding: 1.25rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s;
+  }
+
+  .quick-actions a:hover, .quick-actions button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 14px rgba(0, 0, 0, 0.1);
+  }
+
+  .quick-actions i {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .quick-actions .btn-primary { background: #2563eb; color: #fff; }
+  .quick-actions .btn-secondary { background: #e5e7eb; color: #111827; }
+  .quick-actions .bg-accent { background: #f97316; color: #fff; }
+  .quick-actions .bg-purple-600 { background: #7c3aed; color: #fff; }
+
+  .hover\:bg-gray-50:hover { background-color: #f9fafb; }
+</style>
+
+<!-- Dashboard Header -->
+<div class="dashboard-header mb-8">
+  <h1><i class="fas fa-tachometer-alt text-primary mr-3"></i>Admin Dashboard</h1>
+  <p>Overview of gym operations and performance insights</p>
 </div>
 
 <!-- Key Stats -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <div class="stat-card">
-        <div class="flex items-center justify-between">
-            <div>
-                <div class="stat-value text-primary">{{ total_members }}</div>
-                <div class="stat-label">Active Members</div>
-            </div>
-            <i class="fas fa-users text-primary text-2xl"></i>
-        </div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+  <div class="stat-card">
+    <div class="flex items-center justify-between">
+      <div>
+        <div class="stat-value text-primary">{{ total_members }}</div>
+        <div class="stat-label">Active Members</div>
+      </div>
+      <i class="fas fa-users text-primary text-2xl"></i>
     </div>
-    
-    <div class="stat-card">
-        <div class="flex items-center justify-between">
-            <div>
-                <div class="stat-value text-secondary">{{ total_trainers }}</div>
-                <div class="stat-label">Active Trainers</div>
-            </div>
-            <i class="fas fa-user-tie text-secondary text-2xl"></i>
-        </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="flex items-center justify-between">
+      <div>
+        <div class="stat-value text-secondary">{{ total_trainers }}</div>
+        <div class="stat-label">Active Trainers</div>
+      </div>
+      <i class="fas fa-user-tie text-secondary text-2xl"></i>
     </div>
-    
-    <div class="stat-card">
-        <div class="flex items-center justify-between">
-            <div>
-                <div class="stat-value text-accent">{{ today_attendance }}</div>
-                <div class="stat-label">Today's Attendance</div>
-            </div>
-            <i class="fas fa-calendar-check text-accent text-2xl"></i>
-        </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="flex items-center justify-between">
+      <div>
+        <div class="stat-value text-accent">{{ today_attendance }}</div>
+        <div class="stat-label">Today's Attendance</div>
+      </div>
+      <i class="fas fa-calendar-check text-accent text-2xl"></i>
     </div>
-    
-    <div class="stat-card">
-        <div class="flex items-center justify-between">
-            <div>
-                <div class="stat-value text-success">₹{{ monthly_revenue }}</div>
-                <div class="stat-label">Monthly Revenue</div>
-            </div>
-            <i class="fas fa-rupee-sign text-success text-2xl"></i>
-        </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="flex items-center justify-between">
+      <div>
+        <div class="stat-value text-success">₹{{ monthly_revenue }}</div>
+        <div class="stat-label">Monthly Revenue</div>
+      </div>
+      <i class="fas fa-rupee-sign text-success text-2xl"></i>
     </div>
+  </div>
 </div>
 
-<!-- Financial Overview -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-    <div class="card">
-        <div class="card-header">
-            <h2 class="text-xl font-semibold text-gray-900">Financial Overview</h2>
+<!-- Financial & Equipment Overview -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+  <!-- Financial Overview -->
+  <div class="card">
+    <div class="card-header"><h2>Financial Overview</h2></div>
+    <div class="card-body">
+      <div class="space-y-4">
+        <div class="flex justify-between items-center py-2">
+          <span class="text-gray-600">Total Revenue</span>
+          <span class="font-semibold text-xl text-success">₹{{ total_revenue }}</span>
         </div>
-        <div class="card-body">
-            <div class="space-y-4">
-                <div class="flex justify-between items-center py-2">
-                    <span class="text-gray-600">Total Revenue</span>
-                    <span class="font-semibold text-xl text-success">₹{{ total_revenue }}</span>
-                </div>
-                <div class="flex justify-between items-center py-2">
-                    <span class="text-gray-600">This Month</span>
-                    <span class="font-semibold text-lg">₹{{ monthly_revenue }}</span>
-                </div>
-                <div class="flex justify-between items-center py-2">
-                    <span class="text-gray-600">Pending Payments</span>
-                    <span class="font-semibold text-warning">{{ pending_payments }}</span>
-                </div>
-            </div>
+        <div class="flex justify-between items-center py-2">
+          <span class="text-gray-600">This Month</span>
+          <span class="font-semibold text-lg">₹{{ monthly_revenue }}</span>
         </div>
+        <div class="flex justify-between items-center py-2">
+          <span class="text-gray-600">Pending Payments</span>
+          <span class="font-semibold text-warning">{{ pending_payments }}</span>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <div class="card">
-        <div class="card-header">
-            <h2 class="text-xl font-semibold text-gray-900">Equipment Status</h2>
+  <!-- Equipment Status -->
+  <div class="card">
+    <div class="card-header"><h2>Equipment Status</h2></div>
+    <div class="card-body">
+      <div class="space-y-4">
+        <div class="flex justify-between items-center py-2">
+          <span class="text-gray-600">Working Equipment</span>
+          <span class="font-semibold text-xl text-success">{{ working_equipment }}</span>
         </div>
-        <div class="card-body">
-            <div class="space-y-4">
-                <div class="flex justify-between items-center py-2">
-                    <span class="text-gray-600">Working Equipment</span>
-                    <span class="font-semibold text-xl text-success">{{ working_equipment }}</span>
-                </div>
-                <div class="flex justify-between items-center py-2">
-                    <span class="text-gray-600">Under Maintenance</span>
-                    <span class="font-semibold text-lg text-warning">{{ maintenance_equipment }}</span>
-                </div>
-            </div>
+        <div class="flex justify-between items-center py-2">
+          <span class="text-gray-600">Under Maintenance</span>
+          <span class="font-semibold text-lg text-warning">{{ maintenance_equipment }}</span>
         </div>
+      </div>
     </div>
+  </div>
 </div>
 
-<!-- Recent Activity -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-    <!-- Recent Members -->
-    <div class="card">
-        <div class="card-header flex justify-between items-center">
-            <h2 class="text-xl font-semibold text-gray-900">Recent Members</h2>
-            <a href="{{ url_for('admin.members') }}" class="text-primary hover:underline text-sm">View All</a>
-        </div>
-        <div class="card-body p-0">
-            {% if recent_members %}
-            <div class="divide-y divide-gray-200">
-                {% for member in recent_members %}
-                <div class="p-4 hover:bg-gray-50">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <div class="font-medium text-gray-900">{{ member.full_name }}</div>
-                            <div class="text-sm text-gray-500">{{ member.email }}</div>
-                        </div>
-                        <div class="text-sm text-gray-500">
-                            {{ member.created_at|datetimeformat('%b %d') }}
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <div class="p-4 text-center text-gray-500">No recent members</div>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Recent Payments -->
-    <div class="card">
-        <div class="card-header flex justify-between items-center">
-            <h2 class="text-xl font-semibold text-gray-900">Recent Payments</h2>
-            <a href="{{ url_for('admin.payments') }}" class="text-primary hover:underline text-sm">View All</a>
-        </div>
-        <div class="card-body p-0">
-            {% if recent_payments %}
-            <div class="divide-y divide-gray-200">
-                {% for payment in recent_payments %}
-                <div class="p-4 hover:bg-gray-50">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <div class="font-medium text-gray-900">{{ payment.member_name }}</div>
-                            <div class="text-sm text-gray-500">₹{{ payment.amount }}</div>
-                        </div>
-                        <div class="text-right">
-                            <div class="badge badge-{{ 'success' if payment.payment_status == 'completed' else 'warning' }}">
-                                {{ payment.payment_status|title }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <div class="p-4 text-center text-gray-500">No recent payments</div>
-            {% endif %}
-        </div>
-    </div>
-</div>
-
-<!-- Expiring Memberships Alert -->
-{% if expiring_memberships %}
-<div class="card border-l-4 border-l-warning">
-    <div class="card-header bg-yellow-50">
-        <h2 class="text-xl font-semibold text-gray-900">
-            <i class="fas fa-exclamation-triangle text-warning mr-2"></i>
-            Memberships Expiring Soon
-        </h2>
+<!-- Recent Members & Payments -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+  <!-- Recent Members -->
+  <div class="card">
+    <div class="card-header flex justify-between items-center">
+      <h2>Recent Members</h2>
+      <a href="{{ url_for('admin.members') }}" class="text-primary hover:underline text-sm">View All</a>
     </div>
     <div class="card-body p-0">
+      {% if recent_members %}
         <div class="divide-y divide-gray-200">
-            {% for member in expiring_memberships %}
+          {% for member in recent_members %}
             <div class="p-4 hover:bg-gray-50">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <div class="font-medium text-gray-900">{{ member.full_name }}</div>
-                        <div class="text-sm text-gray-500">{{ member.email }}</div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-sm font-medium text-warning">
-                            Expires: {{ member.membership_end_date.strftime('%b %d, %Y') }}
-                        </div>
-                        <a href="{{ url_for('admin.renew_membership', member_id=member.id) }}" 
-                           class="text-xs text-primary hover:underline">Renew Now</a>
-                    </div>
+              <div class="flex justify-between items-center">
+                <div>
+                  <div class="font-medium text-gray-900">{{ member.full_name }}</div>
+                  <div class="text-sm text-gray-500">{{ member.email }}</div>
                 </div>
+                <div class="text-sm text-gray-500">{{ member.created_at|datetimeformat('%b %d') }}</div>
+              </div>
             </div>
-            {% endfor %}
+          {% endfor %}
         </div>
+      {% else %}
+        <div class="p-4 text-center text-gray-500">No recent members</div>
+      {% endif %}
     </div>
+  </div>
+
+  <!-- Recent Payments -->
+  <div class="card">
+    <div class="card-header flex justify-between items-center">
+      <h2>Recent Payments</h2>
+      <a href="{{ url_for('admin.payments') }}" class="text-primary hover:underline text-sm">View All</a>
+    </div>
+    <div class="card-body p-0">
+      {% if recent_payments %}
+        <div class="divide-y divide-gray-200">
+          {% for payment in recent_payments %}
+            <div class="p-4 hover:bg-gray-50">
+              <div class="flex justify-between items-center">
+                <div>
+                  <div class="font-medium text-gray-900">{{ payment.member_name }}</div>
+                  <div class="text-sm text-gray-500">₹{{ payment.amount }}</div>
+                </div>
+                <div class="text-right">
+                  <div class="badge-{{ 'success' if payment.payment_status == 'completed' else 'warning' }}">
+                    {{ payment.payment_status|title }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="p-4 text-center text-gray-500">No recent payments</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Expiring Memberships -->
+{% if expiring_memberships %}
+<div class="card border-l-4 border-yellow-400">
+  <div class="card-header bg-yellow-50">
+    <h2><i class="fas fa-exclamation-triangle text-warning mr-2"></i>Memberships Expiring Soon</h2>
+  </div>
+  <div class="card-body p-0">
+    <div class="divide-y divide-gray-200">
+      {% for member in expiring_memberships %}
+      <div class="p-4 hover:bg-gray-50 flex justify-between items-center">
+        <div>
+          <div class="font-medium text-gray-900">{{ member.full_name }}</div>
+          <div class="text-sm text-gray-500">{{ member.email }}</div>
+        </div>
+        <div class="text-right">
+          <div class="text-sm font-medium text-warning">
+            Expires: {{ member.membership_end_date.strftime('%b %d, %Y') }}
+          </div>
+          <a href="{{ url_for('admin.renew_membership', member_id=member.id) }}" 
+             class="text-xs text-primary hover:underline">Renew Now</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
 </div>
 {% endif %}
 
 <!-- Quick Actions -->
-<div class="mt-8">
-    <h2 class="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <a href="{{ url_for('admin.add_member_form') }}" class="btn btn-primary text-center">
-            <i class="fas fa-user-plus block mb-2 text-lg"></i>Add Member
-        </a>
-        <a href="{{ url_for('admin.add_trainer_form') }}" class="btn btn-secondary text-center">
-            <i class="fas fa-user-tie block mb-2 text-lg"></i>Add Trainer
-        </a>
-        <a href="{{ url_for('admin.add_membership_plan') }}" class="btn bg-accent text-white hover:bg-orange-600 text-center">
-            <i class="fas fa-crown block mb-2 text-lg"></i>Add Plan
-        </a>
-        <form method="POST" action="{{ url_for('admin.send_renewal_reminders') }}" class="inline">
-            <button type="submit" class="btn bg-purple-600 text-white hover:bg-purple-700 w-full text-center">
-                <i class="fas fa-bell block mb-2 text-lg"></i>Send Reminders
-            </button>
-        </form>
-    </div>
+<div class="mt-10">
+  <h2 class="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
+  <div class="quick-actions grid grid-cols-2 md:grid-cols-4 gap-4">
+    <a href="{{ url_for('admin.add_member_form') }}" class="btn-primary">
+      <i class="fas fa-user-plus"></i>Add Member
+    </a>
+    <a href="{{ url_for('admin.add_trainer_form') }}" class="btn-secondary">
+      <i class="fas fa-user-tie"></i>Add Trainer
+    </a>
+    <a href="{{ url_for('admin.add_membership_plan') }}" class="bg-accent">
+      <i class="fas fa-crown"></i>Add Plan
+    </a>
+    <form method="POST" action="{{ url_for('admin.send_renewal_reminders') }}">
+      <button type="submit" class="bg-purple-600 w-full">
+        <i class="fas fa-bell"></i>Send Reminders
+      </button>
+    </form>
+  </div>
 </div>
+
 <!-- Recent Announcements -->
-<div class="card mt-6">
+<div class="card mt-10">
   <div class="card-header flex justify-between items-center">
-    <h2 class="text-lg font-semibold">
-      <i class="fas fa-bullhorn text-primary mr-2"></i>Recent Announcements
-    </h2>
-    <a href="{{ url_for('admin.add_announcement') }}" class="btn btn-sm btn-primary">
-      <i class="fas fa-plus mr-1"></i> New
+    <h2><i class="fas fa-bullhorn text-primary mr-2"></i>Recent Announcements</h2>
+    <a href="{{ url_for('admin.add_announcement') }}" class="btn btn-primary text-sm px-3 py-1">
+      <i class="fas fa-plus mr-1"></i>New
     </a>
   </div>
   <div class="card-body">
@@ -232,9 +366,7 @@
             <p class="text-sm text-gray-600">{{ ann.content[:60] }}{% if ann.content|length > 60 %}...{% endif %}</p>
           </div>
           <a href="{{ url_for('admin.edit_announcement', announcement_id=ann.id) }}" 
-             class="text-sm text-primary hover:underline">
-            Edit
-          </a>
+             class="text-sm text-primary hover:underline">Edit</a>
         </li>
         {% endfor %}
       </ul>
@@ -246,5 +378,4 @@
     {% endif %}
   </div>
 </div>
-
 {% endblock %}

@@ -4,24 +4,109 @@
 
 {% block content %}
 <style>
-    /* Hero Section Styling */
-    .hero {
+    /* Hero Section */
+    .hero-section {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 90vh; /* reduced height */
+        padding: 4rem 2rem;
+        border-radius: 16px;
         position: relative;
         background: url('https://images.unsplash.com/photo-1558611848-73f7eb4001a1?auto=format&fit=crop&w=1400&q=80') center/cover no-repeat;
-        border-radius: 16px;
         overflow: hidden;
     }
 
-    .hero::before {
+    /* Blue overlay */
+    .hero-section::before {
         content: "";
         position: absolute;
         inset: 0;
-        background: linear-gradient(to right, rgba(37, 99, 235, 0.9), rgba(29, 78, 216, 0.7));
+        background: rgba(30, 90, 255, 0.65);
+        border-radius: 16px;
     }
 
     .hero-content {
         position: relative;
-        z-index: 1;
+        z-index: 2;
+        width: 60%;
+        color: white;
+    }
+
+    .hero-content h1 {
+        font-size: 3.2rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+    }
+
+    .hero-content p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        margin-bottom: 2rem;
+    }
+
+    .hero-buttons .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.9rem 1.8rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.2s ease-in-out;
+        margin-right: 1rem;
+    }
+
+    .btn-primary {
+        background: transparent;
+        border: 2px solid #fff;
+        color: #fff;
+    }
+
+    .btn-primary:hover {
+        background: #fff;
+        color: #2563EB;
+    }
+
+    .btn-outline {
+        background: transparent;
+        border: 2px solid #fff;
+        color: #fff;
+    }
+
+    .btn-outline:hover {
+        background: #fff;
+        color: #2563EB;
+    }
+
+    /* Image slider on right side */
+    .hero-slider {
+        width: 35%;
+        height: 350px;
+        position: relative;
+        z-index: 2;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .hero-slider img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 12px;
+        opacity: 0;
+        animation: fadeSlide 15s infinite;
+    }
+
+    .hero-slider img:nth-child(1) { animation-delay: 0s; }
+    .hero-slider img:nth-child(2) { animation-delay: 5s; }
+    .hero-slider img:nth-child(3) { animation-delay: 10s; }
+
+    @keyframes fadeSlide {
+        0%, 20% { opacity: 1; }
+        33.33%, 100% { opacity: 0; }
     }
 
     /* Card Styling */
@@ -38,94 +123,56 @@
         box-shadow: 0 12px 25px rgba(0, 0, 0, 0.12);
     }
 
-    /* Buttons */
-    .btn {
-        padding: 0.75rem 1.5rem;
-        border-radius: 12px;
-        font-weight: 600;
-        transition: all 0.2s ease-in-out;
-    }
-
-    .btn-primary {
-        background: linear-gradient(to right, #2563eb, #3b82f6);
-        color: #fff;
-        border: none;
-    }
-
-    .btn-primary:hover {
-        background: linear-gradient(to right, #1d4ed8, #2563eb);
-        transform: scale(1.03);
-    }
-
-    /* Membership Plan Header */
-    .card-header {
-        border-bottom: 1px solid #f3f4f6;
-        padding-bottom: 1rem;
-    }
-
-    /* Features Icons */
-    .feature-icon {
-        width: 70px;
-        height: 70px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 1rem auto;
-        color: #fff;
-        font-size: 1.8rem;
-    }
-
     #plans {
-  scroll-margin-top: 50px; /* adjust to your navbar height */  
+        scroll-margin-top: 80px;
     }
-
-
-    .feature-icon.primary { background: #2563eb; }
-    .feature-icon.secondary { background: #16a34a; }
-    .feature-icon.accent { background: #f59e0b; }
 </style>
 
 <!-- Hero Section -->
-<div class="hero text-white p-16 mb-12">
-    <div class="hero-content text-center">
-        <h1 class="text-5xl font-extrabold mb-6">Welcome to FitZone</h1>
-        <p class="text-xl mb-8 opacity-95">Your complete fitness journey starts here</p>
-        
-        {% if not session.user_id %}
-        <div class="space-x-4">
-            <a href="{{ url_for('auth.login') }}" class="btn bg-white text-primary hover:bg-gray-100">
+<div class="hero-section">
+    <div class="hero-content">
+        <h1>Welcome to FitZone</h1>
+        <p>Your complete fitness journey starts here</p>
+
+        <div class="hero-buttons">
+            {% if not session.user_id %}
+            <a href="{{ url_for('auth.login') }}" class="btn btn-primary">
                 <i class="fas fa-sign-in-alt mr-2"></i> Login
             </a>
-            <a href="#plans" class="btn border-2 border-white text-white hover:bg-white hover:text-primary">
+            <a href="#plans" class="btn btn-outline">
                 <i class="fas fa-eye mr-2"></i> View Plans
             </a>
-        </div>
-        {% else %}
-        <div class="space-x-4">
-            {% if session.role == 'admin' %}
-                <a href="{{ url_for('admin.dashboard') }}" class="btn bg-white text-primary hover:bg-gray-100">
+            {% else %}
+                {% if session.role == 'admin' %}
+                <a href="{{ url_for('admin.dashboard') }}" class="btn btn-primary">
                     <i class="fas fa-tachometer-alt mr-2"></i> Admin Dashboard
                 </a>
-            {% elif session.role == 'member' %}
-                <a href="{{ url_for('member.dashboard') }}" class="btn bg-white text-primary hover:bg-gray-100">
+                {% elif session.role == 'member' %}
+                <a href="{{ url_for('member.dashboard') }}" class="btn btn-primary">
                     <i class="fas fa-user mr-2"></i> My Dashboard
                 </a>
-            {% elif session.role == 'trainer' %}
-                <a href="{{ url_for('trainer_routes.dashboard') }}" class="btn bg-white text-primary hover:bg-gray-100">
+                {% elif session.role == 'trainer' %}
+                <a href="{{ url_for('trainer_routes.dashboard') }}" class="btn btn-primary">
                     <i class="fas fa-users mr-2"></i> Trainer Dashboard
                 </a>
+                {% endif %}
             {% endif %}
         </div>
-        {% endif %}
+    </div>
+
+    <!-- Right side Gym Images (rotating) -->
+    <div class="hero-slider">
+        <img src="https://images.unsplash.com/photo-1593079831268-3381b0db4a77?auto=format&fit=crop&w=600&q=80" alt="Gym">
+        <img src="https://images.unsplash.com/photo-1558611848-73f7eb4001a1?auto=format&fit=crop&w=600&q=80" alt="Workout">
+        <img src="{{ url_for('static', filename='images/bhAAi.jpg') }}" alt="Fitness">
     </div>
 </div>
 
 <!-- Announcements -->
 {% if announcements %}
-<div class="mb-12">
+<div class="container mx-auto my-12">
     <h2 class="text-3xl font-bold text-gray-900 mb-6">
-        <i class="fas fa-bullhorn mr-3 text-accent"></i> Latest Announcements
+        <i class="fas fa-bullhorn mr-3 text-blue-600"></i> Latest Announcements
     </h2>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for announcement in announcements %}
@@ -133,7 +180,7 @@
             <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ announcement.title }}</h3>
             <p class="text-gray-600 mb-4">{{ announcement.content[:100] }}{% if announcement.content|length > 100 %}...{% endif %}</p>
             <div class="flex items-center justify-between text-sm text-gray-500">
-                <span class="badge badge-info">{{ announcement.announcement_type|title }}</span>
+                <span class="badge bg-blue-100 text-blue-700 px-3 py-1 rounded-full">{{ announcement.announcement_type|title }}</span>
                 <span>{{ announcement.created_at|datetimeformat }}</span>
             </div>
         </div>
@@ -144,63 +191,56 @@
 <br>
 <!-- Membership Plans -->
 <div id="plans" class="container mx-auto px-4 py-12">
-    <h2 class="text-3xl font-bold text-center mb-10">Membership Plans</h2>
+    <h2 class="text-3xl font-bold text-center mb-10 text-gray-900">Membership Plans</h2>
     
-    <!-- Plans Row -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-        
-        <!-- Basic Plan -->
-        <div class="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-2xl transition duration-300">
+        <div class="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-2xl transition">
             <h3 class="text-xl font-semibold mb-4">Basic Plan</h3>
             <p class="text-gray-600 mb-4">Perfect for beginners</p>
-            <p class="text-3xl font-bold text-primary mb-6">₹999<span class="text-base font-medium text-gray-500">/mo</span></p>
+            <p class="text-3xl font-bold text-blue-600 mb-6">₹999<span class="text-base text-gray-500">/mo</span></p>
             <ul class="text-sm text-gray-600 mb-6 space-y-2">
                 <li>✔ Gym Access</li>
                 <li>✔ 2 Trainer Sessions</li>
                 <li>✘ Diet Plan</li>
             </ul>
-            <button class="w-full bg-primary text-white py-2 rounded-xl hover:bg-primary/90 transition">Choose Plan</button>
+            <button class="w-full bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700">Choose Plan</button>
         </div>
 
-        <!-- Standard Plan -->
-        <div class="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-2xl transition duration-300">
+        <div class="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-2xl transition">
             <h3 class="text-xl font-semibold mb-4">Standard Plan</h3>
             <p class="text-gray-600 mb-4">For regular trainers</p>
-            <p class="text-3xl font-bold text-primary mb-6">₹1499<span class="text-base font-medium text-gray-500">/mo</span></p>
+            <p class="text-3xl font-bold text-blue-600 mb-6">₹1499<span class="text-base text-gray-500">/mo</span></p>
             <ul class="text-sm text-gray-600 mb-6 space-y-2">
                 <li>✔ Gym Access</li>
                 <li>✔ 5 Trainer Sessions</li>
                 <li>✔ Diet Plan</li>
             </ul>
-            <button class="w-full bg-primary text-white py-2 rounded-xl hover:bg-primary/90 transition">Choose Plan</button>
+            <button class="w-full bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700">Choose Plan</button>
         </div>
 
-        <!-- Premium Plan -->
-        <div class="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-2xl transition duration-300">
+        <div class="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-2xl transition">
             <h3 class="text-xl font-semibold mb-4">Premium Plan</h3>
             <p class="text-gray-600 mb-4">Access all facilities</p>
-            <p class="text-3xl font-bold text-primary mb-6">₹1999<span class="text-base font-medium text-gray-500">/mo</span></p>
+            <p class="text-3xl font-bold text-blue-600 mb-6">₹1999<span class="text-base text-gray-500">/mo</span></p>
             <ul class="text-sm text-gray-600 mb-6 space-y-2">
                 <li>✔ Gym + Cardio</li>
                 <li>✔ Unlimited Trainer Sessions</li>
                 <li>✔ Diet + Fitness Plan</li>
             </ul>
-            <button class="w-full bg-primary text-white py-2 rounded-xl hover:bg-primary/90 transition">Choose Plan</button>
+            <button class="w-full bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700">Choose Plan</button>
         </div>
 
-        <!-- Elite Plan -->
-        <div class="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-2xl transition duration-300">
+        <div class="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-2xl transition">
             <h3 class="text-xl font-semibold mb-4">Elite Plan</h3>
             <p class="text-gray-600 mb-4">For serious athletes</p>
-            <p class="text-3xl font-bold text-primary mb-6">₹2499<span class="text-base font-medium text-gray-500">/mo</span></p>
+            <p class="text-3xl font-bold text-blue-600 mb-6">₹2499<span class="text-base text-gray-500">/mo</span></p>
             <ul class="text-sm text-gray-600 mb-6 space-y-2">
                 <li>✔ All Facilities + Spa</li>
                 <li>✔ Personal Trainer</li>
                 <li>✔ Full Nutrition Guidance</li>
             </ul>
-            <button class="w-full bg-primary text-white py-2 rounded-xl hover:bg-primary/90 transition">Choose Plan</button>
+            <button class="w-full bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700">Choose Plan</button>
         </div>
-        
     </div>
 </div>
 </br>

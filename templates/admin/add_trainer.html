@@ -1,95 +1,98 @@
 {% extends "base.html" %}
 
-{% block title %}Add Trainer - Admin{% endblock %}
+{% block title %}Add New Trainer - Admin{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <div class="mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">
-            <i class="fas fa-user-plus mr-3 text-primary"></i>Add New Trainer
+<div class="max-w-5xl mx-auto px-6 py-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 flex items-center">
+            <i class="fas fa-user-plus text-primary text-2xl mr-3"></i>
+            Add New Trainer
         </h1>
         <nav class="text-sm text-gray-500 mt-2">
             <a href="{{ url_for('admin.dashboard') }}" class="hover:text-gray-700">Dashboard</a>
             <span class="mx-2">/</span>
             <a href="{{ url_for('admin.trainers') }}" class="hover:text-gray-700">Trainers</a>
             <span class="mx-2">/</span>
-            <span>Add Trainer</span>
+            <span class="font-medium text-gray-700">Add Trainer</span>
         </nav>
     </div>
 
-    <div class="card">
-        <div class="card-body">
-            <form method="POST" action="{{ url_for('admin.add_trainer') }}">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <!-- Personal Information -->
-                    <div class="space-y-4">
-                        <h3 class="text-lg font-semibold text-gray-900 border-b pb-2">Personal Information</h3>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="full_name">Full Name *</label>
-                            <input type="text" id="full_name" name="full_name" class="form-control" required>
+    <!-- Form Card -->
+    <div class="bg-white rounded-2xl shadow-lg border border-gray-100">
+        <div class="p-8">
+            <form method="POST" action="{{ url_for('admin.add_trainer') }}" class="space-y-8">
+                
+                <!-- Personal Information -->
+                <section>
+                    <h3 class="text-xl font-semibold text-gray-800 border-b pb-3 mb-6 flex items-center">
+                        <i class="fas fa-id-card text-primary mr-2"></i> Personal Information
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="form-label" for="full_name">Full Name <span class="text-red-500">*</span></label>
+                            <input type="text" id="full_name" name="full_name" class="form-control" placeholder="John Doe" required>
                         </div>
-
-                        <div class="form-group">
-                            <label class="form-label" for="email">Email *</label>
-                            <input type="email" id="email" name="email" class="form-control" required>
+                        <div>
+                            <label class="form-label" for="email">Email <span class="text-red-500">*</span></label>
+                            <input type="email" id="email" name="email" class="form-control" placeholder="john@example.com" required>
                         </div>
-
-                        <div class="form-group">
-                            <label class="form-label" for="phone">Phone *</label>
-                            <input type="tel" id="phone" name="phone" class="form-control" required>
+                        <div>
+                            <label class="form-label" for="phone">Phone <span class="text-red-500">*</span></label>
+                            <input type="tel" id="phone" name="phone" class="form-control" placeholder="+91 9876543210" required>
                         </div>
-
-                        <div class="form-group">
-                            <label class="form-label" for="specialization">Specialization *</label>
-                            <input type="text" id="specialization" name="specialization" 
-                                   placeholder="e.g., Strength Training, Yoga, Cardio" class="form-control" required>
+                        <div>
+                            <label class="form-label" for="specialization">Specialization <span class="text-red-500">*</span></label>
+                            <input type="text" id="specialization" name="specialization" placeholder="e.g., Strength Training, Yoga" class="form-control" required>
                         </div>
                     </div>
+                </section>
 
-                    <!-- Professional Information -->
-                    <div class="space-y-4">
-                        <h3 class="text-lg font-semibold text-gray-900 border-b pb-2">Professional Information</h3>
-                        
-                        <div class="form-group">
+                <!-- Professional Information -->
+                <section>
+                    <h3 class="text-xl font-semibold text-gray-800 border-b pb-3 mb-6 flex items-center">
+                        <i class="fas fa-briefcase text-primary mr-2"></i> Professional Information
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
                             <label class="form-label" for="experience_years">Experience (Years)</label>
-                            <input type="number" id="experience_years" name="experience_years" min="0" max="50" class="form-control">
+                            <input type="number" id="experience_years" name="experience_years" min="0" max="50" class="form-control" placeholder="e.g., 5">
                         </div>
-
-                        <div class="form-group">
+                        <div>
                             <label class="form-label" for="certification">Certification</label>
-                            <input type="text" id="certification" name="certification" 
-                                   placeholder="e.g., NASM-CPT, ACSM-CPT" class="form-control">
+                            <input type="text" id="certification" name="certification" placeholder="e.g., NASM-CPT, ACSM-CPT" class="form-control">
                         </div>
-
-                        <div class="form-group">
+                        <div>
                             <label class="form-label" for="salary">Salary (₹)</label>
-                            <input type="number" id="salary" name="salary" step="0.01" class="form-control">
+                            <input type="number" id="salary" name="salary" step="0.01" class="form-control" placeholder="e.g., 50000">
                         </div>
-
-                        <div class="form-group">
+                        <div>
                             <label class="form-label" for="working_hours">Working Hours</label>
-                            <input type="text" id="working_hours" name="working_hours" 
-                                   placeholder="e.g., 6 AM - 10 PM" class="form-control">
+                            <input type="text" id="working_hours" name="working_hours" placeholder="e.g., 6 AM - 10 PM" class="form-control">
                         </div>
                     </div>
-                </div>
+                </section>
 
                 <!-- Bio -->
-                <div class="form-group">
-                    <label class="form-label" for="bio">Bio</label>
-                    <textarea id="bio" name="bio" rows="4" class="form-control" 
-                              placeholder="Brief professional bio and expertise..."></textarea>
-                </div>
+                <section>
+                    <h3 class="text-xl font-semibold text-gray-800 border-b pb-3 mb-6 flex items-center">
+                        <i class="fas fa-pen text-primary mr-2"></i> Bio
+                    </h3>
+                    <div>
+                        <label class="form-label" for="bio">Trainer Bio</label>
+                        <textarea id="bio" name="bio" rows="4" class="form-control" placeholder="Brief professional bio and expertise..."></textarea>
+                    </div>
+                </section>
 
-                <!-- Submit Buttons -->
-                <div class="flex space-x-4">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save mr-2"></i>Create Trainer
-                    </button>
+                <!-- Buttons -->
+                <div class="flex justify-end space-x-4 pt-4 border-t">
                     <a href="{{ url_for('admin.trainers') }}" class="btn btn-secondary">
                         <i class="fas fa-times mr-2"></i>Cancel
                     </a>
+                    <button type="submit" class="btn btn-primary hover:bg-blue-700 transition">
+                        <i class="fas fa-save mr-2"></i>Create Trainer
+                    </button>
                 </div>
             </form>
         </div>

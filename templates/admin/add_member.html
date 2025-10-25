@@ -1,68 +1,70 @@
 {% extends "base.html" %}
 
-{% block title %}Add Member - Admin{% endblock %}
+{% block title %}Add New Member - Admin{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <div class="mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">
-            <i class="fas fa-user-plus mr-3 text-primary"></i>Add New Member
+<div class="max-w-5xl mx-auto px-6 py-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 flex items-center">
+            <i class="fas fa-user-plus text-primary text-2xl mr-3"></i>
+            Add New Member
         </h1>
         <nav class="text-sm text-gray-500 mt-2">
             <a href="{{ url_for('admin.dashboard') }}" class="hover:text-gray-700">Dashboard</a>
             <span class="mx-2">/</span>
             <a href="{{ url_for('admin.members') }}" class="hover:text-gray-700">Members</a>
             <span class="mx-2">/</span>
-            <span>Add Member</span>
+            <span class="font-medium text-gray-700">Add Member</span>
         </nav>
     </div>
 
-    <div class="card">
-        <div class="card-body">
-            <form method="POST" action="{{ url_for('admin.add_member') }}">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <!-- Personal Information -->
-                    <div class="space-y-4">
-                        <h3 class="text-lg font-semibold text-gray-900 border-b pb-2">Personal Information</h3>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="full_name">Full Name *</label>
-                            <input type="text" id="full_name" name="full_name" class="form-control" required>
+    <!-- Form Card -->
+    <div class="bg-white rounded-2xl shadow-lg border border-gray-100">
+        <div class="p-8">
+            <form method="POST" action="{{ url_for('admin.add_member') }}" class="space-y-8">
+                
+                <!-- Personal Information -->
+                <section>
+                    <h3 class="text-xl font-semibold text-gray-800 border-b pb-3 mb-6 flex items-center">
+                        <i class="fas fa-id-card text-primary mr-2"></i> Personal Information
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="form-label" for="full_name">Full Name <span class="text-red-500">*</span></label>
+                            <input type="text" id="full_name" name="full_name" class="form-control" placeholder="John Doe" required>
                         </div>
-
-                        <div class="form-group">
-                            <label class="form-label" for="email">Email *</label>
-                            <input type="email" id="email" name="email" class="form-control" required>
+                        <div>
+                            <label class="form-label" for="email">Email <span class="text-red-500">*</span></label>
+                            <input type="email" id="email" name="email" class="form-control" placeholder="john@example.com" required>
                         </div>
-
-                        <div class="form-group">
-                            <label class="form-label" for="phone">Phone *</label>
-                            <input type="tel" id="phone" name="phone" class="form-control" required>
+                        <div>
+                            <label class="form-label" for="phone">Phone <span class="text-red-500">*</span></label>
+                            <input type="tel" id="phone" name="phone" class="form-control" placeholder="+91 9876543210" required>
                         </div>
-
-                        <div class="form-group">
+                        <div>
                             <label class="form-label" for="date_of_birth">Date of Birth</label>
                             <input type="date" id="date_of_birth" name="date_of_birth" class="form-control">
                         </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="form-group">
-                                <label class="form-label" for="weight">Weight (kg)</label>
-                                <input type="number" id="weight" name="weight" step="0.1" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="height">Height (cm)</label>
-                                <input type="number" id="height" name="height" step="0.1" class="form-control">
-                            </div>
+                        <div>
+                            <label class="form-label" for="weight">Weight (kg)</label>
+                            <input type="number" id="weight" name="weight" step="0.1" class="form-control" placeholder="e.g. 72.5">
+                        </div>
+                        <div>
+                            <label class="form-label" for="height">Height (cm)</label>
+                            <input type="number" id="height" name="height" step="0.1" class="form-control" placeholder="e.g. 178">
                         </div>
                     </div>
+                </section>
 
-                    <!-- Membership & Contact Information -->
-                    <div class="space-y-4">
-                        <h3 class="text-lg font-semibold text-gray-900 border-b pb-2">Membership & Emergency Contact</h3>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="membership_plan_id">Membership Plan *</label>
+                <!-- Membership & Contact -->
+                <section>
+                    <h3 class="text-xl font-semibold text-gray-800 border-b pb-3 mb-6 flex items-center">
+                        <i class="fas fa-id-badge text-primary mr-2"></i> Membership & Emergency Contact
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="form-label" for="membership_plan_id">Membership Plan <span class="text-red-500">*</span></label>
                             <select id="membership_plan_id" name="membership_plan_id" class="form-control" required>
                                 <option value="">Select Plan</option>
                                 {% for plan in membership_plans %}
@@ -70,8 +72,7 @@
                                 {% endfor %}
                             </select>
                         </div>
-
-                        <div class="form-group">
+                        <div>
                             <label class="form-label" for="trainer_id">Assign Trainer</label>
                             <select id="trainer_id" name="trainer_id" class="form-control">
                                 <option value="">No Trainer Assigned</option>
@@ -80,47 +81,42 @@
                                 {% endfor %}
                             </select>
                         </div>
-
-                        <div class="form-group">
+                        <div>
                             <label class="form-label" for="emergency_contact">Emergency Contact Name</label>
-                            <input type="text" id="emergency_contact" name="emergency_contact" class="form-control">
+                            <input type="text" id="emergency_contact" name="emergency_contact" class="form-control" placeholder="Guardian/Family Member Name">
                         </div>
-
-                        
-
-                        <div class="form-group">
+                        <div>
                             <label class="form-label" for="address">Address</label>
-                            <textarea id="address" name="address" rows="3" class="form-control"></textarea>
+                            <textarea id="address" name="address" rows="3" class="form-control" placeholder="Street, City, State, ZIP"></textarea>
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <!-- Health Information -->
-                <div class="mb-6">
-                    <h3 class="text-lg font-semibold text-gray-900 border-b pb-2 mb-4">Health & Fitness Information</h3>
+                <!-- Health Info -->
+                <section>
+                    <h3 class="text-xl font-semibold text-gray-800 border-b pb-3 mb-6 flex items-center">
+                        <i class="fas fa-heartbeat text-primary mr-2"></i> Health & Fitness Information
+                    </h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="form-group">
+                        <div>
                             <label class="form-label" for="medical_conditions">Medical Conditions</label>
-                            <textarea id="medical_conditions" name="medical_conditions" rows="3" class="form-control" 
-                                      placeholder="Any medical conditions, allergies, or health concerns..."></textarea>
+                            <textarea id="medical_conditions" name="medical_conditions" rows="3" class="form-control" placeholder="Any medical conditions or allergies..."></textarea>
                         </div>
-                        
-                        <div class="form-group">
+                        <div>
                             <label class="form-label" for="fitness_goals">Fitness Goals</label>
-                            <textarea id="fitness_goals" name="fitness_goals" rows="3" class="form-control" 
-                                      placeholder="Weight loss, muscle gain, general fitness..."></textarea>
+                            <textarea id="fitness_goals" name="fitness_goals" rows="3" class="form-control" placeholder="Weight loss, muscle gain, etc."></textarea>
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <!-- Submit Buttons -->
-                <div class="flex space-x-4">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save mr-2"></i>Create Member
-                    </button>
+                <!-- Buttons -->
+                <div class="flex justify-end space-x-4 pt-4 border-t">
                     <a href="{{ url_for('admin.members') }}" class="btn btn-secondary">
                         <i class="fas fa-times mr-2"></i>Cancel
                     </a>
+                    <button type="submit" class="btn btn-primary hover:bg-blue-700 transition">
+                        <i class="fas fa-save mr-2"></i>Create Member
+                    </button>
                 </div>
             </form>
         </div>

@@ -3,8 +3,157 @@
 {% block title %}Member Dashboard - FitZone Gym{% endblock %}
 
 {% block content %}
+<style>
+    body {
+        background-color: #f9fafb;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    h1, h2 {
+        color: #111827;
+    }
+
+    .card {
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        transition: all 0.2s ease-in-out;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    }
+
+    .card-header {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .card-body {
+        padding: 1.25rem;
+    }
+
+    .stat-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1.25rem;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        transition: 0.2s ease-in-out;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    .stat-value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #111827;
+    }
+
+    .text-primary {
+        color: #2563eb;
+    }
+
+    .text-accent {
+        color: #f97316;
+    }
+
+    .text-secondary {
+        color: #6b7280;
+    }
+
+    .btn {
+        display: inline-block;
+        padding: 0.7rem 1rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: 0.2s ease-in-out;
+        text-align: center;
+    }
+
+    .btn-primary {
+        background-color: #2563eb;
+        color: #fff;
+    }
+
+    .btn-primary:hover {
+        background-color: #1d4ed8;
+    }
+
+    .btn-secondary {
+        background-color: #6b7280;
+        color: #fff;
+    }
+
+    .btn-secondary:hover {
+        background-color: #4b5563;
+    }
+
+    .alert {
+        padding: 1rem 1.25rem;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+
+    .alert-danger {
+        background: #fee2e2;
+        border: 1px solid #ef4444;
+        color: #991b1b;
+    }
+
+    .alert-warning {
+        background: #fff7ed;
+        border: 1px solid #f59e0b;
+        color: #92400e;
+    }
+
+    .badge {
+        padding: 0.3rem 0.6rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: capitalize;
+    }
+
+    .badge-success {
+        background-color: #dcfce7;
+        color: #166534;
+    }
+
+    .badge-danger {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+
+    .badge-info {
+        background-color: #dbeafe;
+        color: #1e3a8a;
+    }
+
+    .badge-warning {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+
+    a.text-primary:hover {
+        text-decoration: underline;
+    }
+</style>
+
 <div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900 mb-2">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2 flex items-center">
         <i class="fas fa-user mr-3 text-primary"></i>Welcome, {{ member.full_name }}
     </h1>
     <p class="text-gray-600">Track your fitness journey and manage your membership</p>
@@ -16,7 +165,7 @@
     {{ alert_message|safe }}
 
     {% if stats.pending_payments %}
-        <ul class="mt-2 text-sm">
+        <ul class="mt-2 text-sm list-disc pl-6">
             {% for p in stats.pending_payments %}
                 <li class="{% if p.is_overdue %}text-red-600 font-bold{% endif %}">
                     <i class="fas fa-clock mr-1 {% if p.is_overdue %}text-red-600{% else %}text-yellow-500{% endif %}"></i>
@@ -34,33 +183,14 @@
 </div>
 {% endif %}
 
-<!-- Quick Actions -->
-<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-    <a href="{{ url_for('member.profile') }}" class="btn btn-primary text-center">
-        <i class="fas fa-user-edit block mb-1"></i>Edit Profile
-    </a>
-    <a href="{{ url_for('member.workouts') }}" class="btn btn-secondary text-center">
-        <i class="fas fa-dumbbell block mb-1"></i>My Workouts
-    </a>
-    <a href="{{ url_for('member.schedule_session') }}" 
-       class="btn bg-accent text-white hover:bg-orange-600 text-center {% if stats.membership_status != 'active' %}opacity-50 cursor-not-allowed pointer-events-none{% endif %}">
-        <i class="fas fa-calendar-plus block mb-1"></i>Book Session
-    </a>
-    <a href="{{ url_for('member.membership_status') }}" class="btn bg-purple-600 text-white hover:bg-purple-700 text-center">
-        <i class="fas fa-id-card block mb-1"></i>Membership
-    </a>
-    <a href="{{ url_for('auth.change_password_form') }}" class="btn bg-purple-600 text-white hover:bg-purple-700 text-center">
-        <i class="fas fa-key block mb-1"></i>Change Password
-    </a>
-</div>
-
-<!-- Membership Status -->
+<!-- Stats Grid -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Membership Status -->
     <div class="stat-card">
         <div class="flex items-center justify-between">
             <div>
                 <div class="stat-label">Membership Status</div>
-                <div class="stat-value text-sm {{ 'text-success' if stats.membership_status == 'active' else 'text-danger' }}">
+                <div class="stat-value {{ 'text-green-600' if stats.membership_status == 'active' else 'text-red-600' }}">
                     {{ stats.membership_status|title }}
                 </div>
             </div>
@@ -68,12 +198,11 @@
         </div>
     </div>
     
-    
     <div class="stat-card">
         <div class="flex items-center justify-between">
             <div>
                 <div class="stat-label">Days Until Expiry</div>
-                <div class="stat-value text-lg {{ 'text-success' if stats.days_until_expiry > 30 else 'text-warning' if stats.days_until_expiry > 7 else 'text-danger' }}">
+                <div class="stat-value {{ 'text-green-600' if stats.days_until_expiry > 30 else 'text-yellow-600' if stats.days_until_expiry > 7 else 'text-red-600' }}">
                     {{ stats.days_until_expiry }}
                 </div>
             </div>
@@ -85,7 +214,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <div class="stat-label">Recent Sessions</div>
-                <div class="stat-value text-lg">{{ stats.recent_attendance|length }}</div>
+                <div class="stat-value">{{ stats.recent_attendance|length }}</div>
             </div>
             <i class="fas fa-dumbbell text-secondary text-2xl"></i>
         </div>
@@ -95,14 +224,32 @@
         <div class="flex items-center justify-between">
             <div>
                 <div class="stat-label">Pending Payments</div>
-                <div class="stat-value text-lg {{ 'text-danger' if stats.pending_payments else 'text-success' }}">
+                <div class="stat-value {{ 'text-red-600' if stats.pending_payments else 'text-green-600' }}">
                     {{ stats.pending_payments|length }}
                 </div>
             </div>
-            <i class="fas fa-credit-card text-warning text-2xl"></i>
+            <i class="fas fa-credit-card text-yellow-500 text-2xl"></i>
         </div>
     </div>
 </div>
+
+<!-- Quick Actions -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <a href="{{ url_for('member.profile') }}" class="btn btn-primary">
+        <i class="fas fa-user-edit block mb-1"></i>Edit Profile
+    </a>
+    <a href="{{ url_for('member.workouts') }}" class="btn btn-secondary">
+        <i class="fas fa-dumbbell block mb-1"></i>My Workouts
+    </a>
+    <a href="{{ url_for('member.schedule_session') }}" 
+       class="btn bg-orange-500 text-white hover:bg-orange-600 {% if stats.membership_status != 'active' %}opacity-50 cursor-not-allowed pointer-events-none{% endif %}">
+        <i class="fas fa-calendar-plus block mb-1"></i>Book Session
+    </a>
+    <a href="{{ url_for('member.membership_status') }}" class="btn bg-purple-600 text-white hover:bg-purple-700">
+        <i class="fas fa-id-card block mb-1"></i>Membership
+    </a>
+</div>
+
 
 <!-- Recent Activity -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
@@ -116,7 +263,7 @@
             {% if stats.recent_attendance %}
             <div class="divide-y divide-gray-200">
                 {% for attendance in stats.recent_attendance %}
-                <div class="p-4">
+                <div class="p-4 hover:bg-gray-50 transition">
                     <div class="flex justify-between items-center">
                         <div>
                             <div class="font-medium text-gray-900">
@@ -179,15 +326,14 @@
 <!-- Announcements -->
 {% if announcements %}
 <div class="card">
-    <div class="card-header">
-        <h2 class="text-xl font-semibold text-gray-900">
-            <i class="fas fa-bullhorn mr-2 text-accent"></i>Latest Announcements
-        </h2>
+    <div class="card-header flex items-center">
+        <i class="fas fa-bullhorn mr-2 text-accent"></i>
+        <h2 class="text-xl font-semibold text-gray-900">Latest Announcements</h2>
     </div>
     <div class="card-body p-0">
         <div class="divide-y divide-gray-200">
             {% for announcement in announcements %}
-            <div class="p-4 hover:bg-gray-50">
+            <div class="p-4 hover:bg-gray-50 transition">
                 <div class="flex justify-between items-start">
                     <div>
                         <h3 class="font-medium text-gray-900">{{ announcement.title }}</h3>
@@ -198,7 +344,7 @@
                             {{ announcement.created_at|datetimeformat }}
                         </div>
                     </div>
-                    <span class="badge badge-info text-xs">{{ announcement.announcement_type|title }}</span>
+                    <span class="badge badge-info">{{ announcement.announcement_type|title }}</span>
                 </div>
             </div>
             {% endfor %}

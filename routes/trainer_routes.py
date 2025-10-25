@@ -24,6 +24,44 @@ def _parse_date(value):
 
 
 trainer_routes_bp = Blueprint('trainer_routes', __name__,url_prefix='/trainer')
+@trainer_routes_bp.route('/equipment')
+def equipment_list():
+    """View all equipment"""
+    try:
+        equipment = Equipment.get_all()
+        return render_template('trainer/equipment_list.html', equipment=equipment)
+    except Exception as e:
+        flash(f"Error loading equipment list: {str(e)}", "danger")
+        return render_template('admin/equipment_list.html', equipment=[])
+@trainer_routes_bp.route('/equipment/maintenance/<int:equipment_id>', methods=['POST'])
+def update_equipment_status(equipment_id):
+    """Update maintenance status of equipment"""
+    equipment = Equipment.get_by_id(equipment_id)
+    if not equipment:
+        flash('Equipment not found.', 'danger')
+        return redirect(url_for('trainer.equipment_list'))
+
+    try:
+        action = request.form.get('action')
+        notes = request.form.get('maintenance_notes')
+        next_date = request.form.get('next_maintenance_date')
+
+        if action == 'maintenance':
+            equipment.mark_for_maintenance(notes=notes, next_date=next_date)
+            flash('Equipment marked for maintenance.', 'success')
+        elif action == 'working':
+            equipment.mark_as_working()
+            flash('Equipment marked as working.', 'success')
+        elif action == 'out_of_order':
+            equipment.mark_out_of_order(notes=notes)
+            flash('Equipment marked as out of order.', 'warning')
+        else:
+            flash('Invalid action.', 'danger')
+
+    except Exception as e:
+        flash(f"Error updating status: {str(e)}", 'danger')
+
+    return redirect(url_for('trainer.equipment_list'))
 
 @trainer_routes_bp.route('/dashboard')
 @trainer_required

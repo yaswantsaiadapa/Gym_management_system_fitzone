@@ -12,6 +12,7 @@
 
 <!-- Key Metrics -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <!-- Member Statistics -->
     <div class="card">
         <div class="card-header">
             <h3 class="text-lg font-semibold text-gray-900">Member Statistics</h3>
@@ -21,15 +22,23 @@
             <div class="space-y-3">
                 <div class="flex justify-between">
                     <span class="text-gray-600">Total Members</span>
-                    <span class="font-semibold">{{ member_stats.total or 0 }}</span>
+                    <span class="font-semibold">{{ member_stats.total_members or 0 }}</span>
                 </div>
                 <div class="flex justify-between">
                     <span class="text-gray-600">Active Members</span>
-                    <span class="font-semibold text-success">{{ member_stats.active or 0 }}</span>
+                    <span class="font-semibold text-success">{{ member_stats.total_active or 0 }}</span>
                 </div>
                 <div class="flex justify-between">
                     <span class="text-gray-600">Inactive Members</span>
-                    <span class="font-semibold text-warning">{{ member_stats.inactive or 0 }}</span>
+                    <span class="font-semibold text-warning">{{ member_stats.inactive_members or 0 }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">New This Month</span>
+                    <span class="font-semibold text-info">{{ member_stats.new_this_month or 0 }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Expiring Next 7 Days</span>
+                    <span class="font-semibold text-danger">{{ member_stats.expiring_next_7_days or 0 }}</span>
                 </div>
             </div>
             {% else %}
@@ -38,6 +47,7 @@
         </div>
     </div>
 
+    <!-- Revenue Statistics -->
     <div class="card">
         <div class="card-header">
             <h3 class="text-lg font-semibold text-gray-900">Revenue Statistics</h3>
@@ -64,6 +74,7 @@
         </div>
     </div>
 
+    <!-- Attendance Statistics -->
     <div class="card">
         <div class="card-header">
             <h3 class="text-lg font-semibold text-gray-900">Attendance Statistics</h3>
@@ -91,35 +102,25 @@
     </div>
 </div>
 
-<!-- Additional Reports -->
+<!-- Charts -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-    <!-- Revenue Chart Placeholder -->
+    <!-- Revenue Chart -->
     <div class="card">
         <div class="card-header">
             <h3 class="text-lg font-semibold text-gray-900">Monthly Revenue Trend</h3>
         </div>
         <div class="card-body">
-            <div class="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-                <div class="text-center text-gray-500">
-                    <i class="fas fa-chart-line text-4xl mb-2"></i>
-                    <p>Revenue chart will be displayed here</p>
-                </div>
-            </div>
+            <canvas id="revenueChart" class="h-64"></canvas>
         </div>
     </div>
 
-    <!-- Attendance Chart Placeholder -->
+    <!-- Attendance Chart -->
     <div class="card">
         <div class="card-header">
             <h3 class="text-lg font-semibold text-gray-900">Daily Attendance Trend</h3>
         </div>
         <div class="card-body">
-            <div class="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-                <div class="text-center text-gray-500">
-                    <i class="fas fa-chart-area text-4xl mb-2"></i>
-                    <p>Attendance chart will be displayed here</p>
-                </div>
-            </div>
+            <canvas id="attendanceChart" class="h-64"></canvas>
         </div>
     </div>
 </div>
@@ -138,4 +139,38 @@
         </button>
     </div>
 </div>
+
+<!-- Chart.js Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Revenue Chart
+    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(revenueCtx, {
+        type: 'line',
+        data: {
+            labels: {{ revenue_labels|safe if revenue_labels else '[]' }},
+            datasets: [{
+                label: 'Revenue',
+                data: {{ revenue_data|safe if revenue_data else '[]' }},
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1
+            }]
+        }
+    });
+
+    // Attendance Chart
+    const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
+    new Chart(attendanceCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ attendance_labels|safe if attendance_labels else '[]' }},
+            datasets: [{
+                label: 'Attendance',
+                data: {{ attendance_data|safe if attendance_data else '[]' }},
+                backgroundColor: 'rgba(54, 162, 235, 0.6)'
+            }]
+        }
+    });
+</script>
 {% endblock %}

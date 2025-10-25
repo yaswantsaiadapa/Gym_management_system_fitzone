@@ -490,24 +490,20 @@ class Member:
 
     @classmethod
     def get_statistics(cls):
-        """
-        Aggregated stats for reports:
-          - total_members
-          - total_active
-          - new_this_month
-          - expiring_next_7_days
-        """
         db_path = cls._db_path()
 
-        # total members
+        # Total members
         total_members = execute_query("SELECT COUNT(*) FROM members", (), db_path, fetch=True)
         total_members = total_members[0][0] if total_members else 0
 
-        # total active
-        total_active = execute_query("SELECT COUNT(*) FROM members WHERE status = 'active'", (), db_path, fetch=True)
+        # Total active
+        total_active = execute_query("SELECT COUNT(*) FROM members WHERE status='active'", (), db_path, fetch=True)
         total_active = total_active[0][0] if total_active else 0
 
-        # new this month
+        # Inactive members
+        inactive_members = total_members - total_active
+
+        # New members this month
         q_new = """
             SELECT COUNT(*) FROM members
             WHERE strftime('%Y-%m', membership_start_date) = strftime('%Y-%m', 'now')
@@ -515,12 +511,12 @@ class Member:
         new_this_month = execute_query(q_new, (), db_path, fetch=True)
         new_this_month = new_this_month[0][0] if new_this_month else 0
 
-        # expiring in next 7 days
+        # Expiring memberships in next 7 days
         q_exp_7 = """
             SELECT COUNT(*) FROM members
             WHERE membership_end_date IS NOT NULL
-              AND DATE(membership_end_date) >= DATE('now')
-              AND DATE(membership_end_date) <= DATE('now', '+7 days')
+            AND DATE(membership_end_date) >= DATE('now')
+            AND DATE(membership_end_date) <= DATE('now', '+7 days')
         """
         expiring_next_7_days = execute_query(q_exp_7, (), db_path, fetch=True)
         expiring_next_7_days = expiring_next_7_days[0][0] if expiring_next_7_days else 0
@@ -528,6 +524,7 @@ class Member:
         return {
             'total_members': total_members,
             'total_active': total_active,
+            'inactive_members': inactive_members,
             'new_this_month': new_this_month,
             'expiring_next_7_days': expiring_next_7_days
         }

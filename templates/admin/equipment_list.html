@@ -53,15 +53,15 @@
                             <span class="text-sm">{{ item.location or '-' }}</span>
                         </td>
                         <td>
-                            <span class="text-sm">{{ item.purchase_date.strftime('%b %d, %Y') if item.purchase_date else '-' }}</span>
+                            <span class="text-sm">{{ item.purchase_date| datetimeformat('%b %d, %Y')if item.purchase_date else '-' }}</span>
                         </td>
                         <td>
                             <div class="text-xs">
                                 {% if item.last_maintenance_date %}
-                                    <div>Last: {{ item.last_maintenance_date.strftime('%b %d, %Y') }}</div>
+                                    <div>Last: {{ item.last_maintenance_date| datetimeformat('%b %d, %Y')}}</div>
                                 {% endif %}
                                 {% if item.next_maintenance_date %}
-                                    <div class="text-warning">Next: {{ item.next_maintenance_date.strftime('%b %d, %Y') }}</div>
+                                    <div class="text-warning">Next: {{ item.next_maintenance_date| datetimeformat('%b %d, %Y')}}</div>
                                 {% endif %}
                             </div>
                         </td>

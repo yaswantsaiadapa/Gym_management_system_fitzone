@@ -3,95 +3,119 @@
 {% block title %}Members - Admin{% endblock %}
 
 {% block content %}
-<div class="flex justify-between items-center mb-8">
-    <h1 class="text-3xl font-bold text-gray-900">
-        <i class="fas fa-users mr-3 text-primary"></i>Members
-    </h1>
-    <a href="{{ url_for('admin.add_member_form') }}" class="btn btn-primary">
-        <i class="fas fa-plus mr-2"></i>Add New Member
-    </a>
-</div>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
-<div class="card">
-    <div class="card-body p-0">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 flex items-center">
+            <i class="fas fa-users mr-3 text-indigo-600"></i>Members
+        </h1>
+        <a href="{{ url_for('admin.add_member_form') }}" 
+           class="inline-flex items-center bg-indigo-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-indigo-700 transition">
+            <i class="fas fa-plus mr-2"></i> Add Member
+        </a>
+    </div>
+
+    <!-- Members Table -->
+    <div class="bg-white rounded-2xl shadow overflow-hidden">
         {% if members %}
         <div class="overflow-x-auto">
-            <table class="table">
-                <thead>
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
                     <tr>
-                        <th>Member</th>
-                        <th>Contact</th>
-                        <th>Plan</th>
-                        <th>Status</th>
-                        <th>Membership</th>
-                        <th>Trainer</th>
-                        <th>Actions</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Member</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Contact</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Plan</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Membership</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Trainer</th>
+                        <th class="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="bg-white divide-y divide-gray-100">
                     {% for member in members %}
-                    <tr>
-                        <td>
+                    <tr class="hover:bg-gray-50 transition duration-200">
+                        <!-- Member Info -->
+                        <td class="px-6 py-4">
                             <div>
-                                <div class="font-medium text-gray-900">{{ member.full_name or 'N/A' }}</div>
-                                <div class="text-sm text-gray-500">ID: {{ member.id }}</div>
+                                <p class="font-medium text-gray-900">{{ member.full_name or 'N/A' }}</p>
+                                <p class="text-sm text-gray-500">ID: {{ member.id }}</p>
                             </div>
                         </td>
-                        <td>
-                            <div>
-                                <div class="text-sm">{{ member.email or 'N/A' }}</div>
-                                <div class="text-sm text-gray-500">{{ member.phone or 'N/A' }}</div>
-                            </div>
+
+                        <!-- Contact -->
+                        <td class="px-6 py-4">
+                            <p class="text-sm text-gray-800">{{ member.email or 'N/A' }}</p>
+                            <p class="text-sm text-gray-500">{{ member.phone or 'N/A' }}</p>
                         </td>
-                        <td>
-                            <span class="text-sm">{{ member.plan_name or 'No Plan' }}</span>
+
+                        <!-- Plan -->
+                        <td class="px-6 py-4">
+                            <span class="text-sm font-medium text-gray-800">{{ member.plan_name or 'No Plan' }}</span>
                         </td>
-                        <td>
-                            <span class="badge badge-{{ 'success' if member.status == 'active' else 'danger' }}">
+
+                        <!-- Status -->
+                        <td class="px-6 py-4">
+                            <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full 
+                                {{ 'bg-green-100 text-green-800' if member.status == 'active' else 'bg-red-100 text-red-800' }}">
                                 {{ member.status|title }}
                             </span>
                         </td>
-                        <td>
+
+                        <!-- Membership Dates -->
+                        <td class="px-6 py-4 text-sm">
                             {% if member.membership_end_date %}
-                                <div class="text-sm">
-                                    <div>{{ member.membership_start_date.strftime('%b %d, %Y') if member.membership_start_date else 'N/A' }}</div>
-                                    <div class="text-gray-500">to {{ member.membership_end_date.strftime('%b %d, %Y') }}</div>
-                                </div>
+                                <div>{{ member.membership_start_date.strftime('%b %d, %Y') if member.membership_start_date else 'N/A' }}</div>
+                                <div class="text-gray-500">to {{ member.membership_end_date.strftime('%b %d, %Y') }}</div>
                             {% else %}
-                                <span class="text-gray-500">Not Set</span>
+                                <span class="text-gray-400">Not Set</span>
                             {% endif %}
                         </td>
-                        <td>
-                            <span class="text-sm">{{ member.trainer_name or 'Unassigned' }}</span>
+
+                        <!-- Trainer -->
+                        <td class="px-6 py-4 text-sm text-gray-800">
+                            {{ member.trainer_name or 'Unassigned' }}
                         </td>
-                        <td>
-                            <div class="flex space-x-2">
+
+                        <!-- Actions -->
+                        <td class="px-6 py-4 text-center">
+                            <div class="flex justify-center space-x-4">
+                                <!-- Edit -->
                                 <a href="{{ url_for('admin.edit_member', member_id=member.id) }}" 
-                                   class="text-primary hover:text-blue-700" title="Edit">
+                                   class="text-indigo-600 hover:text-indigo-800 transition" title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </a>
+
+                                <!-- Renew -->
                                 <a href="{{ url_for('admin.renew_membership', member_id=member.id) }}" 
-                                   class="text-success hover:text-green-700" title="Renew">
-                                    <i class="fas fa-refresh"></i>
+                                   class="text-green-600 hover:text-green-800 transition" title="Renew">
+                                    <i class="fas fa-sync-alt"></i>
                                 </a>
+
+                                <!-- Delete -->
+                                <form method="get" action="{{ url_for('admin.confirm_delete_member', member_id=member.id) }}" 
+                                      class="inline" onsubmit="return confirm('Are you sure you want to remove this member?');">
+                                    <button type="submit" class="text-red-600 hover:text-red-800 transition" title="Remove">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
                             </div>
                         </td>
-                        <td><form method="get" action="{{ url_for('admin.confirm_delete_member', member_id=member.id) }}" style="display:inline">
-  <button class="btn btn-sm btn-danger">Remove</button>
-</form>
-</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+
         {% else %}
-        <div class="p-8 text-center">
-            <i class="fas fa-users text-gray-400 text-4xl mb-4"></i>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">No members found</h3>
-            <p class="text-gray-500 mb-4">Get started by adding your first member</p>
-            <a href="{{ url_for('admin.add_member_form') }}" class="btn btn-primary">
-                <i class="fas fa-plus mr-2"></i>Add Member
+        <!-- Empty State -->
+        <div class="p-12 text-center">
+            <i class="fas fa-users text-gray-400 text-5xl mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">No Members Found</h3>
+            <p class="text-gray-500 mb-6">Get started by adding your first member to the system.</p>
+            <a href="{{ url_for('admin.add_member_form') }}" 
+               class="inline-flex items-center bg-indigo-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-indigo-700 transition">
+                <i class="fas fa-plus mr-2"></i> Add Member
             </a>
         </div>
         {% endif %}

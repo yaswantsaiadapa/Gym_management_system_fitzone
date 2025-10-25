@@ -854,14 +854,130 @@ def delete_announcement(announcement_id):
 @admin_bp.route('/reports')
 @admin_required
 def reports():
-    member_stats = Member.get_statistics()
-    revenue_stats = Payment.get_revenue_stats()
-    attendance_stats = Attendance.get_monthly_stats(date.today().year, date.today().month)
+    """
+    Admin reports page:
+      - member_stats (from Member.get_statistics)
+      - revenue_stats (from Payment model or aggregated here)
+      - attendance_stats (aggregated here)
+      - revenue_labels / revenue_data for last 12 months
+      - attendance_labels / attendance_data for last 14 days
+    """
+    try:
+        # basic aggregates (reuse model helpers where available)
+        member_stats = Member.get_statistics()
+        revenue_stats = Payment.get_revenue_stats() or {'total_revenue': 0, 'total_payments': 0}
+        # Attempt monthly revenue for the current month
+        monthly_revenue = Payment.get_revenue_stats(year=date.today().year, month=date.today().month) or {'total_revenue': 0}
+        revenue_stats['monthly_revenue'] = monthly_revenue.get('total_revenue', 0)
 
-    return render_template('admin/reports.html',
-                           member_stats=member_stats,
-                           revenue_stats=revenue_stats,
-                           attendance_stats=attendance_stats)
+        # Attendance aggregates for current month (optional helper)
+        attendance_stats = Attendance.get_monthly_stats(date.today().year, date.today().month) or {
+            'total_sessions': 0, 'present': 0, 'absent': 0, 'attendance_rate': 0
+        }
+
+        # ---------------- Revenue time series (last 12 months) ----------------
+        # Build list of month keys (YYYY-MM) and pretty labels (Mon YYYY)
+        today = date.today()
+        months = []
+        month_keys = []
+        for i in range(11, -1, -1):  # 11 months ago .. current month
+            m = (today.replace(day=1) - relativedelta(months=i))
+            key = m.strftime("%Y-%m")
+            label = m.strftime("%b %Y")
+            month_keys.append(key)
+            months.append(label)
+
+        # Query payments grouped by YYYY-MM
+        start_month = (today.replace(day=1) - relativedelta(months=11)).strftime("%Y-%m-01")
+        sql = """
+            SELECT strftime('%Y-%m', payment_date) as ym, IFNULL(SUM(amount),0) as total
+            FROM payments
+            WHERE payment_status = 'completed'
+              AND payment_date IS NOT NULL
+              AND DATE(payment_date) >= DATE(?) 
+            GROUP BY ym
+            ORDER BY ym;
+        """
+        rows = execute_query(sql, (start_month,), current_app.config.get("DATABASE_PATH", None), fetch=True) or []
+        # Normalize returned rows into a dict ym->total
+        revenue_map = {}
+        for r in rows:
+            # rows may be dicts or tuples depending on your execute_query implementation
+            ym = r['ym'] if isinstance(r, dict) else r[0]
+            total = r['total'] if isinstance(r, dict) else r[1]
+            revenue_map[ym] = float(total or 0)
+
+        revenue_data = [revenue_map.get(k, 0) for k in month_keys]
+
+        # ---------------- Attendance time series (last 14 days) ----------------
+        days = []
+        day_keys = []
+        days_back = 13  # last 14 days including today
+        for i in range(days_back, -1, -1):
+            d = today - timedelta(days=i)
+            key = d.isoformat()  # YYYY-MM-DD
+            label = d.strftime("%b %d")
+            day_keys.append(key)
+            days.append(label)
+
+        sql_att = """
+            SELECT DATE(date) as d, 
+                   SUM(CASE WHEN status = 'present' THEN 1 ELSE 0 END) as present_count
+            FROM attendance
+            WHERE DATE(date) >= DATE(?)
+            GROUP BY d
+            ORDER BY d;
+        """
+        start_day = (today - timedelta(days=days_back)).isoformat()
+        att_rows = execute_query(sql_att, (start_day,), current_app.config.get("DATABASE_PATH", None), fetch=True) or []
+        att_map = {}
+        for r in att_rows:
+            d = r['d'] if isinstance(r, dict) else r[0]
+            cnt = r['present_count'] if isinstance(r, dict) else r[1]
+            att_map[d] = int(cnt or 0)
+
+        attendance_data = [att_map.get(k, 0) for k in day_keys]
+
+        # Prepare JSON payloads for Chart.js
+        revenue_labels = json.dumps(months)
+        revenue_json = json.dumps(revenue_data)
+        attendance_labels = json.dumps(days)
+        attendance_json = json.dumps(attendance_data)
+
+        return render_template(
+            'admin/reports.html',
+            member_stats=member_stats,
+            revenue_stats={
+                'total_revenue': revenue_stats.get('total_revenue', 0),
+                'monthly_revenue': revenue_stats.get('monthly_revenue', 0),
+                'pending_amount': getattr(Payment, 'get_pending_amount', lambda: 0)() if hasattr(Payment, 'get_pending_amount') else 0
+            },
+            attendance_stats={
+                'total_sessions': attendance_stats.get('total_sessions', 0),
+                'present': attendance_stats.get('present', 0),
+                'attendance_rate': attendance_stats.get('attendance_rate', 0)
+            },
+            revenue_labels=revenue_labels,
+            revenue_data=revenue_json,
+            attendance_labels=attendance_labels,
+            attendance_data=attendance_json
+        )
+
+    except Exception as e:
+        current_app.logger.exception("Failed building reports data")
+        flash("Error building reports. Check logs.", "danger")
+        # fallback: render with empty series but preserve other functionality
+        return render_template(
+            'admin/reports.html',
+            member_stats=Member.get_statistics() if hasattr(Member, 'get_statistics') else {},
+            revenue_stats={ 'total_revenue': 0, 'monthly_revenue': 0, 'pending_amount': 0 },
+            attendance_stats={ 'total_sessions': 0, 'present': 0, 'attendance_rate': 0 },
+            revenue_labels=json.dumps([]),
+            revenue_data=json.dumps([]),
+            attendance_labels=json.dumps([]),
+            attendance_data=json.dumps([])
+        )
+
 
 # -------------------- Renewal Reminders --------------------
 @admin_bp.route('/send-renewal-reminders', methods=['POST'])

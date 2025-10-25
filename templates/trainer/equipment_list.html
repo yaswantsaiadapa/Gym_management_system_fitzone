@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Equipment - Trainer{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">
+        <i class="fas fa-cogs mr-3 text-primary"></i>Gym Equipment
+    </h1>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        {% if equipment %}
+        <div class="overflow-x-auto">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Equipment</th>
+                        <th>Category</th>
+                        <th>Brand/Model</th>
+                        <th>Status</th>
+                        <th>Location</th>
+                        <th>Purchase Date</th>
+                        <th>Maintenance</th>
+                        <th>Update Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in equipment %}
+                    <tr>
+                        <td>
+                            <div class="font-medium text-gray-900">{{ item.name }}</div>
+                        </td>
+                        <td>
+                            <span class="text-sm">{{ item.category or 'General' }}</span>
+                        </td>
+                        <td>
+                            <div class="text-sm">
+                                {% if item.brand %}{{ item.brand }}{% endif %}
+                                {% if item.model %}<br>{{ item.model }}{% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge badge-{{ 'success' if item.status == 'working' else 'warning' if item.status == 'maintenance' else 'danger' }}">
+                                {{ item.status|title }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="text-sm">{{ item.location or '-' }}</span>
+                        </td>
+                        <td>
+                            <span class="text-sm">{{ item.purchase_date|datetimeformat('%b %d, %Y') if item.purchase_date else '-' }}</span>
+                        </td>
+                        <td>
+                            <div class="text-xs">
+                                {% if item.last_maintenance_date %}
+                                    <div>Last: {{ item.last_maintenance_date|datetimeformat('%b %d, %Y')}}</div>
+                                {% endif %}
+                                {% if item.next_maintenance_date %}
+                                    <div class="text-warning">Next: {{ item.next_maintenance_date|datetimeformat('%b %d, %Y')}}</div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="relative group">
+                                <button class="text-secondary hover:text-green-700" title="Update Status">
+                                    <i class="fas fa-wrench"></i>
+                                </button>
+                                <div class="absolute right-0 top-8 hidden group-hover:block bg-white border rounded-lg shadow-lg p-2 z-10 w-48">
+                                    <form method="POST" action="{{ url_for('trainer_routes.update_equipment_status', equipment_id=item.id) }}
+ }}" class="space-y-2">
+                                        {% if item.status != 'working' %}
+                                        <button type="submit" name="action" value="working" class="w-full text-left text-success hover:bg-gray-50 p-1 rounded text-sm">
+                                            <i class="fas fa-check mr-1"></i>Mark Working
+                                        </button>
+                                        {% endif %}
+                                        {% if item.status != 'maintenance' %}
+                                        <button type="submit" name="action" value="maintenance" class="w-full text-left text-warning hover:bg-gray-50 p-1 rounded text-sm">
+                                            <i class="fas fa-wrench mr-1"></i>Mark Maintenance
+                                        </button>
+                                        {% endif %}
+                                        {% if item.status != 'out_of_order' %}
+                                        <button type="submit" name="action" value="out_of_order" class="w-full text-left text-danger hover:bg-gray-50 p-1 rounded text-sm">
+                                            <i class="fas fa-times mr-1"></i>Out of Order
+                                        </button>
+                                        {% endif %}
+                                    </form>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-8 text-center">
+            <i class="fas fa-cogs text-gray-400 text-4xl mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No equipment found</h3>
+            <p class="text-gray-500 mb-4">No equipment available to view</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
