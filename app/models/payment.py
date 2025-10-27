@@ -1,7 +1,7 @@
 # payment.py (UPDATED)
 from datetime import date, datetime
 from flask import current_app
-from models.database import execute_query
+from app.models.database import execute_query
 import uuid
 
 class Payment:

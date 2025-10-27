@@ -6,23 +6,23 @@ import os
 from datetime import datetime, date
 import json
 # Import enhanced models
-from models.database import init_db
-from models.user import User
-from models.member import Member
-from models.trainer import Trainer
-from models.membership_plan import MembershipPlan
-from models.payment import Payment
-from models.workout import Workout
-from models.diet import Diet
-from models.progress import Progress
-from models.announcement import Announcement
-from models.equipment import Equipment  # ✅ added equipment model
+from app.models.database import init_db
+from app.models.user import User
+from app.models.member import Member
+from app.models.trainer import Trainer
+from app.models.membership_plan import MembershipPlan
+from app.models.payment import Payment
+from app.models.workout import Workout
+from app.models.diet import Diet
+from app.models.progress import Progress
+from app.models.announcement import Announcement
+from app.models.equipment import Equipment  # ✅ added equipment model
 
 # Import route blueprints (ONLY 4 main ones)
-from routes.auth import auth_bp
-from routes.admin import admin_bp
-from routes.member_routes import member_routes_bp
-from routes.trainer_routes import trainer_routes_bp
+from app.routes.auth import auth_bp
+from app.routes.admin import admin_bp
+from app.routes.member_routes import member_routes_bp
+from app.routes.trainer_routes import trainer_routes_bp
 
 from datetime import timedelta
 

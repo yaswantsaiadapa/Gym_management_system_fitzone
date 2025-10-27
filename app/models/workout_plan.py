@@ -1,6 +1,6 @@
 from flask import current_app
-from models.database import execute_query
-from models.workout import Workout
+from app.models.database import execute_query
+from app.models.workout import Workout
 
 
 class MemberWorkoutPlan:

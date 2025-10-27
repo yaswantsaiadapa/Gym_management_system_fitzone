@@ -67,10 +67,28 @@ def calculate_bmi(weight_kg, height_cm):
     return round(bmi, 1)
 
 def get_bmi_category(bmi):
-    """Get BMI category based on BMI value"""
+    """Get BMI category based on BMI value.
+
+    Categories (WHO-style):
+      - < 18.5 : 'Underweight'
+      - 18.5 - <25 : 'Normal weight'
+      - 25 - <30 : 'Overweight'
+      - >=30 : 'Obese'
+    """
     if bmi is None:
         return "Unknown"
-    elif bmi < 18.5:
+
+    try:
+        bmi_val = float(bmi)
+    except Exception:
+        # if not a number, treat as unknown
+        return "Unknown"
+
+    if bmi_val < 18.5:
         return "Underweight"
-    elif bmi < 25:
+    elif bmi_val < 25:
         return "Normal weight"
+    elif bmi_val < 30:
+        return "Overweight"
+    else:
+        return "Obese"

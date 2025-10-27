@@ -1,13 +1,13 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
-from models.user import User
-from models.member import Member
-from models.trainer import Trainer
-from utils.decorators import logout_required
-from utils.email_utils import send_password_change_notification
+from app.models.user import User
+from app.models.member import Member
+from app.models.trainer import Trainer
+from app.utils.decorators import logout_required
+from app.utils.email_utils import send_password_change_notification
 from flask_bcrypt import Bcrypt
 import secrets
 import datetime
-from utils.email_utils import send_password_reset_email  # create this function
+from app.utils.email_utils import send_password_reset_email  # create this function
 
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
@@ -197,7 +197,7 @@ def forgot_password_post():
         flash('Please enter your email address!')
         return redirect(url_for('auth.forgot_password_form'))
 
-    from models.database import execute_query
+    from app.models.database import execute_query
     db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')
 
     # Check if user exists
@@ -230,7 +230,7 @@ def forgot_password_post():
 @logout_required
 def reset_password(token):
     """Reset password using a secure token"""
-    from models.database import execute_query
+    from app.models.database import execute_query
     db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')
 
     # Verify token (example assumes you store token in users table)

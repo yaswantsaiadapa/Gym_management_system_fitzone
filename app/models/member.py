@@ -14,7 +14,7 @@ def delete(self):
     - Updates members.membership_status to 'removed' (or 'deactivated')
     - Records removed_at and removed_by if these columns exist (best-effort)
     """
-    from models.database import execute_query
+    from app.models.database import execute_query
     db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')
 
     try:
@@ -56,7 +56,7 @@ def hard_delete(self):
     - Deletes payments, attendance, workout plans, member record, then user record.
     - Adjust table names below to match your schema.
     """
-    from models.database import execute_query
+    from app.models.database import execute_query
     db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')
 
     try:

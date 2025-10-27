@@ -1,26 +1,26 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify, current_app
 import traceback
-from models.database import execute_query
+from app.models.database import execute_query
 
 from dateutil.relativedelta import relativedelta
-from models.user import User
-from models.member import Member
-from models.trainer import Trainer
-from models.membership_plan import MembershipPlan
-from models.payment import Payment
-from models.announcement import Announcement
-from models.attendance import Attendance
-from models.equipment import Equipment
-from utils.decorators import login_required, admin_required
-from utils.email_utils import send_welcome_email, send_membership_renewal_reminder
+from app.models.user import User
+from app.models.member import Member
+from app.models.trainer import Trainer
+from app.models.membership_plan import MembershipPlan
+from app.models.payment import Payment
+from app.models.announcement import Announcement
+from app.models.attendance import Attendance
+from app.models.equipment import Equipment
+from app.utils.decorators import login_required, admin_required
+from app.utils.email_utils import send_welcome_email, send_membership_renewal_reminder
 # removed werkzeug import; using bcrypt instead
 from flask_bcrypt import Bcrypt
 from datetime import date, timedelta, datetime
 import secrets
 import string
 import json
-from models.workout import Workout
-from models.workout_plan import MemberWorkoutPlan, WorkoutPlanDetail
+from app.models.workout import Workout
+from app.models.workout_plan import MemberWorkoutPlan, WorkoutPlanDetail
 def table_exists(table_name, db_path):
     res = execute_query("SELECT name FROM sqlite_master WHERE type='table' AND name = ?", (table_name,), db_path, fetch=True)
     return bool(res)

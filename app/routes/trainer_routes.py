@@ -1,16 +1,15 @@
 from flask import Blueprint, current_app, render_template, request, redirect, url_for, flash, session
-from models.equipment import Equipment
-from models.trainer import Trainer
-from models.member import Member
-from models.workout import Workout
-from models.diet import Diet
-from models.progress import Progress
-from models.attendance import Attendance,_slot_to_datetimes
-from models.announcement import Announcement
+from app.models.equipment import Equipment
+from app.models.trainer import Trainer
+from app.models.member import Member
+from app.models.workout import Workout
+from app.models.diet import Diet
+from app.models.progress import Progress
+from app.models.attendance import Attendance,_slot_to_datetimes
+from app.models.announcement import Announcement
 
-from utils.decorators import  login_required, trainer_required
-from datetime import date, datetime
-from models.workout_plan import MemberWorkoutPlan, WorkoutPlanDetail
+from app.utils.decorators import  login_required, trainer_required
+from app.models.workout_plan import MemberWorkoutPlan, WorkoutPlanDetail
 from datetime import date, datetime
 
 def _parse_date(value):

@@ -1,5 +1,5 @@
 from flask import current_app
-from models.database import execute_query
+from app.models.database import execute_query
 
 
 class Workout:

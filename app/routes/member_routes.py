@@ -1,19 +1,19 @@
 # routes/member_routes.py
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify, current_app
 from datetime import date, datetime,timedelta
-from models.user import User
-from models.member import Member
-from models.trainer import Trainer
-from models.membership_plan import MembershipPlan
-from models.payment import Payment
-from models.workout import Workout
-from models.diet import Diet
-from models.progress import Progress
-from models.attendance import Attendance, _slot_to_datetimes, _parse_datetime
-from models.announcement import Announcement
-from routes.admin import members
-from utils.decorators import login_required, member_required
-from models.workout_plan import MemberWorkoutPlan, WorkoutPlanDetail
+from app.models.user import User
+from app.models.member import Member
+from app.models.trainer import Trainer
+from app.models.membership_plan import MembershipPlan
+from app.models.payment import Payment
+from app.models.workout import Workout
+from app.models.diet import Diet
+from app.models.progress import Progress
+from app.models.attendance import Attendance, _slot_to_datetimes, _parse_datetime
+from app.models.announcement import Announcement
+from app.routes.admin import members
+from app.utils.decorators import login_required, member_required
+from app.models.workout_plan import MemberWorkoutPlan, WorkoutPlanDetail
 import json
 
 # NOTE: Keep blueprint without url_prefix so app.register_blueprint(..., url_prefix='/member') controls final path.
@@ -406,7 +406,7 @@ def payments():
         except Exception as ex:
             current_app.logger.exception("Payment model fetch failed, falling back to SQL: %s", ex)
             # fallback direct query
-            from models.database import execute_query
+            from app.models.database import execute_query
             db_path = current_app.config.get('DATABASE_PATH', 'gym_management.db')
             rows = execute_query(
                 "SELECT id, member_id, amount, currency, method, transaction_id, status, note, created_at "
