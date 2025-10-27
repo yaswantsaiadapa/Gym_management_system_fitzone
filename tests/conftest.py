@@ -4,36 +4,54 @@ from pathlib import Path
 import pytest
 from flask import Flask
 
-# ensure project root on sys.path (so imports like `from app.utils import ...` work)
+# Ensure repository root is on sys.path so `import app...` works
 project_root = Path(__file__).resolve().parents[1]
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-from app.app import create_app  # adjust if your factory is named differently
-# If you don't have a factory, create a minimal Flask app in tests instead.
+# Import app factory if present. If your app factory is named differently, adjust this import.
+try:
+    from app.app import create_app  # recommended: you have app/app.py with create_app()
+    HAVE_FACTORY = True
+except Exception:
+    HAVE_FACTORY = False
 
 @pytest.fixture(scope="session")
 def flask_app():
-    app = create_app()
-    app.config.update({
-        "TESTING": True,
-        "WTF_CSRF_ENABLED": False,
-        # Use sqlite memory if your app accepts SQLALCHEMY_DATABASE_URI
-        "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
-    })
-    # If your app needs DB schema, create it here (depending on your DB setup)
-    with app.app_context():
-        # If using SQLAlchemy: create tables. Example:
-        # from app.models.database import db
-        # db.create_all()
-        pass
+    """
+    Minimal Flask app used by unit tests. It registers a simple endpoint named
+    'auth.login' so `url_for('auth.login')` resolves inside decorators.
+    """
+    if HAVE_FACTORY:
+        app = create_app()
+        app.config.update({
+            "TESTING": True,
+            "WTF_CSRF_ENABLED": False,
+            "SECRET_KEY": "test-secret-key",
+        })
+    else:
+        app = Flask("test_app")
+        app.config.update({
+            "TESTING": True,
+            "SECRET_KEY": "test-secret-key",
+        })
+
+
+    # use exact endpoint name used in your decorators: 'auth.login'
+        # Register dummy endpoint *only if* it doesn’t already exist
+    if "auth.login" not in app.view_functions:
+        def _dummy_login():
+            return "login page"
+        app.add_url_rule(
+            "/auth/login", endpoint="auth.login",
+            view_func=_dummy_login, methods=["GET"]
+        )
+
     yield app
 
-@pytest.fixture
+@pytest.fixture()
 def client(flask_app):
+    """Flask test client fixture."""
     return flask_app.test_client()
 
-@pytest.fixture
-def app_ctx(flask_app):
-    with flask_app.app_context():
-        yield
+
