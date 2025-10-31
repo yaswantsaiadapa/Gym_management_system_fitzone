@@ -12,7 +12,6 @@
             </h1>
             <p class="text-gray-600 text-sm">Manage your clients and track their progress</p>
         </div>
-
         <!-- Key Stats -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
             <div class="bg-white shadow-md rounded-xl p-5 flex justify-between items-center hover:shadow-lg transition">
@@ -53,9 +52,7 @@
             <a href="{{ url_for('trainer_routes.schedule') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg text-center shadow-md transition">
                 <i class="fas fa-calendar block text-lg mb-1"></i>My Schedule
             </a>
-            <button onclick="markTodayAttendance()" class="bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 rounded-lg text-center shadow-md transition">
-                <i class="fas fa-check-circle block text-lg mb-1"></i>Mark Attendance
-            </button>
+            <a href="{{ url_for('trainer_routes.equipment_list') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg text-center shadow-md transition"> <i class="fas fa-bell block text-lg mb-1"></i>View Equipment</a>
             <a href="{{ url_for('auth.change_password_form') }}" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 rounded-lg text-center shadow-md transition">
                 <i class="fas fa-key block text-lg mb-1"></i>Change Password
             </a>
