@@ -4,73 +4,95 @@
 
 {% block content %}
 <div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900">
-        <i class="fas fa-apple-alt mr-3 text-primary"></i>My Diet Plans
+    <h1 class="text-3xl font-bold text-gray-900 flex items-center gap-3">
+        <i class="fas fa-apple-alt text-primary"></i>
+        My Diet Plans
     </h1>
-    <p class="text-gray-600">View your personalized nutrition plans</p>
+    <p class="text-gray-600">View and track your personalized nutrition plans</p>
 </div>
 
 {% if diet_plans %}
-<div class="space-y-6">
+<div class="space-y-8">
     {% for diet in diet_plans %}
-    <div class="card">
-        <div class="card-header">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h3 class="text-xl font-semibold text-gray-900">{{ diet.name }}</h3>
-                    {% if diet.total_calories %}
-                    <p class="text-gray-600 text-sm">Target: {{ diet.total_calories }} calories/day</p>
-                    {% endif %}
-                </div>
-                <span class="badge badge-{{ 'success' if diet.status == 'active' else 'warning' }}">
-                    {{ diet.status|title }}
-                </span>
-            </div>
-            {% if diet.description %}
-            <p class="text-gray-600 mt-2">{{ diet.description }}</p>
-            {% endif %}
-        </div>
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-md hover:shadow-lg transition duration-200">
         
-        <div class="card-body">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center flex-wrap gap-2">
+            <div>
+                <h3 class="text-xl font-semibold text-gray-900">{{ diet.name }}</h3>
+                {% if diet.total_calories %}
+                <p class="text-gray-600 text-sm">Target: 
+                    <span class="font-medium text-gray-800">{{ diet.total_calories }}</span> calories/day
+                </p>
+                {% endif %}
+                {% if diet.description %}
+                <p class="text-gray-500 mt-1">{{ diet.description }}</p>
+                {% endif %}
+            </div>
+            <span class="px-3 py-1 rounded-full text-sm font-medium 
+                {% if diet.status == 'active' %}
+                    bg-green-100 text-green-700
+                {% else %}
+                    bg-yellow-100 text-yellow-700
+                {% endif %}">
+                {{ diet.status|title }}
+            </span>
+        </div>
+
+        <!-- Body -->
+        <div class="px-6 py-5">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                     <label class="text-sm text-gray-500">Start Date</label>
-                    <div class="font-medium">{{ diet.start_date| datetimeformat('%B %d, %Y')}}</div>
+                    <div class="mt-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 font-medium text-gray-800">
+                        {{ diet.start_date|datetimeformat('%B %d, %Y') }}
+                    </div>
                 </div>
+
                 {% if diet.end_date %}
                 <div>
                     <label class="text-sm text-gray-500">End Date</label>
-                    <div class="font-medium">{{ diet.end_date| datetimeformat('%B %d, %Y')}}</div>
+                    <div class="mt-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 font-medium text-gray-800">
+                        {{ diet.end_date|datetimeformat('%B %d, %Y') }}
+                    </div>
                 </div>
                 {% endif %}
+
                 <div>
                     <label class="text-sm text-gray-500">Duration</label>
-                    <div class="font-medium">
+                    <div class="mt-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 font-medium text-gray-800">
                         {% set days = (diet.end_date - diet.start_date).days if diet.end_date else 'Ongoing' %}
                         {{ days }} {% if days != 'Ongoing' %}days{% endif %}
                     </div>
                 </div>
             </div>
-            
-            <div class="bg-gray-50 rounded-lg p-4 text-center">
-                <i class="fas fa-utensils text-gray-400 text-3xl mb-2"></i>
-                <p class="text-gray-500">Detailed meal plans will be provided by your trainer</p>
-                <p class="text-sm text-gray-400 mt-1">Contact your trainer for specific meal schedules and recipes</p>
+
+            <!-- Info Section -->
+            <div class="mt-6 bg-blue-50 border border-blue-100 rounded-xl p-5 text-center">
+                <i class="fas fa-utensils text-blue-400 text-3xl mb-2"></i>
+                <p class="text-gray-700 font-medium">
+                    Detailed meal plans will be provided by your trainer
+                </p>
+                <p class="text-sm text-gray-500 mt-1">
+                    Contact your trainer for specific meal schedules and recipes
+                </p>
             </div>
         </div>
     </div>
     {% endfor %}
 </div>
+
 {% else %}
-<div class="card">
-    <div class="card-body text-center py-12">
-        <i class="fas fa-apple-alt text-gray-400 text-4xl mb-4"></i>
-        <h3 class="text-lg font-medium text-gray-900 mb-2">No diet plans assigned</h3>
-        <p class="text-gray-500 mb-4">Your trainer will create personalized diet plans for you</p>
-        <a href="{{ url_for('member_routes.dashboard') }}" class="btn btn-primary">
-            <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
-        </a>
-    </div>
+<div class="bg-white rounded-2xl shadow-md border border-gray-200 text-center py-12">
+    <i class="fas fa-apple-alt text-gray-400 text-4xl mb-4"></i>
+    <h3 class="text-lg font-semibold text-gray-900 mb-2">No Diet Plans Assigned</h3>
+    <p class="text-gray-500 mb-6">
+        Your trainer will soon create personalized diet plans for you.
+    </p>
+    <a href="{{ url_for('member_routes.dashboard') }}" 
+       class="inline-flex items-center gap-2 bg-primary hover:bg-blue-700 text-white font-medium px-5 py-2.5 rounded-lg shadow transition">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
 </div>
 {% endif %}
 {% endblock %}
