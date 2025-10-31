@@ -12,72 +12,65 @@
 
 {% if progress_records %}
 <!-- Progress Chart -->
-<div class="card mb-8">
-    <div class="card-header">
-        <h2 class="text-xl font-semibold text-gray-900">Progress Chart</h2>
+<div class="card shadow-lg border border-gray-200 rounded-2xl mb-8 bg-white">
+    <div class="card-header border-b border-gray-100 px-6 py-4">
+        <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+            <i class="fas fa-chart-area text-primary mr-2"></i> Progress Overview
+        </h2>
     </div>
-    <div class="card-body">
-        <canvas id="progressChart" class="w-full h-64"></canvas>
+    <div class="card-body px-6 py-6">
+        <canvas id="progressChart" class="w-full h-72"></canvas>
     </div>
 </div>
 
 <!-- Progress Records -->
-<div class="card">
-    <div class="card-header">
-        <h2 class="text-xl font-semibold text-gray-900">Progress Records</h2>
+<div class="card shadow-lg border border-gray-200 rounded-2xl bg-white">
+    <div class="card-header border-b border-gray-100 px-6 py-4">
+        <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+            <i class="fas fa-list-alt text-primary mr-2"></i> Detailed Progress Records
+        </h2>
     </div>
-    <div class="card-body p-0">
+    <div class="card-body px-0 py-4">
         <div class="overflow-x-auto">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Weight (kg)</th>
-                        <th>BMI</th>
-                        <th>Body Fat %</th>
-                        <th>Measurements</th>
-                        <th>Notes</th>
+            <table class="min-w-full border-collapse">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr class="text-left text-gray-600 text-sm uppercase">
+                        <th class="px-6 py-3 font-semibold">Date</th>
+                        <th class="px-6 py-3 font-semibold">Weight (kg)</th>
+                        <th class="px-6 py-3 font-semibold">BMI</th>
+                        <th class="px-6 py-3 font-semibold">Body Fat %</th>
+                        <th class="px-6 py-3 font-semibold">Measurements</th>
+                        <th class="px-6 py-3 font-semibold">Notes</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-gray-100">
                     {% for record in progress_records %}
-                    <tr>
-                        <td>
-                            <div class="font-medium">{{ record.recorded_date.strftime('%B %d, %Y') }}</div>
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 text-gray-900 font-medium">
+                            {{ record.recorded_date.strftime('%B %d, %Y') }}
                         </td>
-                        <td>
-                            {% if record.weight %}
-                            <span class="font-medium">{{ record.weight }}</span>
-                            {% else %}
-                            <span class="text-gray-400">-</span>
+                        <td class="px-6 py-4 text-gray-700">
+                            {{ record.weight if record.weight else '-' }}
+                        </td>
+                        <td class="px-6 py-4 text-gray-700">
+                            {{ record.bmi if record.bmi else '-' }}
+                        </td>
+                        <td class="px-6 py-4 text-gray-700">
+                            {{ record.body_fat_percentage ~ '%' if record.body_fat_percentage else '-' }}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-600 space-y-1">
+                            {% if record.chest %}<div>Chest: {{ record.chest }} cm</div>{% endif %}
+                            {% if record.waist %}<div>Waist: {{ record.waist }} cm</div>{% endif %}
+                            {% if record.bicep %}<div>Bicep: {{ record.bicep }} cm</div>{% endif %}
+                            {% if not record.chest and not record.waist and not record.bicep %}
+                            <div class="text-gray-400">-</div>
                             {% endif %}
                         </td>
-                        <td>
-                            {% if record.bmi %}
-                            <span class="font-medium">{{ record.bmi }}</span>
-                            {% else %}
-                            <span class="text-gray-400">-</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if record.body_fat_percentage %}
-                            <span class="font-medium">{{ record.body_fat_percentage }}%</span>
-                            {% else %}
-                            <span class="text-gray-400">-</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <div class="text-sm space-y-1">
-                                {% if record.chest %}<div>Chest: {{ record.chest }}cm</div>{% endif %}
-                                {% if record.waist %}<div>Waist: {{ record.waist }}cm</div>{% endif %}
-                                {% if record.bicep %}<div>Bicep: {{ record.bicep }}cm</div>{% endif %}
-                            </div>
-                        </td>
-                        <td>
+                        <td class="px-6 py-4 text-sm text-gray-600">
                             {% if record.notes %}
-                            <span class="text-sm text-gray-600">{{ record.notes[:50] }}{% if record.notes|length > 50 %}...{% endif %}</span>
+                                {{ record.notes[:60] }}{% if record.notes|length > 60 %}...{% endif %}
                             {% else %}
-                            <span class="text-gray-400">-</span>
+                                <span class="text-gray-400">-</span>
                             {% endif %}
                         </td>
                     </tr>
@@ -103,7 +96,9 @@
                     borderColor: 'rgba(37, 99, 235, 1)',
                     backgroundColor: 'rgba(37, 99, 235, 0.2)',
                     fill: true,
-                    tension: 0.3
+                    tension: 0.3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 },
                 {
                     label: 'BMI',
@@ -111,7 +106,9 @@
                     borderColor: 'rgba(16, 185, 129, 1)',
                     backgroundColor: 'rgba(16, 185, 129, 0.2)',
                     fill: true,
-                    tension: 0.3
+                    tension: 0.3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 },
                 {
                     label: 'Body Fat %',
@@ -119,7 +116,9 @@
                     borderColor: 'rgba(220, 38, 38, 1)',
                     backgroundColor: 'rgba(220, 38, 38, 0.2)',
                     fill: true,
-                    tension: 0.3
+                    tension: 0.3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 }
             ]
         },
@@ -129,15 +128,20 @@
                 legend: { position: 'top' }
             },
             scales: {
-                y: { beginAtZero: false, title: { display: true, text: 'Value' } },
-                x: { title: { display: true, text: 'Date' } }
+                y: {
+                    beginAtZero: false,
+                    title: { display: true, text: 'Value', color: '#374151' }
+                },
+                x: {
+                    title: { display: true, text: 'Date', color: '#374151' }
+                }
             }
         }
     });
 </script>
 
 {% else %}
-<div class="card">
+<div class="card shadow-lg border border-gray-200 rounded-2xl bg-white">
     <div class="card-body text-center py-12">
         <i class="fas fa-chart-line text-gray-400 text-4xl mb-4"></i>
         <h3 class="text-lg font-medium text-gray-900 mb-2">No progress records yet</h3>
@@ -145,5 +149,4 @@
     </div>
 </div>
 {% endif %}
-
 {% endblock %}
