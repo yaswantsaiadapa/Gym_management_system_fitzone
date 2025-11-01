@@ -321,6 +321,33 @@ def edit_diet_plan(plan_id):
                          diet_plan=diet_plan,
                          meals=meals,
                          member=member)
+@trainer_routes_bp.route('/workout-plan-detail/delete/<int:detail_id>', methods=['POST'])
+@trainer_required
+def delete_workout_plan_detail(detail_id):
+    """Delete a workout plan detail (exercise)"""
+    try:
+        # Fetch the detail
+        detail = WorkoutPlanDetail.get_by_id(detail_id)
+        if not detail:
+            flash("Exercise not found.", "danger")
+            return redirect(request.referrer or url_for('trainer_routes.workout_plans'))
+
+        # Verify that the current trainer owns this plan
+        workout_plan = MemberWorkoutPlan.get_by_id(detail.plan_id)
+        trainer_id = session.get('trainer_id')
+        if not workout_plan or workout_plan.trainer_id != trainer_id:
+            flash("You are not authorized to delete this exercise.", "danger")
+            return redirect(request.referrer or url_for('trainer_routes.workout_plans'))
+
+        # Perform deletion
+        detail.delete()  # You need to implement this method in your WorkoutPlanDetail model
+        flash("Exercise removed successfully.", "success")
+
+    except Exception as e:
+        current_app.logger.exception(f"Error deleting workout plan detail: {e}")
+        flash(f"An error occurred: {str(e)}", "danger")
+
+    return redirect(url_for('trainer_routes.edit_workout_plan', plan_id=detail.plan_id))
 
 @trainer_routes_bp.route('/clients/<int:member_id>/progress/record', methods=['GET', 'POST'])
 @trainer_required

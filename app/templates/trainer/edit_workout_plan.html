@@ -24,8 +24,7 @@
                 </div>
                 <div>
                     <label class="text-sm text-gray-500">Start Date</label>
-                    <div class="font-medium">{{ workout_plan.start_date | datetimeformat('%B %d, %Y') }}
-</div>
+                    <div class="font-medium">{{ workout_plan.start_date | datetimeformat('%B %d, %Y') }}</div>
                 </div>
                 <div>
                     <label class="text-sm text-gray-500">Status</label>
@@ -44,21 +43,21 @@
     </div>
 
     <!-- Current Exercises -->
-    <<div class="card mb-8">
-    <div class="card-header flex justify-between items-center">
-        <h2 class="text-xl font-semibold text-gray-900">Exercises in Plan</h2>
-        <a href="{{ url_for('trainer_routes.add_workout_plan_detail', plan_id=workout_plan.id) }}" 
-           class="btn btn-primary">
-            <i class="fas fa-plus mr-2"></i>Add Exercise
-        </a>
-    </div>
+    <div class="card mb-8">
+        <div class="card-header flex justify-between items-center">
+            <h2 class="text-xl font-semibold text-gray-900">Exercises in Plan</h2>
+            <a href="{{ url_for('trainer_routes.add_workout_plan_detail', plan_id=workout_plan.id) }}" 
+               class="btn btn-primary">
+                <i class="fas fa-plus mr-2"></i>Add Exercise
+            </a>
+        </div>
         <div class="card-body p-0">
             {% if plan_details %}
             <div class="overflow-x-auto">
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>Exercise</th>
+                            <th>Exercise (ID)</th>
                             <th>Day</th>
                             <th>Sets</th>
                             <th>Reps</th>
@@ -72,7 +71,15 @@
                         {% for detail in plan_details %}
                         <tr>
                             <td>
-                                <div class="font-medium text-gray-900">{{ detail.workout_name }}</div>
+                                {% if detail.workout %}
+                                <div class="font-medium text-gray-900">
+                                    {{ detail.workout.name }} (ID: {{ detail.workout.id }})
+                                </div>
+                                {% else %}
+                                <div class="font-medium text-red-500">
+                                    Exercise not found (ID: {{ detail.workout_id }})
+                                </div>
+                                {% endif %}
                             </td>
                             <td>
                                 <span class="badge badge-info">{{ detail.day_of_week|title if detail.day_of_week else 'Any Day' }}</span>
@@ -89,9 +96,14 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <button class="text-danger hover:text-red-700" title="Remove">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                <!-- Delete form using POST -->
+                                <form action="{{ url_for('trainer_routes.delete_workout_plan_detail', detail_id=detail.id) }}" method="POST" style="display:inline;">
+                                    <button type="submit" class="text-danger hover:text-red-700" 
+                                            title="Remove" 
+                                            onclick="return confirm('Are you sure you want to delete this exercise?');">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                         {% endfor %}
@@ -104,7 +116,6 @@
                 <h3 class="text-lg font-medium text-gray-900 mb-2">No exercises added yet</h3>
                 <p class="text-gray-500 mb-4">Add exercises to complete this workout plan</p>
                 <a href="{{ url_for('trainer_routes.add_workout_plan_detail', plan_id=workout_plan.id) }}" class="btn btn-primary">
-
                     <i class="fas fa-plus mr-2"></i>Add First Exercise
                 </a>
             </div>

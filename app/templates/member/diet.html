@@ -11,17 +11,21 @@
     <p class="text-gray-600">View and track your personalized nutrition plans</p>
 </div>
 
-{% if diet_plans %}
+
+
+{% if diet_plans and diet_plans|length > 0 %}
 <div class="space-y-8">
     {% for diet in diet_plans %}
     <div class="bg-white rounded-2xl border border-gray-200 shadow-md hover:shadow-lg transition duration-200">
-        
         <!-- Header -->
         <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center flex-wrap gap-2">
             <div>
-                <h3 class="text-xl font-semibold text-gray-900">{{ diet.name }}</h3>
+                <h3 class="text-xl font-semibold text-gray-900">{{ diet.name or 'Untitled Plan' }}</h3>
+                {% if diet.trainer_name %}
+                <p class="text-sm text-gray-600">Created by {{ diet.trainer_name }}</p>
+                {% endif %}
                 {% if diet.total_calories %}
-                <p class="text-gray-600 text-sm">Target: 
+                <p class="text-gray-600 text-sm mt-1">Target: 
                     <span class="font-medium text-gray-800">{{ diet.total_calories }}</span> calories/day
                 </p>
                 {% endif %}
@@ -45,38 +49,95 @@
                 <div>
                     <label class="text-sm text-gray-500">Start Date</label>
                     <div class="mt-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 font-medium text-gray-800">
-                        {{ diet.start_date|datetimeformat('%B %d, %Y') }}
+                        {% if diet.start_date %}
+                            {{ diet.start_date.strftime('%B %d, %Y') }}
+                        {% else %}
+                            -
+                        {% endif %}
                     </div>
                 </div>
 
-                {% if diet.end_date %}
                 <div>
                     <label class="text-sm text-gray-500">End Date</label>
                     <div class="mt-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 font-medium text-gray-800">
-                        {{ diet.end_date|datetimeformat('%B %d, %Y') }}
+                        {% if diet.end_date %}
+                            {{ diet.end_date.strftime('%B %d, %Y') }}
+                        {% else %}
+                            Ongoing
+                        {% endif %}
                     </div>
                 </div>
-                {% endif %}
 
                 <div>
                     <label class="text-sm text-gray-500">Duration</label>
                     <div class="mt-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 font-medium text-gray-800">
-                        {% set days = (diet.end_date - diet.start_date).days if diet.end_date else 'Ongoing' %}
-                        {{ days }} {% if days != 'Ongoing' %}days{% endif %}
+                        {% if diet.start_date and diet.end_date %}
+                            {% set days = (diet.end_date - diet.start_date).days %}
+                            {{ days }} days
+                        {% else %}
+                            Ongoing
+                        {% endif %}
                     </div>
                 </div>
             </div>
 
-            <!-- Info Section -->
-            <div class="mt-6 bg-blue-50 border border-blue-100 rounded-xl p-5 text-center">
-                <i class="fas fa-utensils text-blue-400 text-3xl mb-2"></i>
-                <p class="text-gray-700 font-medium">
-                    Detailed meal plans will be provided by your trainer
-                </p>
-                <p class="text-sm text-gray-500 mt-1">
-                    Contact your trainer for specific meal schedules and recipes
-                </p>
+            
+
+            <!-- Meals Section (collapsible) -->
+            {% set toggle_id = 'meals-' ~ (diet.id if diet.id is not none else loop.index) %}
+            <div class="mt-6">
+                <button type="button"
+                        class="px-4 py-2 bg-primary text-white rounded-lg shadow hover:bg-blue-700 transition"
+                        onclick="document.getElementById('{{ toggle_id }}').classList.toggle('hidden')">
+                    View Meals
+                </button>
+
+                <div id="{{ toggle_id }}" class="mt-4 space-y-4 hidden">
+                    {% set meals = diet.meals if diet.meals is defined else [] %}
+                    {% if meals and meals|length > 0 %}
+                        {% set meals_by_type = {'breakfast': [], 'lunch': [], 'dinner': [], 'snack': []} %}
+                        {% for meal in meals %}
+                            {% if meal.meal_type in meals_by_type %}
+                                {% set _ = meals_by_type[meal.meal_type].append(meal) %}
+                            {% else %}
+                                {% set _ = meals_by_type.setdefault('snack', []).append(meal) %}
+                            {% endif %}
+                        {% endfor %}
+
+                        {% for meal_type, group in meals_by_type.items() %}
+                            {% if group and group|length > 0 %}
+                            <div class="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                                <h4 class="text-md font-semibold capitalize mb-2">{{ meal_type }}</h4>
+                                <ul class="space-y-2">
+                                    {% for meal in group %}
+                                    <li class="border-b border-gray-200 pb-2">
+                                        <p class="font-medium">{{ meal.meal_name }}</p>
+                                        {% if meal.ingredients %}
+                                        <p class="text-sm text-gray-500">Ingredients: {{ meal.ingredients }}</p>
+                                        {% endif %}
+                                        {% if meal.calories %}
+                                        <p class="text-sm text-gray-500">
+                                            Calories: {{ meal.calories }},
+                                            Protein: {{ meal.protein or '-' }}g,
+                                            Carbs: {{ meal.carbs or '-' }}g,
+                                            Fat: {{ meal.fat or '-' }}g
+                                        </p>
+                                        {% endif %}
+                                        {% if meal.instructions %}
+                                        <p class="text-sm text-gray-500 mt-1">Instructions: {{ meal.instructions }}</p>
+                                        {% endif %}
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-gray-500 italic">No meals added yet for this plan.</p>
+                    {% endif %}
+                </div>
             </div>
+
         </div>
     </div>
     {% endfor %}
@@ -89,7 +150,7 @@
     <p class="text-gray-500 mb-6">
         Your trainer will soon create personalized diet plans for you.
     </p>
-    <a href="{{ url_for('member_routes.dashboard') }}" 
+    <a href="{{ url_for('member.dashboard') }}" 
        class="inline-flex items-center gap-2 bg-primary hover:bg-blue-700 text-white font-medium px-5 py-2.5 rounded-lg shadow transition">
         <i class="fas fa-arrow-left"></i> Back to Dashboard
     </a>

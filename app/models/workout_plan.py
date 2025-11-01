@@ -128,7 +128,12 @@ class MemberWorkoutPlan:
         if not self.id:
             self.id = result
         return self.id
-
+    def delete(self):
+        if not self.id:
+            raise ValueError("Cannot delete a workout detail that hasn't been saved.")
+        db_path = current_app.config.get("DATABASE_PATH", "gym_management.db")
+        query = "DELETE FROM workout_plan_details WHERE id = ?"
+        execute_query(query, (self.id,), db_path)
     def deactivate(self):
         """Deactivate (soft delete) this workout plan."""
         if not self.id:

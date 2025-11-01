@@ -517,20 +517,36 @@ def insert_default_data(cursor):
             ''', equipment)
 
     # Insert sample workouts
+    # Insert sample workouts
     cursor.execute('SELECT COUNT(*) FROM workouts')
     if cursor.fetchone()[0] == 0:
         workouts = [
+            # Existing strength/cardio workouts
             ('Push-ups', 'Bodyweight exercise for chest and arms', 'strength', 'beginner', 15, 50, 'Lie face down, push body up and down using arms', 'None'),
             ('Treadmill Running', 'Cardiovascular exercise on treadmill', 'cardio', 'beginner', 30, 300, 'Start slow, increase speed gradually, maintain steady pace', 'Treadmill'),
             ('Bench Press', 'Chest strengthening exercise with barbell', 'strength', 'intermediate', 45, 200, 'Lie on bench, press barbell up and down', 'Barbell, Bench'),
             ('Squats', 'Lower body compound exercise', 'strength', 'beginner', 20, 100, 'Stand with feet apart, lower body as if sitting, return to standing', 'None or Weights'),
-            ('Plank', 'Core strengthening exercise', 'strength', 'beginner', 10, 30, 'Hold body straight in push-up position', 'None')
+            ('Plank', 'Core strengthening exercise', 'strength', 'beginner', 10, 30, 'Hold body straight in push-up position', 'None'),
+
+            # --- 10 new exercises ---
+            ('Lunges', 'Strengthens legs and glutes', 'strength', 'beginner', 20, 80, 'Step forward, lower body, return', 'None or Dumbbells'),
+            ('Bicep Curls', 'Arm isolation exercise for biceps', 'strength', 'beginner', 15, 40, 'Curl dumbbells up to shoulder', 'Dumbbells'),
+            ('Shoulder Press', 'Shoulder strengthening exercise', 'strength', 'intermediate', 20, 60, 'Press dumbbells overhead', 'Dumbbells'),
+            ('Jumping Jacks', 'Full body cardio exercise', 'cardio', 'beginner', 10, 70, 'Jump with arms and legs spread', 'None'),
+            ('Mountain Climbers', 'Core and cardio exercise', 'cardio', 'intermediate', 15, 100, 'Alternate knees to chest quickly', 'None'),
+            ('Leg Raises', 'Lower abs exercise', 'strength', 'beginner', 15, 30, 'Lift legs while lying down', 'None'),
+            ('Bicycle Crunches', 'Abdominal exercise', 'strength', 'beginner', 10, 25, 'Alternate elbow to opposite knee', 'None'),
+            ('Yoga Cat-Cow', 'Spinal flexibility exercise', 'flexibility', 'beginner', 10, 0, 'Alternate arching and rounding back', 'None'),
+            ('Seated Forward Bend', 'Hamstring and back stretch', 'flexibility', 'beginner', 10, 0, 'Reach forward to touch toes while seated', 'None'),
+            ('Butterfly Stretch', 'Inner thigh flexibility', 'flexibility', 'beginner', 10, 0, 'Sit, press soles together, push knees down gently', 'None')
         ]
-        for workout in workouts:
-            cursor.execute('''
-                INSERT INTO workouts (name, description, category, difficulty_level, duration_minutes, calories_burned, instructions, equipment_needed)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ''', workout)
+
+    for workout in workouts:
+        cursor.execute('''
+            INSERT INTO workouts (name, description, category, difficulty_level, duration_minutes, calories_burned, instructions, equipment_needed)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', workout)
+
 
     # Insert sample announcement
     cursor.execute('SELECT COUNT(*) FROM announcements')

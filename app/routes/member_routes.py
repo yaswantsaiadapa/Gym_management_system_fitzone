@@ -256,9 +256,28 @@ def workouts():
 def diet():
     """Member diet plans"""
     try:
-        user_id = session['user_id']
+        user_id = session.get('user_id')
+        if not user_id:
+            current_app.logger.warning("No user_id in session when loading diet page.")
+            flash('Please log in to view diet plans.')
+            return redirect(url_for('auth.login'))
+
         member = Member.get_by_user_id(user_id)
+        if not member:
+            current_app.logger.warning("No member record for user_id=%s", user_id)
+            flash('Member record not found.')
+            return redirect(url_for('member.dashboard'))
+
         diet_plans = Diet.get_member_diet_plans(member.id)
+
+        # Extra safety: ensure diet_plans is a list (so template logic works)
+        if not isinstance(diet_plans, list):
+            current_app.logger.warning("Diet.get_member_diet_plans returned non-list: %r", diet_plans)
+            diet_plans = []
+
+        # Log how many plans we are sending to the template
+        current_app.logger.debug("Rendering /diet: member_id=%s, plans=%d", member.id, len(diet_plans))
+
         return render_template('member/diet.html', diet_plans=diet_plans)
     except Exception as e:
         current_app.logger.exception("Error loading diet plans: %s", e)
