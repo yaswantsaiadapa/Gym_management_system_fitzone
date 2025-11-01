@@ -541,11 +541,11 @@ def insert_default_data(cursor):
             ('Butterfly Stretch', 'Inner thigh flexibility', 'flexibility', 'beginner', 10, 0, 'Sit, press soles together, push knees down gently', 'None')
         ]
 
-    for workout in workouts:
-        cursor.execute('''
-            INSERT INTO workouts (name, description, category, difficulty_level, duration_minutes, calories_burned, instructions, equipment_needed)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', workout)
+        for workout in workouts:
+            cursor.execute('''
+                INSERT INTO workouts (name, description, category, difficulty_level, duration_minutes, calories_burned, instructions, equipment_needed)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', workout)
 
 
     # Insert sample announcement
