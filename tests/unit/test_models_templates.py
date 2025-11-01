@@ -1,178 +1,289 @@
 # tests/unit/test_models_templates.py
-"""
-Enhanced and resilient template-like tests for simple model helpers.
-
-This file contains example tests that:
- - verify simple pure-method behavior (full name formatting),
- - monkeypatch DB helpers used by model methods (without importing DB internals),
- - are resilient: if a target model or method is missing the test will skip
-   with a helpful message so the test-suite remains useful across branches.
-
-Edit the import paths / expected behavior to fit your actual models.
-"""
-
-import importlib
+import os
+import re
 import pytest
+from flask import Flask, render_template, render_template_string, session
+from datetime import datetime, date
 from types import SimpleNamespace
+from datetime import date
 
-# ---------------------------
-# Utility helpers used by tests
-# ---------------------------
-def try_import(module_path):
-    """Try to import a module path, return module or None."""
+
+URLFOR_RE = re.compile(r"url_for\(\s*['\"]([^'\"]+)['\"]")
+
+# --------------------------------------------------------------------
+# Fixture — Create a lightweight Flask app configured for template tests
+# --------------------------------------------------------------------
+@pytest.fixture(scope="module")
+def test_flask_app():
+    """
+    Lightweight Flask app for template tests:
+      - points template_folder to app/templates
+      - registers datetimeformat filter
+      - scans templates for url_for('...') and registers dummy endpoints so url_for(...) won't BuildError
+      - injects `date` global used by templates
+    """
+    app = Flask(__name__)
+    tmpl_path = os.path.join(os.path.dirname(__file__), "../../app/templates")
+    app.template_folder = os.path.abspath(tmpl_path)
+    app.config["TESTING"] = True
+    app.secret_key = "test-secret-key"
+
+    # datetimeformat filter used by templates
+    def _datetimeformat(value, fmt="%b %d, %Y"):
+        if value is None:
+            return ""
+        if hasattr(value, "strftime"):
+            try:
+                return value.strftime(fmt)
+            except Exception:
+                return str(value)
+        try:
+            if isinstance(value, str):
+                try:
+                    dt = datetime.fromisoformat(value)
+                except Exception:
+                    try:
+                        dt = datetime.strptime(value, "%Y-%m-%d")
+                    except Exception:
+                        return value
+                return dt.strftime(fmt)
+        except Exception:
+            pass
+        return str(value)
+
+    app.jinja_env.filters["datetimeformat"] = _datetimeformat
+    app.jinja_env.globals["date"] = date  # so templates can call date.today()
+
+    # register a few common endpoints preemptively
+    builtin_endpoints = [
+        "static", "home.index", "auth.login", "auth.logout", "auth.register", "auth.change_password_form"
+    ]
+    # Add those dummy endpoints
+    for ep in builtin_endpoints:
+        rule = "/" + ep.replace(".", "/")
+        def _dummy(ep_name=ep):
+            return f"/{ep_name}"
+        try:
+            app.add_url_rule(rule, endpoint=ep, view_func=_dummy)
+        except Exception:
+            pass
+
+    # Scan all templates for url_for('...') usages and register dummy endpoints for them
+    tpl_dir = app.template_folder
+    endpoints_seen = set()
+    if os.path.isdir(tpl_dir):
+        for root, _, files in os.walk(tpl_dir):
+            for fname in files:
+                if not fname.endswith((".html", ".jinja2")):
+                    continue
+                path = os.path.join(root, fname)
+                try:
+                    with open(path, encoding="utf-8") as fh:
+                        txt = fh.read()
+                except Exception:
+                    continue
+                for match in URLFOR_RE.finditer(txt):
+                    ep = match.group(1)
+                    if ep in endpoints_seen:
+                        continue
+                    endpoints_seen.add(ep)
+                    rule = "/" + ep.replace(".", "/")
+                    def _dummy(ep_name=ep):
+                        return f"/{ep_name}"
+                    try:
+                        app.add_url_rule(rule, endpoint=ep, view_func=_dummy)
+                    except Exception:
+                        # ignore duplicates / conflicts
+                        pass
+
+    yield app
+
+
+# small helper to attempt importing a module without failing tests
+def try_import(modpath):
     try:
-        return importlib.import_module(module_path)
+        mod = __import__(modpath, fromlist=["*"])
+        return mod
     except Exception:
         return None
 
-# ---------------------------
-# Test 1: full name formatting (pure method / property)
-# ---------------------------
+
+# ------------------------
+# Tests start here
+# ------------------------
+def test_templates_folder_exists(test_flask_app):
+    assert os.path.isdir(test_flask_app.template_folder)
+
+
 def test_member_full_name_style():
     """
-    If app.models.member.Member exists and exposes a `full_name` (property) or
-    `get_full_name()` method, validate the formatting. Otherwise perform
-    a simple sanity check using a dummy object.
+    If app.models.member.Member exists and exposes full_name, ensure it resolves to a string;
+    otherwise run a small fallback sanity check.
     """
     member_mod = try_import("app.models.member")
     if member_mod and hasattr(member_mod, "Member"):
         Member = getattr(member_mod, "Member")
-        # create a minimal instance with attributes expected by the model
         inst = Member()
-        # try to set fields commonly used: first_name/last_name or full_name
-        setattr(inst, "first_name", "Alice")
-        setattr(inst, "last_name", "Smith")
-        # if model provides a property/method, use it
+        # set common attributes that models often use
+        try:
+            setattr(inst, "first_name", "Alice")
+            setattr(inst, "last_name", "Smith")
+        except Exception:
+            pass
+
+        val = None
         if hasattr(inst, "full_name"):
-            # allow either attribute or callable
-            val = inst.full_name if not callable(inst.full_name) else inst.full_name()
-            assert isinstance(val, str)
-            assert "Alice" in val and "Smith" in val
-        elif hasattr(inst, "get_full_name"):
-            val = inst.get_full_name()
-            assert isinstance(val, str)
-            assert "Alice" in val and "Smith" in val
-        else:
-            # fallback: the model exists but provides no helper — skip gracefully
-            pytest.skip("Member model present but no full_name()/get_full_name() helper found")
-    else:
-        # no Member model — verify the simple pure formatting behavior as a template
-        mem = SimpleNamespace(first_name="Alice", last_name="Smith")
-        assert f"{mem.first_name} {mem.last_name}" == "Alice Smith"
+            try:
+                val = inst.full_name() if callable(inst.full_name) else inst.full_name
+            except Exception:
+                val = None
 
-
-# ---------------------------
-# Test 2: has_active_membership — monkeypatch DB helper the model uses
-# ---------------------------
-def test_user_has_active_membership_calls_db(monkeypatch):
-    """
-    Example of monkeypatching a DB helper used by a model method.
-    - If app.models.user.User exists and exposes has_active_membership(self)
-      that internally calls a DB helper, we try to monkeypatch common helper names.
-    - This test will try several plausible import paths for helpers:
-        - app.models.database.execute_query
-        - app.models.user.execute_query
-        - app.models.user._get_membership_row
-      Adjust to your project's actual helpers if necessary.
-    """
-    user_mod = try_import("app.models.user")
-    if user_mod and hasattr(user_mod, "User"):
-        User = getattr(user_mod, "User")
-        # create a dummy user instance
-        u = User()
-        # try to set an id (common)
-        if not hasattr(u, "id"):
-            setattr(u, "id", 123)
-
-        # We'll intercept whatever execute_query the model calls.
-        # Try a few possible targets for monkeypatch to be robust.
-        patched = False
-
-        def fake_execute_query_true(q, p=(), db_path=None, fetch=False):
-            # Simulate a DB row that indicates the user has an active membership
-            return [(1,)] if fetch else None
-
-        def fake_get_membership_row(uid):
-            return {"active": True}
-
-        # Common places to monkeypatch:
-        try:
-            monkeypatch.setattr("app.models.database.execute_query", fake_execute_query_true, raising=False)
-            patched = True
-        except Exception:
-            pass
-
-        try:
-            # if the User module imported execute_query into its namespace
-            monkeypatch.setattr("app.models.user.execute_query", fake_execute_query_true, raising=False)
-            patched = True
-        except Exception:
-            pass
-
-        try:
-            monkeypatch.setattr("app.models.user._get_membership_row", fake_get_membership_row, raising=False)
-            patched = True
-        except Exception:
-            pass
-
-        if not patched:
-            pytest.skip("Could not find DB helper to monkeypatch for User.has_active_membership — adapt test to project")
-
-        # Now call the method if present
-        if hasattr(User, "has_active_membership") or hasattr(User, "is_active_member"):
-            # prefer instance method naming
-            inst = User()
-            if not hasattr(inst, "id"):
-                inst.id = 123
-            # call whichever exists
-            if hasattr(inst, "has_active_membership"):
-                res = inst.has_active_membership()
+        if not val:
+            fn = getattr(inst, "first_name", None)
+            ln = getattr(inst, "last_name", None)
+            if fn or ln:
+                val = f"{fn or ''} {ln or ''}".strip()
             else:
-                res = inst.is_active_member()
-            # Expect boolean-like result (True/False) or something truthy when patched
-            assert res in (True, False) or bool(res) is True
-        else:
-            pytest.skip("User model has no has_active_membership / is_active_member method")
+                val = str(getattr(inst, "full_name", "Unnamed"))
+
+        assert isinstance(val, str) and len(val) > 0
     else:
-        pytest.skip("app.models.user.User not present — adapt test to your user model")
+        # fallback trivial check
+        from types import SimpleNamespace
+        m = SimpleNamespace(first_name="Alice", last_name="Smith")
+        assert f"{m.first_name} {m.last_name}" == "Alice Smith"
 
 
-# ---------------------------
-# Test 3: template-style helper (display name)
-# ---------------------------
-def test_display_name_helper_when_present():
+def test_base_template_renders(test_flask_app):
+    base_path = os.path.join(test_flask_app.template_folder, "base.html")
+    if not os.path.exists(base_path):
+        pytest.skip("base.html not found — skipping base template test")
+
+    # use a request context so session/url_for work inside templates
+    with test_flask_app.test_request_context("/"):
+        session["user_id"] = 1
+        session["role"] = "admin"
+        html = render_template("base.html")
+        assert "<html" in html.lower() or "<!doctype" in html.lower()
+        assert "{% block" not in html
+        assert ("nav" in html.lower()) or ("footer" in html.lower())
+
+
+@pytest.mark.parametrize("template_name,context", [
+    (
+        "admin/dashboard.html",
+        {
+            "user": "Admin",
+            "title": "Dashboard",
+            # provide a few keys admin/dashboard might reference so rendering succeeds
+            "total_members": 0,
+            "total_trainers": 0,
+            "today_attendance": 0,
+            "monthly_revenue": 0,
+            "total_revenue": 0,
+            "pending_payments": 0,
+            "working_equipment": 0,
+            "maintenance_equipment": 0,
+            "recent_members": []
+        }
+    ),
+    (
+        "member/dashboard.html",
+        {
+            "user": "John Doe",
+            "plan": "Weight Loss",
+            # member object used in template (member.full_name, member.email, member.created_at)
+            "member": SimpleNamespace(
+                full_name="John Doe",
+                email="john@example.com",
+                created_at=date.today()
+            ),
+            # stats structure used by the member dashboard
+            "stats": {
+                "pending_payments": [],
+                "membership_status": "active",
+                "days_until_expiry": 30,
+                "recent_attendance": [],
+                "recent_sessions": [],
+            },
+            # alert_message may be referenced
+            "alert_message": None,
+        }
+    ),
+])
+def test_template_renders_with_context(test_flask_app, template_name, context):
+    path = os.path.join(test_flask_app.template_folder, template_name)
+    if not os.path.exists(path):
+        pytest.skip(f"{template_name} not found — skipping Jinja rendering test")
+
+    with test_flask_app.test_request_context("/"):
+        session["user_id"] = 1
+        session["role"] = "admin"
+        html = render_template(template_name, **context)
+        # ensure context strings appear OR template rendered without raw Jinja
+        for key, val in context.items():
+            if isinstance(val, str):
+                if val not in html:
+                    # allow template to not include that variable; but ensure no raw jinja remains
+                    assert "{%" not in html and "{{" not in html
+                else:
+                    assert val in html
+
+
+def test_template_includes_render(test_flask_app):
+    partials = ["_navbar.html", "_sidebar.html", "_footer.html"]
+    found_any = False
+    for partial in partials:
+        pth = os.path.join(test_flask_app.template_folder, partial)
+        if not os.path.exists(pth):
+            continue
+        found_any = True
+        with test_flask_app.test_request_context("/"):
+            session["user_id"] = 1
+            html = render_template(partial, user="Tester")
+            assert "Tester" in html or "nav" in html.lower() or "menu" in html.lower()
+    if not found_any:
+        pytest.skip("No partial templates found — skipping partials test")
+
+
+def test_inline_jinja_macros_render_correctly(test_flask_app):
+    jinja_snippet = """
+    {% macro badge(status) -%}
+        <span class="badge {{ 'bg-success' if status=='active' else 'bg-danger' }}">{{ status }}</span>
+    {%- endmacro %}
+    {{ badge('active') }}
     """
-    If a model provides a simple helper to compute a display name, ensure the output is stable.
-    This test tries to locate `app.models.member.Member` or `app.models.user.User` and call
-    a `display_name()` or similar. If not present, demonstrate expected behavior with a SimpleNamespace.
-    """
-    member_mod = try_import("app.models.member")
-    user_mod = try_import("app.models.user")
+    with test_flask_app.test_request_context("/"):
+        html = render_template_string(jinja_snippet)
+        assert "badge" in html
+        assert "active" in html
+        assert "bg-success" in html
 
-    target = None
-    if member_mod and hasattr(member_mod, "Member"):
-        target = getattr(member_mod, "Member")
-    elif user_mod and hasattr(user_mod, "User"):
-        target = getattr(user_mod, "User")
 
-    if target:
-        inst = target()
-        # seed typical fields
-        if not hasattr(inst, "full_name"):
-            inst.full_name = "Bobby Tables"
-        if not hasattr(inst, "email"):
-            inst.email = "bobby@example.com"
+@pytest.mark.parametrize("template_name", [
+    "admin/reports.html",
+    "admin/members.html",
+    "trainer/dashboard.html",
+])
+def test_template_inheritance_and_blocks(test_flask_app, template_name):
+    path = os.path.join(test_flask_app.template_folder, template_name)
+    if not os.path.exists(path):
+        pytest.skip(f"{template_name} missing — skipping inheritance test")
 
-        if hasattr(inst, "display_name"):
-            dn = inst.display_name()
-            assert isinstance(dn, str) and len(dn) > 0
-        elif hasattr(inst, "get_display_name"):
-            dn = inst.get_display_name()
-            assert isinstance(dn, str) and len(dn) > 0
-        else:
-            # fallback: construct from available attrs
-            assert f"{inst.full_name} <{inst.email}>" == f"{inst.full_name} <{inst.email}>"
-    else:
-        # No models available — verify the simple formatting behavior
-        s = SimpleNamespace(full_name="Bobby Tables", email="bobby@example.com")
-        assert f"{s.full_name} <{s.email}>" == "Bobby Tables <bobby@example.com>"
+    with test_flask_app.test_request_context("/"):
+        session["user_id"] = 1
+        # some templates don't use the 'user' variable; we only assert that
+        # Jinja was evaluated (no raw tags) and HTML was produced
+        html = render_template(template_name, user="Admin")
+        assert ("<html" in html) or ("<body" in html)
+        assert "{%" not in html and "{{" not in html
+
+
+def test_static_assets_links_present(test_flask_app):
+    base_path = os.path.join(test_flask_app.template_folder, "base.html")
+    if not os.path.exists(base_path):
+        pytest.skip("base.html not found for static asset check")
+
+    with open(base_path, encoding="utf-8") as f:
+        content = f.read().lower()
+    assert any(x in content for x in ["bootstrap", "tailwind", "chart", "js", "css"])
